@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Setores{% endblock %}
+{% block page_title %}Gerenciar Setores{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="fas fa-building"></i> Gerenciar Setores</h2>
+        <p class="page-subtitle">Cadastre e gerencie os setores da instituição</p>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="openModal('modalNovoSetor')">
+            <i class="fas fa-plus"></i> Novo Setor
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if setores %}
+        <div class="table-responsive">
+            <table class="data-table data-table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Descrição</th>
+                        <th>Status</th>
+                        <th>Cadastro</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for setor in setores %}
+                    <tr>
+                        <td>{{ setor.id }}</td>
+                        <td><strong>{{ setor.nome }}</strong></td>
+                        <td>{{ setor.descricao or '-' }}</td>
+                        <td>
+                            {% if setor.ativo %}
+                            <span class="badge-status" style="background: #28a745">Ativo</span>
+                            {% else %}
+                            <span class="badge-status" style="background: #dc3545">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ formatar_data(setor.created_at) }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline" onclick="openEditSetorModal({{ setor.id }}, '{{ setor.nome }}', '{{ setor.descricao or '' }}', {{ 'true' if setor.ativo else 'false' }})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-building"></i>
+            <p>Nenhum setor cadastrado</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Novo Setor -->
+<div class="modal" id="modalNovoSetor">
+    <div class="modal-overlay" onclick="closeModal('modalNovoSetor')"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-plus"></i> Novo Setor</h3>
+            <button class="modal-close" onclick="closeModal('modalNovoSetor')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('main.admin_criar_setor') }}">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="novo_nome_setor">Nome do setor *</label>
+                    <input type="text" id="novo_nome_setor" name="nome" required minlength="2">
+                </div>
+                <div class="form-group">
+                    <label for="novo_descricao_setor">Descrição</label>
+                    <textarea id="novo_descricao_setor" name="descricao" rows="3" placeholder="Descrição do setor..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalNovoSetor')">Cancelar</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Criar Setor</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Setor -->
+<div class="modal" id="modalEditarSetor">
+    <div class="modal-overlay" onclick="closeModal('modalEditarSetor')"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Editar Setor</h3>
+            <button class="modal-close" onclick="closeModal('modalEditarSetor')">&times;</button>
+        </div>
+        <form method="POST" id="formEditarSetor" action="">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_nome_setor">Nome do setor *</label>
+                    <input type="text" id="edit_nome_setor" name="nome" required minlength="2">
+                </div>
+                <div class="form-group">
+                    <label for="edit_descricao_setor">Descrição</label>
+                    <textarea id="edit_descricao_setor" name="descricao" rows="3"></textarea>
+                </div>
+                <div class="form-group form-check">
+                    <input type="checkbox" id="edit_ativo_setor" name="ativo">
+                    <label for="edit_ativo_setor">Setor ativo</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarSetor')">Cancelar</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function openEditSetorModal(id, nome, descricao, ativo) {
+    document.getElementById('formEditarSetor').action = '/admin/setores/' + id + '/editar';
+    document.getElementById('edit_nome_setor').value = nome;
+    document.getElementById('edit_descricao_setor').value = descricao;
+    document.getElementById('edit_ativo_setor').checked = ativo;
+    openModal('modalEditarSetor');
+}
+</script>
+{% endblock %}

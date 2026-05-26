@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Logs do Sistema{% endblock %}
+{% block page_title %}Logs do Sistema{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="fas fa-history"></i> Logs do Sistema</h2>
+        <p class="page-subtitle">Registro de todas as operações realizadas</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if logs.items %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Data/Hora</th>
+                        <th>Usuário</th>
+                        <th>Ação</th>
+                        <th>Entidade</th>
+                        <th>ID Entidade</th>
+                        <th>Detalhes</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr>
+                        <td>{{ log.id }}</td>
+                        <td>{{ formatar_data(log.created_at) }}</td>
+                        <td>{{ log.usuario.nome if log.usuario else 'Sistema' }}</td>
+                        <td>
+                            <span class="badge-log badge-log-{{ log.acao }}">{{ log.acao|title }}</span>
+                        </td>
+                        <td>{{ log.entidade|title }}</td>
+                        <td>{{ log.entidade_id or '-' }}</td>
+                        <td>{{ log.detalhes or '-' }}</td>
+                        <td><code>{{ log.ip_address or '-' }}</code></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if logs.pages > 1 %}
+        <div class="pagination">
+            {% if logs.has_prev %}
+            <a href="{{ url_for('main.admin_logs', page=logs.prev_num) }}" class="pagination-item"><i class="fas fa-chevron-left"></i></a>
+            {% endif %}
+            {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    {% if page_num == logs.page %}
+                    <span class="pagination-item active">{{ page_num }}</span>
+                    {% else %}
+                    <a href="{{ url_for('main.admin_logs', page=page_num) }}" class="pagination-item">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                    <span class="pagination-item disabled">...</span>
+                {% endif %}
+            {% endfor %}
+            {% if logs.has_next %}
+            <a href="{{ url_for('main.admin_logs', page=logs.next_num) }}" class="pagination-item"><i class="fas fa-chevron-right"></i></a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <p>Nenhum log registrado</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

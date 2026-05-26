@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios{% endblock %}
+{% block page_title %}Relatórios{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="fas fa-chart-bar"></i> Relatórios e Analytics</h2>
+        <p class="page-subtitle">Análise completa dos chamados do sistema</p>
+    </div>
+</div>
+
+<!-- Cards de resumo -->
+<div class="stats-grid stats-grid-4">
+    <div class="stat-card stat-primary">
+        <div class="stat-icon"><i class="fas fa-headset"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">{{ estatisticas.total }}</span>
+            <span class="stat-label">Total</span>
+        </div>
+    </div>
+    <div class="stat-card stat-info">
+        <div class="stat-icon"><i class="fas fa-folder-open"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">{{ estatisticas.abertos }}</span>
+            <span class="stat-label">Abertos</span>
+        </div>
+    </div>
+    <div class="stat-card stat-success">
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">{{ estatisticas.resolvidos }}</span>
+            <span class="stat-label">Resolvidos</span>
+        </div>
+    </div>
+    <div class="stat-card stat-purple">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">{{ estatisticas.tempo_medio_resolucao }}h</span>
+            <span class="stat-label">Tempo Médio</span>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Gráfico por mês -->
+    <div class="card card-chart-large">
+        <div class="card-header">
+            <h3><i class="fas fa-chart-line"></i> Chamados por Mês (Últimos 12 meses)</h3>
+        </div>
+        <div class="card-body">
+            <canvas id="chartMeses" data-values='{{ chamados_por_mes|tojson }}'></canvas>
+        </div>
+    </div>
+
+    <!-- Gráfico por setor -->
+    <div class="card card-chart-large">
+        <div class="card-header">
+            <h3><i class="fas fa-building"></i> Chamados por Setor</h3>
+        </div>
+        <div class="card-body">
+            <canvas id="chartSetores" data-values='{{ chamados_por_setor|tojson }}'></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Status -->
+    <div class="card card-chart">
+        <div class="card-header">
+            <h3><i class="fas fa-chart-pie"></i> Por Status</h3>
+        </div>
+        <div class="card-body">
+            <canvas id="chartStatusRel"></canvas>
+        </div>
+    </div>
+
+    <!-- Prioridade -->
+    <div class="card card-chart">
+        <div class="card-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> Por Prioridade</h3>
+        </div>
+        <div class="card-body">
+            <canvas id="chartPrioridadeRel"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos por Setor (apenas Admin) -->
+{% if current_user.is_admin() and graficos_por_setor %}
+<div class="page-header" style="margin-top: 24px;">
+    <div class="page-header-left">
+        <h2><i class="fas fa-chart-area"></i> Análise por Setor</h2>
+        <p class="page-subtitle">Gráficos detalhados de cada setor</p>
+    </div>
+</div>
+
+<div class="setores-grid">
+    {% for setor_nome, dados in graficos_por_setor.items() %}
+    {% if dados.total > 0 %}
+    <div class="card card-chart">
+        <div class="card-header">
+            <h3><i class="fas fa-building"></i> {{ setor_nome }}</h3>
+            <span class="badge-status" style="background: var(--primary)">{{ dados.total }} chamados</span>
+        </div>
+        <div class="card-body">
+            <canvas id="chartSetor{{ loop.index }}" data-status='{{ dados.por_status|tojson }}' data-prioridade='{{ dados.por_prioridade|tojson }}'></canvas>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Tabela detalhada por status -->
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-table"></i> Detalhamento por Status</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Quantidade</th>
+                        <th>Percentual</th>
+                        <th>Barra</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for status, quantidade in estatisticas.por_status.items() %}
+                    <tr>
+                        <td>
+                            <span class="badge-status" style="background: {{ get_status_cor(status) }}">
+                                {{ get_status_label(status) }}
+                            </span>
+                        </td>
+                        <td><strong>{{ quantidade }}</strong></td>
+                        <td>{{ ((quantidade / estatisticas.total * 100) if estatisticas.total > 0 else 0)|round(1) }}%</td>
+                        <td style="width: 40%">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ (quantidade / estatisticas.total * 100) if estatisticas.total > 0 else 0 }}%; background: {{ get_status_cor(status) }}"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela detalhada por prioridade -->
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-table"></i> Detalhamento por Prioridade</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Prioridade</th>
+                        <th>Quantidade</th>
+                        <th>Percentual</th>
+                        <th>Barra</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prioridade, quantidade in estatisticas.por_prioridade.items() %}
+                    <tr>
+                        <td>
+                            <span class="badge-prioridade" style="background: {{ get_prioridade_cor(prioridade) }}">
+                                {{ get_prioridade_label(prioridade) }}
+                            </span>
+                        </td>
+                        <td><strong>{{ quantidade }}</strong></td>
+                        <td>{{ ((quantidade / estatisticas.total * 100) if estatisticas.total > 0 else 0)|round(1) }}%</td>
+                        <td style="width: 40%">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ (quantidade / estatisticas.total * 100) if estatisticas.total > 0 else 0 }}%; background: {{ get_prioridade_cor(prioridade) }}"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico por mês
+    const mesData = JSON.parse(document.getElementById('chartMeses').dataset.values);
+    new Chart(document.getElementById('chartMeses'), {
+        type: 'line',
+        data: {
+            labels: mesData.map(d => d.mes),
+            datasets: [{
+                label: 'Chamados',
+                data: mesData.map(d => d.total),
+                borderColor: '#f46c6c',
+                backgroundColor: 'rgba(244, 108, 108, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#f46c6c'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Gráfico por setor
+    const setorData = JSON.parse(document.getElementById('chartSetores').dataset.values);
+    new Chart(document.getElementById('chartSetores'), {
+        type: 'bar',
+        data: {
+            labels: setorData.map(d => d.setor.length > 20 ? d.setor.substring(0, 20) + '...' : d.setor),
+            datasets: [{
+                label: 'Chamados',
+                data: setorData.map(d => d.total),
+                backgroundColor: ['#f46c6c', '#17a2b8', '#28a745', '#ffc107', '#6f42c1', '#fd7e14', '#20c997', '#6c757d'],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+
+    // Status
+    const statusData = {{ estatisticas.por_status|tojson }};
+    new Chart(document.getElementById('chartStatusRel'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(statusData).map(s => {
+                const labels = {aberto: 'Aberto', em_andamento: 'Em Andamento', pendente: 'Pendente', resolvido: 'Resolvido', fechado: 'Fechado'};
+                return labels[s] || s;
+            }),
+            datasets: [{
+                data: Object.values(statusData),
+                backgroundColor: ['#17a2b8', '#ffc107', '#6f42c1', '#28a745', '#6c757d'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+            cutout: '60%'
+        }
+    });
+
+    // Prioridade
+    const prioridadeData = {{ estatisticas.por_prioridade|tojson }};
+    new Chart(document.getElementById('chartPrioridadeRel'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(prioridadeData).map(p => {
+                const labels = {baixa: 'Baixa', media: 'Média', alta: 'Alta', urgente: 'Urgente'};
+                return labels[p] || p;
+            }),
+            datasets: [{
+                data: Object.values(prioridadeData),
+                backgroundColor: ['#28a745', '#ffc107', '#fd7e14', '#dc3545'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+            cutout: '60%'
+        }
+    });
+
+    // Gráficos por setor (admin)
+    {% if current_user.is_admin() and graficos_por_setor %}
+    {% for setor_nome, dados in graficos_por_setor.items() %}
+    {% if dados.total > 0 %}
+    (function() {
+        const ctx = document.getElementById('chartSetor{{ loop.index }}');
+        if (!ctx) return;
+        const statusData = JSON.parse(ctx.dataset.status);
+        const prioridadeData = JSON.parse(ctx.dataset.prioridade);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Status', 'Prioridade'],
+                datasets: [
+                    {
+                        label: 'Abertos',
+                        data: [statusData.aberto || 0, prioridadeData.alta || 0],
+                        backgroundColor: '#17a2b8'
+                    },
+                    {
+                        label: 'Em Andamento',
+                        data: [statusData.em_andamento || 0, prioridadeData.media || 0],
+                        backgroundColor: '#ffc107'
+                    },
+                    {
+                        label: 'Resolvidos',
+                        data: [statusData.resolvido || 0, prioridadeData.baixa || 0],
+                        backgroundColor: '#28a745'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+    })();
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+});
+</script>
+{% endblock %}

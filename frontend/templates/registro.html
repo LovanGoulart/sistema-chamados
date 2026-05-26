@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro{% endblock %}
+{% block page_title %}Cadastro{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-school"></i>
+                </div>
+                <h1>Colégio Mauá</h1>
+                <p>Criar nova conta</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('main.registro') }}" class="auth-form" novalidate>
+                <div class="form-group">
+                    <label for="nome">Nome completo *</label>
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required minlength="3" value="{{ dados.nome if dados else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">E-mail *</label>
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" name="email" placeholder="seu@email.com" required value="{{ dados.email if dados else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="telefone">Telefone</label>
+                    <div class="input-group">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000" value="{{ dados.telefone if dados else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="setor_id">Setor</label>
+                    <div class="input-group">
+                        <i class="fas fa-building"></i>
+                        <select id="setor_id" name="setor_id">
+                            <option value="">Selecione seu setor (opcional)</option>
+                            {% for setor in setores %}
+                            <option value="{{ setor.id }}" {% if dados and dados.setor_id == setor.id %}selected{% endif %}>{{ setor.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="senha">Senha *</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="senha" name="senha" placeholder="Mínimo 6 caracteres" required minlength="6">
+                        <button type="button" class="toggle-password" tabindex="-1">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmar_senha">Confirmar senha *</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="confirmar_senha" name="confirmar_senha" placeholder="Repita sua senha" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-user-plus"></i> Criar conta
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Já tem uma conta? <a href="{{ url_for('main.login') }}">Faça login</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

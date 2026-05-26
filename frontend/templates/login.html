@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+{% block page_title %}Login{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-school"></i>
+                </div>
+                <h1>Colégio Mauá</h1>
+                <p>Sistema de Chamados</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('main.login') }}" class="auth-form" novalidate>
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" name="email" placeholder="seu@email.com" required autofocus>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="senha" name="senha" placeholder="Sua senha" required>
+                        <button type="button" class="toggle-password" tabindex="-1">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Não tem uma conta? <a href="{{ url_for('main.registro') }}">Cadastre-se</a></p>
+            </div>
+
+            <div class="auth-demo">
+                <p class="demo-title"><i class="fas fa-info-circle"></i> Contas de demonstração:</p>
+                <div class="demo-accounts">
+                    <div class="demo-account">
+                        <span class="demo-role">Admin</span>
+                        <code>admin@colegiomaua.edu.br / admin123</code>
+                    </div>
+                    <div class="demo-account">
+                        <span class="demo-role">Usuário</span>
+                        <code>carlos@colegiomaua.edu.br / 123456</code>
+                    </div>
+                    <div class="demo-account">
+                        <span class="demo-role">Setor</span>
+                        <code>joao@colegiomaua.edu.br / 123456</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

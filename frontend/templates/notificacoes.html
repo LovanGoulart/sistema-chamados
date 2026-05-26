@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Notificações{% endblock %}
+{% block page_title %}Notificações{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="fas fa-bell"></i> Notificações</h2>
+        <p class="page-subtitle">Todas as suas notificações</p>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-outline" onclick="marcarTodasLidas()">
+            <i class="fas fa-check-double"></i> Marcar todas como lidas
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if notificacoes %}
+        <div class="notificacoes-lista">
+            {% for notif in notificacoes %}
+            <div class="notificacao-item {% if not notif.lida %}notificacao-nao-lida{% endif %}" data-id="{{ notif.id }}">
+                <div class="notificacao-icon">
+                    <i class="fas fa-{% if 'chamado' in notif.titulo|lower %}headset{% elif 'mensagem' in notif.titulo|lower %}comment{% else %}bell{% endif %}"></i>
+                </div>
+                <div class="notificacao-conteudo">
+                    <h4 class="notificacao-titulo">{{ notif.titulo }}</h4>
+                    <p class="notificacao-mensagem">{{ notif.mensagem }}</p>
+                    <span class="notificacao-data">{{ formatar_data(notif.created_at) }}</span>
+                </div>
+                <div class="notificacao-acoes">
+                    {% if notif.link %}
+                    <a href="{{ notif.link }}" class="btn btn-sm btn-outline">Ver</a>
+                    {% endif %}
+                    {% if not notif.lida %}
+                    <button class="btn btn-sm btn-ghost" onclick="marcarLida({{ notif.id }}, this)">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-bell-slash"></i>
+            <p>Nenhuma notificação</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function marcarLida(id, btn) {
+    fetch('/notificacoes/' + id + '/ler', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const item = btn.closest('.notificacao-item');
+                item.classList.remove('notificacao-nao-lida');
+                btn.remove();
+            }
+        });
+}
+
+function marcarTodasLidas() {
+    fetch('/notificacoes/ler-todas', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelectorAll('.notificacao-nao-lida').forEach(el => {
+                    el.classList.remove('notificacao-nao-lida');
+                });
+                document.querySelectorAll('.notificacao-acoes .btn-ghost').forEach(el => el.remove());
+            }
+        });
+}
+</script>
+{% endblock %}

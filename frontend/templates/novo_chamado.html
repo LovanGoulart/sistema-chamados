@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Chamado{% endblock %}
+{% block page_title %}Novo Chamado{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="fas fa-plus-circle"></i> Novo Chamado</h2>
+        <p class="page-subtitle">Abra um novo chamado para o setor responsável</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('main.novo_chamado') }}" class="form-chamado" novalidate enctype="multipart/form-data">
+            <div class="form-row">
+                <div class="form-group form-group-large">
+                    <label for="titulo">Título do chamado *</label>
+                    <input type="text" id="titulo" name="titulo" placeholder="Descreva brevemente o problema" required minlength="5" maxlength="200" value="{{ dados.titulo if dados else '' }}">
+                    <span class="form-hint">Mínimo 5 caracteres</span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="setor_destino_id">Setor de destino *</label>
+                    <select id="setor_destino_id" name="setor_destino_id" required>
+                        <option value="">Selecione o setor</option>
+                        {% for setor in setores %}
+                        <option value="{{ setor.id }}" {% if dados and dados.setor_destino_id == setor.id %}selected{% endif %}>{{ setor.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="prioridade">Prioridade *</label>
+                    <select id="prioridade" name="prioridade" required>
+                        <option value="baixa" {% if dados and dados.prioridade == 'baixa' %}selected{% endif %}>Baixa</option>
+                        <option value="media" {% if not dados or dados.prioridade == 'media' %}selected{% endif %}>Média</option>
+                        <option value="alta" {% if dados and dados.prioridade == 'alta' %}selected{% endif %}>Alta</option>
+                        <option value="urgente" {% if dados and dados.prioridade == 'urgente' %}selected{% endif %}>Urgente (ligue para o setor)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="local">Local / Área *</label>
+                    <input type="text" id="local" name="local" placeholder="Ex: Sala 101 - Bloco A" required value="{{ dados.local if dados else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="area_patrimonial">Área Patrimonial</label>
+                    <input type="text" id="area_patrimonial" name="area_patrimonial" placeholder="Ex: Bloco A, Bloco Principal" value="{{ dados.area_patrimonial if dados else '' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="data_preferencial">Data preferencial para manutenção</label>
+                    <input type="datetime-local" id="data_preferencial" name="data_preferencial" value="{{ dados.data_preferencial if dados else '' }}">
+                    <span class="form-hint">Sugestão de data para atendimento</span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group form-group-full">
+                    <label for="descricao">Descrição detalhada *</label>
+                    <textarea id="descricao" name="descricao" rows="6" placeholder="Descreva o problema com o máximo de detalhes possível..." required minlength="10">{{ dados.descricao if dados else '' }}</textarea>
+                    <span class="form-hint">Mínimo 10 caracteres. Quanto mais detalhes, melhor o atendimento.</span>
+                </div>
+            </div>
+
+            <!-- Upload de Anexos -->
+            <div class="form-row">
+                <div class="form-group form-group-full">
+                    <label for="anexos"><i class="fas fa-paperclip"></i> Anexar arquivos (opcional)</label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <input type="file" id="anexos" name="anexos" multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="display:none">
+                        <div class="file-upload-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Clique ou arraste arquivos aqui</p>
+                            <span class="file-upload-hint">JPG, PNG, PDF, DOC, XLS (máx. 16MB cada)</span>
+                        </div>
+                    </div>
+                    <div class="file-list" id="fileList"></div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('main.chamados') }}" class="btn btn-outline">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Abrir Chamado
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('anexos');
+    const fileList = document.getElementById('fileList');
+
+    if (fileUploadArea && fileInput) {
+        fileUploadArea.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        fileUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        fileUploadArea.addEventListener('dragleave', function() {
+            this.classList.remove('dragover');
+        });
+
+        fileUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            fileInput.files = e.dataTransfer.files;
+            atualizarListaArquivos();
+        });
+
+        fileInput.addEventListener('change', atualizarListaArquivos);
+    }
+
+    function atualizarListaArquivos() {
+        fileList.innerHTML = '';
+        const files = fileInput.files;
+
+        if (files.length === 0) return;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const item = document.createElement('div');
+            item.className = 'file-list-item';
+            item.innerHTML = `
+                <i class="fas fa-file"></i>
+                <span class="file-name">${escapeHtml(file.name)}</span>
+                <span class="file-size">(${(file.size / 1024).toFixed(1)} KB)</span>
+                <button type="button" class="file-remove" data-index="${i}">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            fileList.appendChild(item);
+        }
+
+        document.querySelectorAll('.file-remove').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const index = parseInt(this.dataset.index);
+                const dt = new DataTransfer();
+                const files = Array.from(fileInput.files);
+                files.splice(index, 1);
+                files.forEach(function(f) { dt.items.add(f); });
+                fileInput.files = dt.files;
+                atualizarListaArquivos();
+            });
+        });
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+});
+</script>
+{% endblock %}

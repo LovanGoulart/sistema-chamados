@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Perfil{% endblock %}
+{% block page_title %}Meu Perfil{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="fas fa-user"></i> Meu Perfil</h2>
+        <p class="page-subtitle">Gerencie suas informações pessoais</p>
+    </div>
+</div>
+
+<div class="profile-grid">
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-id-card"></i> Informações Pessoais</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('main.perfil') }}" class="form-perfil" novalidate>
+                <div class="form-group">
+                    <label for="nome">Nome completo</label>
+                    <input type="text" id="nome" name="nome" value="{{ current_user.nome }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" value="{{ current_user.email }}" disabled>
+                    <span class="form-hint">O e-mail não pode ser alterado</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="telefone">Telefone</label>
+                    <input type="tel" id="telefone" name="telefone" value="{{ current_user.telefone or '' }}" placeholder="(00) 00000-0000">
+                </div>
+
+                <div class="form-group">
+                    <label>Setor</label>
+                    <input type="text" value="{{ current_user.setor.nome if current_user.setor else 'Não vinculado' }}" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Perfil</label>
+                    <input type="text" value="{{ current_user.perfil.value|title }}" disabled>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-lock"></i> Alterar Senha</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('main.perfil') }}" class="form-senha" novalidate>
+                <div class="form-group">
+                    <label for="senha_atual">Senha atual</label>
+                    <div class="input-group">
+                        <input type="password" id="senha_atual" name="senha_atual" placeholder="Digite sua senha atual">
+                        <button type="button" class="toggle-password" tabindex="-1">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="nova_senha">Nova senha</label>
+                    <div class="input-group">
+                        <input type="password" id="nova_senha" name="nova_senha" placeholder="Mínimo 6 caracteres" minlength="6">
+                        <button type="button" class="toggle-password" tabindex="-1">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmar_senha">Confirmar nova senha</label>
+                    <div class="input-group">
+                        <input type="password" id="confirmar_senha" name="confirmar_senha" placeholder="Repita a nova senha">
+                        <button type="button" class="toggle-password" tabindex="-1">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-key"></i> Alterar senha
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

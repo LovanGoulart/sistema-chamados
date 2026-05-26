@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}Chamado #{{ chamado.id }}{% endblock %}
+{% block page_title %}Chamado #{{ chamado.id }}{% endblock %}
+
+{% block content %}
+<div class="chamado-detalhe">
+    <!-- Alerta de data vencida -->
+    {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}
+    <div class="alert alert-destaque">
+        <i class="fas fa-exclamation-circle"></i>
+        <strong>Atenção:</strong> A data preferencial para este chamado ({% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}) já foi atingida ou está próxima!
+    </div>
+    {% endif %}
+
+    <!-- Header do chamado -->
+    <div class="chamado-header-card">
+        <div class="chamado-header-main">
+            <div class="chamado-badges">
+                <span class="badge-prioridade badge-large" style="background: {{ get_prioridade_cor(chamado.prioridade.value) }}">
+                    {{ get_prioridade_label(chamado.prioridade.value) }}
+                </span>
+                <span class="badge-status badge-large" style="background: {{ get_status_cor(chamado.status.value) }}">
+                    {{ get_status_label(chamado.status.value) }}
+                </span>
+                {% if chamado.data_preferencial %}
+                <span class="badge-data {% if verificar_data_destaque(chamado.data_preferencial) %}badge-data-vencida{% endif %}">
+                    <i class="fas fa-calendar-alt"></i> {{ formatar_data(chamado.data_preferencial) }}
+                </span>
+                {% endif %}
+            </div>
+            <h2 class="chamado-titulo-principal">{{ chamado.titulo }}</h2>
+            <div class="chamado-meta">
+                <span><i class="fas fa-user"></i> {{ chamado.usuario.nome }}</span>
+                <span><i class="fas fa-building"></i> {{ chamado.setor_destino.nome }}</span>
+                <span><i class="fas fa-clock"></i> {{ formatar_data(chamado.created_at) }}</span>
+                {% if chamado.atendente %}
+                <span><i class="fas fa-user-check"></i> Atendente: {{ chamado.atendente.nome }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="chamado-actions">
+            {% if current_user.perfil.value in ['admin', 'setor'] %}
+            <form method="POST" action="{{ url_for('main.atualizar_status_chamado', chamado_id=chamado.id) }}" class="status-form">
+                <label for="status">Alterar status:</label>
+                <select name="status" id="status" onchange="mostrarCampoObservacao(this)">
+                    <option value="aberto" {% if chamado.status.value == 'aberto' %}selected{% endif %}>Aberto</option>
+                    <option value="em_andamento" {% if chamado.status.value == 'em_andamento' %}selected{% endif %}>Em Andamento</option>
+                    <option value="pendente" {% if chamado.status.value == 'pendente' %}selected{% endif %}>Pendente</option>
+                    <option value="resolvido" {% if chamado.status.value == 'resolvido' %}selected{% endif %}>Resolvido</option>
+                    <option value="fechado" {% if chamado.status.value == 'fechado' %}selected{% endif %}>Fechado</option>
+                </select>
+
+                <!-- Campo de observação para status pendente -->
+                <div class="observacao-status" id="observacaoStatus" style="display:none;">
+                    <label for="observacao">Motivo/Observação:</label>
+                    <textarea name="observacao" id="observacao" rows="3" placeholder="Descreva o motivo da alteração de status..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-sm btn-primary">Atualizar Status</button>
+            </form>
+            {% endif %}
+
+            {% if current_user.perfil.value in ['admin', 'setor'] and not chamado.atendente %}
+            <form method="POST" action="{{ url_for('main.atribuir_chamado', chamado_id=chamado.id) }}" class="atribuir-form">
+                <label for="atendente_id">Atribuir a:</label>
+                <select name="atendente_id" id="atendente_id" required>
+                    <option value="">Selecione um colaborador</option>
+                    {% for u in usuarios_setor %}
+                    <option value="{{ u.id }}">{{ u.nome }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-sm btn-primary">Atribuir</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="chamado-grid">
+        <!-- Coluna principal -->
+        <div class="chamado-main">
+            <!-- Descrição -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-align-left"></i> Descrição</h3>
+                </div>
+                <div class="card-body">
+                    <p class="chamado-descricao-full">{{ chamado.descricao }}</p>
+
+                    <div class="chamado-detalhes-grid">
+                        <div class="detalhe-item">
+                            <span class="detalhe-label"><i class="fas fa-map-marker-alt"></i> Local</span>
+                            <span class="detalhe-value">{{ chamado.local }}</span>
+                        </div>
+                        {% if chamado.area_patrimonial %}
+                        <div class="detalhe-item">
+                            <span class="detalhe-label"><i class="fas fa-building"></i> Área Patrimonial</span>
+                            <span class="detalhe-value">{{ chamado.area_patrimonial }}</span>
+                        </div>
+                        {% endif %}
+                        {% if chamado.data_preferencial %}
+                        <div class="detalhe-item">
+                            <span class="detalhe-label"><i class="fas fa-calendar-alt"></i> Data Preferencial</span>
+                            <span class="detalhe-value {% if verificar_data_destaque(chamado.data_preferencial) %}text-danger{% endif %}">
+                                {{ formatar_data(chamado.data_preferencial) }}
+                                {% if verificar_data_destaque(chamado.data_preferencial) %}<i class="fas fa-exclamation-triangle"></i>{% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                        <div class="detalhe-item">
+                            <span class="detalhe-label"><i class="fas fa-clock"></i> Última atualização</span>
+                            <span class="detalhe-value">{{ formatar_data(chamado.updated_at) }}</span>
+                        </div>
+                        {% if chamado.data_resolucao %}
+                        <div class="detalhe-item">
+                            <span class="detalhe-label"><i class="fas fa-check-circle"></i> Resolvido em</span>
+                            <span class="detalhe-value">{{ formatar_data(chamado.data_resolucao) }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat/Mensagens -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-comments"></i> Mensagens ({{ mensagens|length }})</h3>
+                </div>
+                <div class="card-body">
+                    {% if mensagens %}
+                    <div class="mensagens-lista">
+                        {% for mensagem in mensagens %}
+                        <div class="mensagem-item {% if mensagem.usuario_id == current_user.id %}mensagem-propria{% else %}mensagem-outro{% endif %}">
+                            <div class="mensagem-avatar">{{ mensagem.autor.nome[0]|upper }}</div>
+                            <div class="mensagem-conteudo">
+                                <div class="mensagem-header">
+                                    <span class="mensagem-autor">{{ mensagem.autor.nome }}</span>
+                                    <span class="mensagem-data">{{ formatar_data(mensagem.created_at) }}</span>
+                                </div>
+                                <p class="mensagem-texto">{{ mensagem.conteudo }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state small">
+                        <i class="fas fa-comment-dots"></i>
+                        <p>Nenhuma mensagem ainda</p>
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" action="{{ url_for('main.enviar_mensagem', chamado_id=chamado.id) }}" class="mensagem-form">
+                        <div class="input-group">
+                            <input type="text" name="conteudo" placeholder="Digite sua mensagem..." required autocomplete="off">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna lateral -->
+        <div class="chamado-sidebar">
+            <!-- Anexos -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-paperclip"></i> Anexos ({{ anexos|length }})</h3>
+                </div>
+                <div class="card-body">
+                    {% if anexos %}
+                    <div class="anexos-lista">
+                        {% for anexo in anexos %}
+                        <div class="anexo-item">
+                            <div class="anexo-icon">
+                                <i class="fas fa-{% if anexo.tipo_arquivo in ['jpg','jpeg','png','gif'] %}image{% elif anexo.tipo_arquivo == 'pdf' %}file-pdf{% else %}file{% endif %}"></i>
+                            </div>
+                            <div class="anexo-info">
+                                <span class="anexo-nome">{{ anexo.nome_arquivo }}</span>
+                                <span class="anexo-meta">{{ (anexo.tamanho / 1024)|round(1) }} KB · {{ formatar_data(anexo.created_at) }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state small">
+                        <i class="fas fa-paperclip"></i>
+                        <p>Nenhum anexo</p>
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" action="{{ url_for('main.upload_anexo', chamado_id=chamado.id) }}" enctype="multipart/form-data" class="upload-form">
+                        <div class="file-input-wrapper">
+                            <input type="file" name="arquivo" id="arquivo" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt" required>
+                            <label for="arquivo" class="btn btn-outline btn-block">
+                                <i class="fas fa-cloud-upload-alt"></i> Anexar arquivo
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 8px;">
+                            <i class="fas fa-upload"></i> Enviar
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-history"></i> Timeline</h3>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-dot" style="background: #28a745"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-acao">Chamado criado</span>
+                                <span class="timeline-data">{{ formatar_data(chamado.created_at) }}</span>
+                            </div>
+                        </div>
+                        {% if chamado.status.value != 'aberto' %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot" style="background: #ffc107"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-acao">Status alterado para {{ get_status_label(chamado.status.value) }}</span>
+                                <span class="timeline-data">{{ formatar_data(chamado.updated_at) }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if chamado.atendente %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot" style="background: #17a2b8"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-acao">Atribuído a {{ chamado.atendente.nome }}</span>
+                                <span class="timeline-data">{{ formatar_data(chamado.updated_at) }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if chamado.data_resolucao %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot" style="background: #6c757d"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-acao">Chamado resolvido</span>
+                                <span class="timeline-data">{{ formatar_data(chamado.data_resolucao) }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function mostrarCampoObservacao(select) {
+    const observacaoDiv = document.getElementById('observacaoStatus');
+    if (select.value === 'pendente') {
+        observacaoDiv.style.display = 'block';
+        document.getElementById('observacao').setAttribute('required', 'required');
+    } else {
+        observacaoDiv.style.display = 'none';
+        document.getElementById('observacao').removeAttribute('required');
+    }
+}
+
+// Verificar status atual ao carregar
+(function() {
+    const statusSelect = document.getElementById('status');
+    if (statusSelect && statusSelect.value === 'pendente') {
+        mostrarCampoObservacao(statusSelect);
+    }
+})();
+</script>
+{% endblock %}

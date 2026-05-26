@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Usuários{% endblock %}
+{% block page_title %}Gerenciar Usuários{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h2><i class="fas fa-users"></i> Gerenciar Usuários</h2>
+        <p class="page-subtitle">Cadastre, edite e exclua usuários do sistema</p>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="openModal('modalNovoUsuario')">
+            <i class="fas fa-user-plus"></i> Novo Usuário
+        </button>
+    </div>
+</div>
+
+<!-- Busca -->
+<div class="card card-filters">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('main.admin_usuarios') }}" class="filter-form">
+            <div class="filter-group filter-group-large">
+                <label for="busca"><i class="fas fa-search"></i> Buscar usuário</label>
+                <input type="text" id="busca" name="busca" placeholder="Nome ou e-mail..." value="{{ busca or '' }}">
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
+                <a href="{{ url_for('main.admin_usuarios') }}" class="btn btn-outline"><i class="fas fa-undo"></i> Limpar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de usuários -->
+<div class="card">
+    <div class="card-body">
+        {% if usuarios.items %}
+        <div class="table-responsive">
+            <table class="data-table data-table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                        <th>Telefone</th>
+                        <th>Perfil</th>
+                        <th>Setor</th>
+                        <th>Status</th>
+                        <th>Cadastro</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios.items %}
+                    <tr>
+                        <td>{{ usuario.id }}</td>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar-small">{{ usuario.nome[0]|upper }}</div>
+                                <span>{{ usuario.nome }}</span>
+                            </div>
+                        </td>
+                        <td>{{ usuario.email }}</td>
+                        <td>{{ usuario.telefone or '-' }}</td>
+                        <td><span class="badge-perfil badge-perfil-{{ usuario.perfil.value }}">{{ usuario.perfil.value|title }}</span></td>
+                        <td>{{ usuario.setor.nome if usuario.setor else '-' }}</td>
+                        <td>
+                            {% if usuario.ativo %}
+                            <span class="badge-status" style="background: #28a745">Ativo</span>
+                            {% else %}
+                            <span class="badge-status" style="background: #dc3545">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ formatar_data(usuario.created_at) }}</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="btn btn-sm btn-outline" onclick="openEditModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}', '{{ usuario.email }}', '{{ usuario.telefone or '' }}', '{{ usuario.perfil.value }}', {{ usuario.setor_id or 'null' }}, {{ 'true' if usuario.ativo else 'false' }})" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="openDeleteModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}')" title="Excluir">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if usuarios.pages > 1 %}
+        <div class="pagination">
+            {% if usuarios.has_prev %}
+            <a href="{{ url_for('main.admin_usuarios', page=usuarios.prev_num, busca=busca) }}" class="pagination-item"><i class="fas fa-chevron-left"></i></a>
+            {% endif %}
+            {% for page_num in usuarios.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    {% if page_num == usuarios.page %}
+                    <span class="pagination-item active">{{ page_num }}</span>
+                    {% else %}
+                    <a href="{{ url_for('main.admin_usuarios', page=page_num, busca=busca) }}" class="pagination-item">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                    <span class="pagination-item disabled">...</span>
+                {% endif %}
+            {% endfor %}
+            {% if usuarios.has_next %}
+            <a href="{{ url_for('main.admin_usuarios', page=usuarios.next_num, busca=busca) }}" class="pagination-item"><i class="fas fa-chevron-right"></i></a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-users-slash"></i>
+            <p>Nenhum usuário encontrado</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Novo Usuário -->
+<div class="modal" id="modalNovoUsuario">
+    <div class="modal-overlay" onclick="closeModal('modalNovoUsuario')"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus"></i> Novo Usuário</h3>
+            <button class="modal-close" onclick="closeModal('modalNovoUsuario')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('main.admin_criar_usuario') }}">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="novo_nome">Nome completo *</label>
+                    <input type="text" id="novo_nome" name="nome" required minlength="3">
+                </div>
+                <div class="form-group">
+                    <label for="novo_email">E-mail *</label>
+                    <input type="email" id="novo_email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="novo_telefone">Telefone</label>
+                    <input type="tel" id="novo_telefone" name="telefone">
+                </div>
+                <div class="form-group">
+                    <label for="novo_perfil">Perfil *</label>
+                    <select id="novo_perfil" name="perfil" required>
+                        <option value="usuario">Usuário</option>
+                        <option value="setor">Setor</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="novo_setor">Setor</label>
+                    <select id="novo_setor" name="setor_id">
+                        <option value="">Nenhum</option>
+                        {% for setor in setores %}
+                        <option value="{{ setor.id }}">{{ setor.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="novo_senha">Senha *</label>
+                    <input type="password" id="novo_senha" name="senha" required minlength="6" placeholder="Mínimo 6 caracteres">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalNovoUsuario')">Cancelar</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Criar Usuário</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Usuário -->
+<div class="modal" id="modalEditarUsuario">
+    <div class="modal-overlay" onclick="closeModal('modalEditarUsuario')"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Editar Usuário</h3>
+            <button class="modal-close" onclick="closeModal('modalEditarUsuario')">&times;</button>
+        </div>
+        <form method="POST" id="formEditarUsuario" action="">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_nome">Nome completo</label>
+                    <input type="text" id="edit_nome" name="nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_email">E-mail</label>
+                    <input type="email" id="edit_email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_telefone">Telefone</label>
+                    <input type="tel" id="edit_telefone" name="telefone">
+                </div>
+                <div class="form-group">
+                    <label for="edit_perfil">Perfil</label>
+                    <select id="edit_perfil" name="perfil" required>
+                        <option value="usuario">Usuário</option>
+                        <option value="setor">Setor</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_setor">Setor</label>
+                    <select id="edit_setor" name="setor_id">
+                        <option value="">Nenhum</option>
+                        {% for setor in setores %}
+                        <option value="{{ setor.id }}">{{ setor.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_senha">Nova senha (deixe em branco para manter)</label>
+                    <input type="password" id="edit_senha" name="senha" minlength="6" placeholder="Deixe em branco para não alterar">
+                </div>
+                <div class="form-group form-check">
+                    <input type="checkbox" id="edit_ativo" name="ativo">
+                    <label for="edit_ativo">Usuário ativo</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarUsuario')">Cancelar</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Excluir Usuário -->
+<div class="modal" id="modalExcluirUsuario">
+    <div class="modal-overlay" onclick="closeModal('modalExcluirUsuario')"></div>
+    <div class="modal-content modal-content-small">
+        <div class="modal-header">
+            <h3><i class="fas fa-trash-alt" style="color: var(--danger)"></i> Excluir Usuário</h3>
+            <button class="modal-close" onclick="closeModal('modalExcluirUsuario')">&times;</button>
+        </div>
+        <form method="POST" id="formExcluirUsuario" action="">
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+                <p>Tem certeza que deseja excluir o usuário <strong id="deleteUserName"></strong>?</p>
+                <p class="text-muted">O usuário será desativado e não poderá mais acessar o sistema.</p>
+
+                <div class="form-group" style="margin-top: 16px;">
+                    <label for="senha_confirmacao">Digite sua senha para confirmar:</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="senha_confirmacao" name="senha_confirmacao" required placeholder="Sua senha de administrador">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalExcluirUsuario')">Cancelar</button>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Confirmar Exclusão</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function openEditModal(id, nome, email, telefone, perfil, setorId, ativo) {
+    document.getElementById('formEditarUsuario').action = '/admin/usuarios/' + id + '/editar';
+    document.getElementById('edit_nome').value = nome;
+    document.getElementById('edit_email').value = email;
+    document.getElementById('edit_telefone').value = telefone;
+    document.getElementById('edit_perfil').value = perfil;
+    document.getElementById('edit_setor').value = setorId || '';
+    document.getElementById('edit_ativo').checked = ativo;
+    document.getElementById('edit_senha').value = '';
+    openModal('modalEditarUsuario');
+}
+
+function openDeleteModal(id, nome) {
+    document.getElementById('formExcluirUsuario').action = '/admin/usuarios/' + id + '/excluir';
+    document.getElementById('deleteUserName').textContent = nome;
+    document.getElementById('senha_confirmacao').value = '';
+    openModal('modalExcluirUsuario');
+}
+</script>
+{% endblock %}
