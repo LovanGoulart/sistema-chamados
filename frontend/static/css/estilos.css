@@ -96,7 +96,7 @@ a:hover {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Desktop: sidebar recolhida */
+/* ===== SIDEBAR RECOLHIDA - CONTEÚDO EXPANDE ===== */
 .sidebar.collapsed {
     width: var(--sidebar-collapsed);
 }
@@ -127,6 +127,22 @@ a:hover {
     right: 4px;
     top: 8px;
     transform: none;
+}
+
+/* ===== MAIN CONTENT SE AJUSTA À SIDEBAR ===== */
+.main-content {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    transition: var(--transition);
+}
+
+/* Quando sidebar está recolhida, main-content expande */
+.sidebar.collapsed ~ .main-content {
+    margin-left: var(--sidebar-collapsed);
+}
+
+.main-content.full-width {
+    margin-left: 0;
 }
 
 .sidebar-header {
@@ -311,17 +327,7 @@ a:hover {
     display: block;
 }
 
-/* Main Content */
-.main-content {
-    margin-left: var(--sidebar-width);
-    min-height: 100vh;
-    transition: var(--transition);
-}
-
-.main-content.full-width {
-    margin-left: 0;
-}
-
+/* Topbar */
 .topbar {
     position: sticky;
     top: 0;
@@ -2066,19 +2072,21 @@ a:hover {
     }
 }
 
-/* Mobile (até 768px) */
+/* ===== MOBILE (até 768px) ===== */
 @media (max-width: 768px) {
+    /* Sidebar escondida por padrão no mobile */
     .sidebar {
         transform: translateX(-100%);
         width: var(--sidebar-width);
         box-shadow: var(--shadow-lg);
     }
 
+    /* Sidebar visível quando ativa */
     .sidebar.active {
         transform: translateX(0);
     }
 
-    /* Resetar estilos de collapsed no mobile */
+    /* Resetar estilos de collapsed no mobile - sidebar sempre full no mobile */
     .sidebar.collapsed {
         width: var(--sidebar-width);
     }
@@ -2101,14 +2109,17 @@ a:hover {
         font-size: 1.1rem;
     }
 
+    /* Main content sem margem no mobile */
     .main-content {
-        margin-left: 0;
+        margin-left: 0 !important;
     }
 
+    /* Botão hamburger visível */
     .mobile-menu-btn {
         display: block;
     }
 
+    /* Stats grid 2 colunas no mobile médio */
     .stats-grid,
     .stats-grid-4 {
         grid-template-columns: repeat(2, 1fr);
