@@ -26,18 +26,42 @@ main = Blueprint('main', __name__)
 api = Blueprint('api', __name__, url_prefix='/api')
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# FUNÇÃO AUXILIAR: Prioridade ordenada
+# FUNÇÃO AUXILIAR: Ordenação de chamados
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def get_prioridade_ordem(prioridade):
-    """Retorna a ordem numérica da prioridade para sorting."""
+    """Retorna a ordem numérica da prioridade para sorting.
+
+    Ordem: urgente -> alta -> media -> baixa
+    """
     ordem = {'urgente': 0, 'alta': 1, 'media': 2, 'baixa': 3}
     return ordem.get(prioridade, 99)
 
 
+def get_status_ordem(status):
+    """Retorna a ordem numérica do status para sorting.
+
+    Ordem: aberto -> pendente -> em_andamento -> resolvido -> fechado
+    """
+    ordem = {
+        'aberto': 0,
+        'pendente': 1,
+        'em_andamento': 2,
+        'resolvido': 3,
+        'fechado': 4
+    }
+    return ordem.get(status, 99)
+
+
 def get_chamados_ordenados(query_or_list):
-    """Retorna chamados ordenados por prioridade (urgente -> baixa).
-    Aceita tanto uma Query quanto uma lista já paginada."""
+    """Retorna chamados ordenados por status, prioridade e data.
+
+    Ordenação principal:   Status (aberto -> pendente -> em_andamento -> resolvido -> fechado)
+    Ordenação secundária:  Prioridade (urgente -> alta -> media -> baixa)
+    Ordenação terciária:   Data de criação (mais recente primeiro)
+
+    Aceita tanto uma Query quanto uma lista já paginada.
+    """
     # Se for uma query (não paginada), pegar todos
     if hasattr(query_or_list, 'all'):
         chamados = query_or_list.all()
@@ -48,8 +72,12 @@ def get_chamados_ordenados(query_or_list):
     else:
         chamados = list(query_or_list)
 
-    # Ordenar por prioridade (urgente primeiro) e depois por data
-    chamados.sort(key=lambda c: (get_prioridade_ordem(c.prioridade.value), c.created_at), reverse=False)
+    # Ordenar por status (aberto primeiro), depois prioridade (urgente primeiro), depois data (mais recente)
+    chamados.sort(key=lambda c: (
+        get_status_ordem(c.status.value),
+        get_prioridade_ordem(c.prioridade.value),
+        -c.created_at.timestamp() if c.created_at else 0
+    ), reverse=False)
     return chamados
 
 
@@ -184,7 +212,7 @@ def dashboard():
     estatisticas = ChamadoService.get_estatisticas(current_user)
     chamados_por_mes = ChamadoService.get_chamados_por_mes(current_user, 6)
 
-    # Últimos chamados ordenados por prioridade
+    # Últimos chamados ordenados por status e prioridade
     if current_user.perfil == PerfilUsuario.ADMIN:
         query = Chamado.query
     elif current_user.perfil == PerfilUsuario.SETOR:
@@ -230,7 +258,7 @@ def chamados():
     resultado = ChamadoService.listar_chamados(current_user, filtros, pagina)
     setores = Setor.query.filter_by(ativo=True).order_by(Setor.nome).all()
 
-    # Ordenar por prioridade
+    # Ordenar por status, prioridade e data
     chamados_ordenados = get_chamados_ordenados(resultado)
 
     return render_template('chamados.html',
@@ -563,7 +591,7 @@ def relatorios():
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# ROTAS PROTEGIDAS - ADMINISTRAÇÃO
+# ROTAS PROTEGIDAS - ADMINISTRAÇÃO (USUÁRIOS - CORRIGIDO)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @main.route('/admin/usuarios')
@@ -582,10 +610,8 @@ def admin_usuarios():
     pagina = request.args.get('page', 1, type=int)
     busca = request.args.get('busca', '')
 
-    # Query base
     query = Usuario.query
 
-    # Filtro de busca
     if busca:
         query = query.filter(
             db.or_(
@@ -594,7 +620,6 @@ def admin_usuarios():
             )
         )
 
-    # ORDENAÇÃO: ativo DESC (ativos primeiro), depois created_at DESC (mais novos no topo)
     usuarios = query.order_by(Usuario.ativo.desc(), Usuario.created_at.desc()).paginate(
         page=pagina, per_page=10, error_out=False
     )
@@ -628,13 +653,11 @@ def admin_criar_usuario():
         'setor_id': request.form.get('setor_id', type=int)
     }
 
-    # Validação: perfil 'setor' OBRIGA seleção de setor
     if perfil == 'setor':
         if not dados['setor_id']:
             flash('Para perfil "Setor", é obrigatório selecionar um setor de trabalho.', 'error')
             return redirect(url_for('main.admin_usuarios'))
 
-    # Perfil 'usuario' ou 'admin': garantir que setor_id seja None
     if perfil in ('usuario', 'admin'):
         dados['setor_id'] = None
 
@@ -655,7 +678,6 @@ def admin_editar_usuario(usuario_id):
         flash('Acesso restrito.', 'error')
         return redirect(url_for('main.dashboard'))
 
-    # Não permitir editar a si mesmo via esta rota
     if usuario_id == current_user.id:
         flash('Use a página de perfil para editar seus próprios dados.', 'warning')
         return redirect(url_for('main.admin_usuarios'))
@@ -671,13 +693,11 @@ def admin_editar_usuario(usuario_id):
         'ativo': request.form.get('ativo') == 'on'
     }
 
-    # Validação: perfil 'setor' OBRIGA seleção de setor
     if perfil == 'setor':
         if not dados['setor_id']:
             flash('Para perfil "Setor", é obrigatório selecionar um setor de trabalho.', 'error')
             return redirect(url_for('main.admin_usuarios'))
 
-    # Perfil 'usuario' ou 'admin': garantir que setor_id seja None
     if perfil in ('usuario', 'admin'):
         dados['setor_id'] = None
 
@@ -694,15 +714,22 @@ def admin_editar_usuario(usuario_id):
     return redirect(url_for('main.admin_usuarios'))
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# DESATIVAR / REATIVAR (apenas muda o campo 'ativo' - reversível)
+# ═══════════════════════════════════════════════════════════════════════════════
 @main.route('/admin/usuarios/<int:usuario_id>/toggle-status', methods=['POST'])
 @login_required
 def admin_toggle_status_usuario(usuario_id):
-    """Alterna o status ativo/inativo de um usuário rapidamente (apenas admin)."""
+    """Alterna o status ativo/inativo de um usuário (apenas admin).
+
+    Esta rota APENAS muda o campo 'ativo' do usuário.
+    NÃO remove o usuário do banco.
+    O usuário pode ser reativado posteriormente.
+    """
     if not current_user.is_admin():
         flash('Acesso restrito.', 'error')
         return redirect(url_for('main.dashboard'))
 
-    # Não permitir desativar a si mesmo
     if usuario_id == current_user.id:
         flash('Você não pode alterar seu próprio status.', 'error')
         return redirect(url_for('main.admin_usuarios'))
@@ -720,7 +747,6 @@ def admin_toggle_status_usuario(usuario_id):
             return redirect(url_for('main.admin_usuarios'))
 
     try:
-        # Inverte o status atual
         usuario.ativo = not usuario.ativo
         db.session.commit()
 
@@ -743,15 +769,21 @@ def admin_toggle_status_usuario(usuario_id):
     return redirect(url_for('main.admin_usuarios'))
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# EXCLUIR PERMANENTEMENTE (DELETE do banco - IRREVERSÍVEL)
+# ═══════════════════════════════════════════════════════════════════════════════
 @main.route('/admin/usuarios/<int:usuario_id>/excluir', methods=['POST'])
 @login_required
 def admin_excluir_usuario(usuario_id):
-    """Exclui/desativa um usuário com confirmação de senha (apenas admin)."""
+    """Exclui um usuário PERMANENTEMENTE do banco de dados (apenas admin).
+
+    ATENÇÃO: Esta ação é IRREVERSÍVEL. O usuário é completamente removido.
+    Requer confirmação de senha do administrador.
+    """
     if not current_user.is_admin():
         flash('Acesso restrito.', 'error')
         return redirect(url_for('main.dashboard'))
 
-    # Não permitir excluir a si mesmo
     if usuario_id == current_user.id:
         flash('Você não pode excluir seu próprio usuário.', 'error')
         return redirect(url_for('main.admin_usuarios'))
@@ -775,22 +807,24 @@ def admin_excluir_usuario(usuario_id):
             return redirect(url_for('main.admin_usuarios'))
 
     try:
-        # Soft delete: desativa o usuário ao invés de deletar
-        usuario.ativo = False
+        nome_usuario = usuario.nome
+
+        # EXCLUSÃO PERMANENTE do banco de dados
+        db.session.delete(usuario)
         db.session.commit()
 
         registrar_log(
             current_user.id, 
-            'excluir', 
+            'excluir_permanente', 
             'usuario', 
-            usuario.id,
-            f'Usuário {usuario.nome} desativado (exclusão solicitada)'
+            usuario_id,
+            f'Usuário {nome_usuario} excluído permanentemente do banco de dados'
         )
 
-        flash(f'Usuário {usuario.nome} desativado com sucesso!', 'success')
+        flash(f'Usuário {nome_usuario} excluído permanentemente!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Erro ao desativar usuário: {str(e)}', 'error')
+        flash(f'Erro ao excluir usuário: {str(e)}', 'error')
 
     return redirect(url_for('main.admin_usuarios'))
 

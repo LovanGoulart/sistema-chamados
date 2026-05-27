@@ -62,7 +62,7 @@
                             <td colspan="9">
                                 <div class="separator-content">
                                     <i class="fas fa-ban"></i>
-                                    <span>Usuários Inativos / Excluídos</span>
+                                    <span>Usuários Inativos</span>
                                     <div class="separator-line"></div>
                                 </div>
                             </td>
@@ -106,7 +106,7 @@
                                     {% if usuario.ativo %}
                                     <button class="btn btn-sm btn-warning" 
                                         onclick="openToggleStatusModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}', false)" 
-                                        title="Desativar usuário">
+                                        title="Desativar usuário (pode reativar depois)">
                                         <i class="fas fa-user-slash"></i>
                                     </button>
                                     {% else %}
@@ -122,11 +122,11 @@
                                     </button>
                                 {% endif %}
 
-                                <!-- EXCLUIR -->
+                                <!-- EXCLUIR PERMANENTE -->
                                 {% if usuario.id != current_user.id %}
                                 <button class="btn btn-sm btn-danger" 
                                     onclick="openDeleteModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}')" 
-                                    title="Excluir usuário permanentemente">
+                                    title="Excluir PERMANENTEMENTE (não pode desfazer!)">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                                 {% else %}
@@ -172,9 +172,7 @@
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
-<!-- MODAL NOVO USUÁRIO                                                    -->
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL NOVO USUÁRIO -->
 <div class="modal" id="modalNovoUsuario">
     <div class="modal-overlay" onclick="closeModal('modalNovoUsuario')"></div>
     <div class="modal-content">
@@ -228,9 +226,7 @@
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
-<!-- MODAL EDITAR USUÁRIO                                                  -->
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL EDITAR USUÁRIO -->
 <div class="modal" id="modalEditarUsuario">
     <div class="modal-overlay" onclick="closeModal('modalEditarUsuario')"></div>
     <div class="modal-content">
@@ -288,9 +284,7 @@
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
-<!-- MODAL DESATIVAR / REATIVAR USUÁRIO                                    -->
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL DESATIVAR / REATIVAR USUÁRIO -->
 <div class="modal" id="modalToggleStatus">
     <div class="modal-overlay" onclick="closeModal('modalToggleStatus')"></div>
     <div class="modal-content modal-content-small">
@@ -305,6 +299,10 @@
                     <span id="toggleStatusMessage"></span>
                 </div>
                 <p id="toggleStatusDescription"></p>
+                <p class="text-muted" style="margin-top: 8px; font-size: 0.9em;">
+                    <i class="fas fa-info-circle"></i> 
+                    Esta ação pode ser desfeita reativando o usuário posteriormente.
+                </p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline" onclick="closeModal('modalToggleStatus')">Cancelar</button>
@@ -316,27 +314,34 @@
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
-<!-- MODAL EXCLUIR USUÁRIO                                                 -->
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL EXCLUIR USUÁRIO PERMANENTEMENTE -->
 <div class="modal" id="modalExcluirUsuario">
     <div class="modal-overlay" onclick="closeModal('modalExcluirUsuario')"></div>
-    <div class="modal-content modal-content-small">
+    <div class="modal-content modal-content-small" style="border-top: 4px solid #dc3545;">
         <div class="modal-header">
-            <h3><i class="fas fa-trash-alt" style="color: var(--danger)"></i> Excluir Usuário</h3>
+            <h3><i class="fas fa-trash-alt" style="color: #dc3545"></i> Excluir Permanentemente</h3>
             <button class="modal-close" onclick="closeModal('modalExcluirUsuario')">&times;</button>
         </div>
         <form method="POST" id="formExcluirUsuario" action="">
             <div class="modal-body">
-                <div class="alert alert-danger">
+                <div class="alert alert-danger" style="background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                    <strong>ATENÇÃO!</strong> Esta ação é <strong>IRREVERSÍVEL</strong>.
                 </div>
-                <p>Tem certeza que deseja excluir permanentemente o usuário <strong id="deleteUserName"></strong>?</p>
-                <p class="text-muted">Todos os dados do usuário serão preservados, mas ele não poderá mais acessar o sistema.</p>
+                <p>Você está prestes a <strong>EXCLUIR PERMANENTEMENTE</strong> o usuário <strong id="deleteUserName"></strong> do banco de dados.</p>
+
+                <div class="delete-consequences" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin: 12px 0; border-radius: 4px;">
+                    <p style="margin: 0; font-weight: 600; color: #856404;"><i class="fas fa-skull-crossbones"></i> Consequências:</p>
+                    <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #856404; font-size: 0.95em;">
+                        <li>O usuário será <strong>completamente removido</strong></li>
+                        <li>Chamados criados por ele ficarão <strong>sem autor</strong></li>
+                        <li>Mensagens e logs podem ficar com <strong>referências quebradas</strong></li>
+                        <li><strong>NÃO é possível desfazer</strong> esta ação</li>
+                    </ul>
+                </div>
 
                 <div class="form-group" style="margin-top: 16px;">
-                    <label for="senha_confirmacao">Digite sua senha para confirmar:</label>
+                    <label for="senha_confirmacao">Digite sua senha de administrador para confirmar:</label>
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
                         <input type="password" id="senha_confirmacao" name="senha_confirmacao" required placeholder="Sua senha de administrador">
@@ -345,7 +350,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline" onclick="closeModal('modalExcluirUsuario')">Cancelar</button>
-                <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Confirmar Exclusão</button>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Sim, Excluir Permanentemente</button>
             </div>
         </form>
     </div>
@@ -414,7 +419,7 @@ function openToggleStatusModal(id, nome, ativar) {
         title.innerHTML = '<i class="fas fa-user-slash" style="color: #ffc107"></i> Desativar Usuário';
         alertBox.className = 'alert alert-warning';
         message.textContent = ' Você está prestes a desativar um usuário.';
-        description.innerHTML = 'O usuário <strong>' + nome + '</strong> não poderá mais acessar o sistema, mas seus dados e chamados serão preservados.';
+        description.innerHTML = 'O usuário <strong>' + nome + '</strong> não poderá mais acessar o sistema, mas seus dados e chamados serão preservados. Você pode reativá-lo depois.';
         btn.className = 'btn btn-warning';
         btn.innerHTML = '<i class="fas fa-user-slash"></i> Desativar Usuário';
     }
