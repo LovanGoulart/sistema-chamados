@@ -50,31 +50,6 @@
             </div>
         </div>
     </div>
-        <!-- Gráfico por prioridade -->
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="fas fa-exclamation-triangle"></i> Chamados por Prioridade</h3>
-        </div>
-        <div class="card-body">
-            <div class="prioridade-bars">
-                {% for prioridade, quantidade in estatisticas.por_prioridade.items() %}
-                <div class="prioridade-bar-item">
-                    <div class="prioridade-bar-header">
-                        <span class="prioridade-label">
-                            <span class="badge-prioridade" style="background: {{ get_prioridade_cor(prioridade) }}">
-                                {{ get_prioridade_label(prioridade) }}
-                            </span>
-                        </span>
-                        <span class="prioridade-count">{{ quantidade }}</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: {{ (quantidade / estatisticas.total * 100) if estatisticas.total > 0 else 0 }}%; background: {{ get_prioridade_cor(prioridade) }}"></div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
     <!-- Últimos chamados -->
     <div class="card">
         <div class="card-header">
@@ -146,6 +121,31 @@
                 </a>
             </div>
             {% endif %}
+        </div>
+    </div>
+            <!-- Gráfico por prioridade -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> Chamados por Prioridade</h3>
+        </div>
+        <div class="card-body">
+            <div class="prioridade-bars">
+                {% for prioridade, quantidade in estatisticas.por_prioridade.items() %}
+                <div class="prioridade-bar-item">
+                    <div class="prioridade-bar-header">
+                        <span class="prioridade-label">
+                            <span class="badge-prioridade" style="background: {{ get_prioridade_cor(prioridade) }}">
+                                {{ get_prioridade_label(prioridade) }}
+                            </span>
+                        </span>
+                        <span class="prioridade-count">{{ quantidade }}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ (quantidade / estatisticas.total * 100) if estatisticas.total > 0 else 0 }}%; background: {{ get_prioridade_cor(prioridade) }}"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
     <!-- Gráficos e tabelas -->

@@ -569,7 +569,12 @@ def relatorios():
 @main.route('/admin/usuarios')
 @login_required
 def admin_usuarios():
-    """Gerenciamento de usuários (apenas admin)."""
+    """Gerenciamento de usuários (apenas admin).
+
+    Ordenação:
+      - Ativos primeiro (mais recentes no topo)
+      - Inativos depois (mais recentes no topo)
+    """
     if not current_user.is_admin():
         flash('Acesso restrito a administradores.', 'error')
         return redirect(url_for('main.dashboard'))
@@ -577,7 +582,10 @@ def admin_usuarios():
     pagina = request.args.get('page', 1, type=int)
     busca = request.args.get('busca', '')
 
+    # Query base
     query = Usuario.query
+
+    # Filtro de busca
     if busca:
         query = query.filter(
             db.or_(
@@ -586,7 +594,11 @@ def admin_usuarios():
             )
         )
 
-    usuarios = query.order_by(Usuario.nome).paginate(page=pagina, per_page=10, error_out=False)
+    # ORDENAÇÃO: ativo DESC (ativos primeiro), depois created_at DESC (mais novos no topo)
+    usuarios = query.order_by(Usuario.ativo.desc(), Usuario.created_at.desc()).paginate(
+        page=pagina, per_page=10, error_out=False
+    )
+
     setores = Setor.query.filter_by(ativo=True).order_by(Setor.nome).all()
 
     return render_template('admin_usuarios.html', 
@@ -605,14 +617,26 @@ def admin_criar_usuario():
         flash('Acesso restrito.', 'error')
         return redirect(url_for('main.dashboard'))
 
+    perfil = request.form.get('perfil', 'usuario')
+
     dados = {
         'nome': request.form.get('nome', '').strip(),
         'email': request.form.get('email', '').strip(),
         'telefone': request.form.get('telefone', '').strip(),
         'senha': request.form.get('senha', ''),
-        'perfil': request.form.get('perfil', 'usuario'),
+        'perfil': perfil,
         'setor_id': request.form.get('setor_id', type=int)
     }
+
+    # Validação: perfil 'setor' OBRIGA seleção de setor
+    if perfil == 'setor':
+        if not dados['setor_id']:
+            flash('Para perfil "Setor", é obrigatório selecionar um setor de trabalho.', 'error')
+            return redirect(url_for('main.admin_usuarios'))
+
+    # Perfil 'usuario' ou 'admin': garantir que setor_id seja None
+    if perfil in ('usuario', 'admin'):
+        dados['setor_id'] = None
 
     try:
         UsuarioService.criar_usuario(dados)
@@ -631,14 +655,31 @@ def admin_editar_usuario(usuario_id):
         flash('Acesso restrito.', 'error')
         return redirect(url_for('main.dashboard'))
 
+    # Não permitir editar a si mesmo via esta rota
+    if usuario_id == current_user.id:
+        flash('Use a página de perfil para editar seus próprios dados.', 'warning')
+        return redirect(url_for('main.admin_usuarios'))
+
+    perfil = request.form.get('perfil')
+
     dados = {
         'nome': request.form.get('nome', '').strip(),
         'email': request.form.get('email', '').strip(),
         'telefone': request.form.get('telefone', '').strip(),
-        'perfil': request.form.get('perfil'),
+        'perfil': perfil,
         'setor_id': request.form.get('setor_id', type=int),
         'ativo': request.form.get('ativo') == 'on'
     }
+
+    # Validação: perfil 'setor' OBRIGA seleção de setor
+    if perfil == 'setor':
+        if not dados['setor_id']:
+            flash('Para perfil "Setor", é obrigatório selecionar um setor de trabalho.', 'error')
+            return redirect(url_for('main.admin_usuarios'))
+
+    # Perfil 'usuario' ou 'admin': garantir que setor_id seja None
+    if perfil in ('usuario', 'admin'):
+        dados['setor_id'] = None
 
     senha = request.form.get('senha', '')
     if senha:
@@ -649,6 +690,107 @@ def admin_editar_usuario(usuario_id):
         flash('Usuário atualizado com sucesso!', 'success')
     except Exception as e:
         flash(f'Erro ao atualizar usuário: {str(e)}', 'error')
+
+    return redirect(url_for('main.admin_usuarios'))
+
+
+@main.route('/admin/usuarios/<int:usuario_id>/toggle-status', methods=['POST'])
+@login_required
+def admin_toggle_status_usuario(usuario_id):
+    """Alterna o status ativo/inativo de um usuário rapidamente (apenas admin)."""
+    if not current_user.is_admin():
+        flash('Acesso restrito.', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    # Não permitir desativar a si mesmo
+    if usuario_id == current_user.id:
+        flash('Você não pode alterar seu próprio status.', 'error')
+        return redirect(url_for('main.admin_usuarios'))
+
+    usuario = Usuario.query.get_or_404(usuario_id)
+
+    # Impedir desativação do último admin ativo
+    if usuario.perfil == PerfilUsuario.ADMIN and usuario.ativo:
+        total_admins_ativos = Usuario.query.filter_by(
+            perfil=PerfilUsuario.ADMIN, 
+            ativo=True
+        ).count()
+        if total_admins_ativos <= 1:
+            flash('Não é possível desativar o único administrador ativo.', 'error')
+            return redirect(url_for('main.admin_usuarios'))
+
+    try:
+        # Inverte o status atual
+        usuario.ativo = not usuario.ativo
+        db.session.commit()
+
+        acao = 'reativar' if usuario.ativo else 'desativar'
+        status_msg = 'reativado' if usuario.ativo else 'desativado'
+
+        registrar_log(
+            current_user.id, 
+            acao, 
+            'usuario', 
+            usuario.id,
+            f'Usuário {usuario.nome} {status_msg}'
+        )
+
+        flash(f'Usuário {usuario.nome} {status_msg} com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao alterar status do usuário: {str(e)}', 'error')
+
+    return redirect(url_for('main.admin_usuarios'))
+
+
+@main.route('/admin/usuarios/<int:usuario_id>/excluir', methods=['POST'])
+@login_required
+def admin_excluir_usuario(usuario_id):
+    """Exclui/desativa um usuário com confirmação de senha (apenas admin)."""
+    if not current_user.is_admin():
+        flash('Acesso restrito.', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    # Não permitir excluir a si mesmo
+    if usuario_id == current_user.id:
+        flash('Você não pode excluir seu próprio usuário.', 'error')
+        return redirect(url_for('main.admin_usuarios'))
+
+    usuario = Usuario.query.get_or_404(usuario_id)
+
+    # Verificar senha do administrador para confirmação
+    senha_confirmacao = request.form.get('senha_confirmacao', '')
+    if not current_user.check_senha(senha_confirmacao):
+        flash('Senha de confirmação incorreta.', 'error')
+        return redirect(url_for('main.admin_usuarios'))
+
+    # Impedir exclusão do último admin
+    if usuario.perfil == PerfilUsuario.ADMIN:
+        total_admins = Usuario.query.filter_by(
+            perfil=PerfilUsuario.ADMIN, 
+            ativo=True
+        ).count()
+        if total_admins <= 1:
+            flash('Não é possível excluir o único administrador ativo.', 'error')
+            return redirect(url_for('main.admin_usuarios'))
+
+    try:
+        # Soft delete: desativa o usuário ao invés de deletar
+        usuario.ativo = False
+        db.session.commit()
+
+        registrar_log(
+            current_user.id, 
+            'excluir', 
+            'usuario', 
+            usuario.id,
+            f'Usuário {usuario.nome} desativado (exclusão solicitada)'
+        )
+
+        flash(f'Usuário {usuario.nome} desativado com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao desativar usuário: {str(e)}', 'error')
 
     return redirect(url_for('main.admin_usuarios'))
 

@@ -7,7 +7,7 @@
 <div class="page-header">
     <div class="page-header-left">
         <h2><i class="fas fa-users"></i> Gerenciar Usuários</h2>
-        <p class="page-subtitle">Cadastre, edite e exclua usuários do sistema</p>
+        <p class="page-subtitle">Cadastre, edite e gerencie usuários do sistema</p>
     </div>
     <div class="page-header-right">
         <button class="btn btn-primary" onclick="openModal('modalNovoUsuario')">
@@ -48,16 +48,32 @@
                         <th>Setor</th>
                         <th>Status</th>
                         <th>Cadastro</th>
-                        <th>Ações</th>
+                        <th style="text-align: center; white-space: nowrap;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% set mostrou_separador = false %}
                     {% for usuario in usuarios.items %}
-                    <tr>
+
+                    {# SEPARADOR VISUAL: quando o primeiro inativo aparece #}
+                    {% if not usuario.ativo and not mostrou_separador %}
+                        {% set mostrou_separador = true %}
+                        <tr class="row-separator">
+                            <td colspan="9">
+                                <div class="separator-content">
+                                    <i class="fas fa-ban"></i>
+                                    <span>Usuários Inativos / Excluídos</span>
+                                    <div class="separator-line"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+
+                    <tr class="{{ 'row-inactive' if not usuario.ativo else '' }}">
                         <td>{{ usuario.id }}</td>
                         <td>
                             <div class="user-cell">
-                                <div class="user-avatar-small">{{ usuario.nome[0]|upper }}</div>
+                                <div class="user-avatar-small {{ 'avatar-inactive' if not usuario.ativo else '' }}">{{ usuario.nome[0]|upper }}</div>
                                 <span>{{ usuario.nome }}</span>
                             </div>
                         </td>
@@ -67,20 +83,57 @@
                         <td>{{ usuario.setor.nome if usuario.setor else '-' }}</td>
                         <td>
                             {% if usuario.ativo %}
-                            <span class="badge-status" style="background: #28a745">Ativo</span>
+                            <span class="badge-status" style="background: #28a745"><i class="fas fa-check-circle"></i> Ativo</span>
                             {% else %}
-                            <span class="badge-status" style="background: #dc3545">Inativo</span>
+                            <span class="badge-status" style="background: #6c757d"><i class="fas fa-ban"></i> Inativo</span>
                             {% endif %}
                         </td>
-                        <td>{{ formatar_data(usuario.created_at) }}</td>
+                        <td>
+                            {{ formatar_data(usuario.created_at) }}
+                            <br><small class="text-muted">{{ formatar_data_curta(usuario.created_at) }}</small>
+                        </td>
                         <td>
                             <div class="table-actions">
-                                <button class="btn btn-sm btn-outline" onclick="openEditModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}', '{{ usuario.email }}', '{{ usuario.telefone or '' }}', '{{ usuario.perfil.value }}', {{ usuario.setor_id or 'null' }}, {{ 'true' if usuario.ativo else 'false' }})" title="Editar">
+                                <!-- EDITAR -->
+                                <button class="btn btn-sm btn-outline" 
+                                    onclick="openEditModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}', '{{ usuario.email }}', '{{ usuario.telefone or '' }}', '{{ usuario.perfil.value }}', {{ usuario.setor_id or 'null' }}, {{ 'true' if usuario.ativo else 'false' }})" 
+                                    title="Editar usuário">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-sm btn-danger" onclick="openDeleteModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}')" title="Excluir">
+
+                                <!-- DESATIVAR / REATIVAR -->
+                                {% if usuario.id != current_user.id %}
+                                    {% if usuario.ativo %}
+                                    <button class="btn btn-sm btn-warning" 
+                                        onclick="openToggleStatusModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}', false)" 
+                                        title="Desativar usuário">
+                                        <i class="fas fa-user-slash"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-success" 
+                                        onclick="openToggleStatusModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}', true)" 
+                                        title="Reativar usuário">
+                                        <i class="fas fa-user-check"></i>
+                                    </button>
+                                    {% endif %}
+                                {% else %}
+                                    <button class="btn btn-sm btn-disabled" disabled title="Não pode alterar seu próprio status">
+                                        <i class="fas fa-lock"></i>
+                                    </button>
+                                {% endif %}
+
+                                <!-- EXCLUIR -->
+                                {% if usuario.id != current_user.id %}
+                                <button class="btn btn-sm btn-danger" 
+                                    onclick="openDeleteModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}')" 
+                                    title="Excluir usuário permanentemente">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
+                                {% else %}
+                                    <button class="btn btn-sm btn-disabled" disabled title="Não pode excluir a si mesmo">
+                                        <i class="fas fa-lock"></i>
+                                    </button>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -119,7 +172,9 @@
     </div>
 </div>
 
-<!-- Modal Novo Usuário -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL NOVO USUÁRIO                                                    -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
 <div class="modal" id="modalNovoUsuario">
     <div class="modal-overlay" onclick="closeModal('modalNovoUsuario')"></div>
     <div class="modal-content">
@@ -127,7 +182,7 @@
             <h3><i class="fas fa-user-plus"></i> Novo Usuário</h3>
             <button class="modal-close" onclick="closeModal('modalNovoUsuario')">&times;</button>
         </div>
-        <form method="POST" action="{{ url_for('main.admin_criar_usuario') }}">
+        <form method="POST" action="{{ url_for('main.admin_criar_usuario') }}" id="formNovoUsuario">
             <div class="modal-body">
                 <div class="form-group">
                     <label for="novo_nome">Nome completo *</label>
@@ -143,20 +198,22 @@
                 </div>
                 <div class="form-group">
                     <label for="novo_perfil">Perfil *</label>
-                    <select id="novo_perfil" name="perfil" required>
+                    <select id="novo_perfil" name="perfil" required onchange="toggleSetorField('novo')">
+                        <option value="">Selecione um perfil...</option>
                         <option value="usuario">Usuário</option>
                         <option value="setor">Setor</option>
                         <option value="admin">Administrador</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="novo_setor">Setor</label>
+                <div class="form-group" id="novo_setor_group" style="display: none;">
+                    <label for="novo_setor">Setor *</label>
                     <select id="novo_setor" name="setor_id">
-                        <option value="">Nenhum</option>
+                        <option value="">Selecione um setor...</option>
                         {% for setor in setores %}
                         <option value="{{ setor.id }}">{{ setor.nome }}</option>
                         {% endfor %}
                     </select>
+                    <small class="form-help">Obrigatório para perfis de Setor. Todos os chamados direcionados a este setor serão visíveis para este usuário.</small>
                 </div>
                 <div class="form-group">
                     <label for="novo_senha">Senha *</label>
@@ -171,7 +228,9 @@
     </div>
 </div>
 
-<!-- Modal Editar Usuário -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL EDITAR USUÁRIO                                                  -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
 <div class="modal" id="modalEditarUsuario">
     <div class="modal-overlay" onclick="closeModal('modalEditarUsuario')"></div>
     <div class="modal-content">
@@ -195,20 +254,22 @@
                 </div>
                 <div class="form-group">
                     <label for="edit_perfil">Perfil</label>
-                    <select id="edit_perfil" name="perfil" required>
+                    <select id="edit_perfil" name="perfil" required onchange="toggleSetorField('edit')">
+                        <option value="">Selecione um perfil...</option>
                         <option value="usuario">Usuário</option>
                         <option value="setor">Setor</option>
                         <option value="admin">Administrador</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="edit_setor">Setor</label>
+                <div class="form-group" id="edit_setor_group" style="display: none;">
+                    <label for="edit_setor">Setor *</label>
                     <select id="edit_setor" name="setor_id">
-                        <option value="">Nenhum</option>
+                        <option value="">Selecione um setor...</option>
                         {% for setor in setores %}
                         <option value="{{ setor.id }}">{{ setor.nome }}</option>
                         {% endfor %}
                     </select>
+                    <small class="form-help">Obrigatório para perfis de Setor. Todos os chamados direcionados a este setor serão visíveis para este usuário.</small>
                 </div>
                 <div class="form-group">
                     <label for="edit_senha">Nova senha (deixe em branco para manter)</label>
@@ -227,7 +288,37 @@
     </div>
 </div>
 
-<!-- Modal Excluir Usuário -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL DESATIVAR / REATIVAR USUÁRIO                                    -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="modal" id="modalToggleStatus">
+    <div class="modal-overlay" onclick="closeModal('modalToggleStatus')"></div>
+    <div class="modal-content modal-content-small">
+        <div class="modal-header">
+            <h3 id="toggleStatusTitle"><i class="fas fa-user-cog"></i> Alterar Status</h3>
+            <button class="modal-close" onclick="closeModal('modalToggleStatus')">&times;</button>
+        </div>
+        <form method="POST" id="formToggleStatus" action="">
+            <div class="modal-body">
+                <div class="alert" id="toggleStatusAlert">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="toggleStatusMessage"></span>
+                </div>
+                <p id="toggleStatusDescription"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalToggleStatus')">Cancelar</button>
+                <button type="submit" class="btn" id="toggleStatusBtn">
+                    <i class="fas fa-check"></i> Confirmar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL EXCLUIR USUÁRIO                                                 -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
 <div class="modal" id="modalExcluirUsuario">
     <div class="modal-overlay" onclick="closeModal('modalExcluirUsuario')"></div>
     <div class="modal-content modal-content-small">
@@ -241,8 +332,8 @@
                     <i class="fas fa-exclamation-triangle"></i>
                     <strong>Atenção!</strong> Esta ação não pode ser desfeita.
                 </div>
-                <p>Tem certeza que deseja excluir o usuário <strong id="deleteUserName"></strong>?</p>
-                <p class="text-muted">O usuário será desativado e não poderá mais acessar o sistema.</p>
+                <p>Tem certeza que deseja excluir permanentemente o usuário <strong id="deleteUserName"></strong>?</p>
+                <p class="text-muted">Todos os dados do usuário serão preservados, mas ele não poderá mais acessar o sistema.</p>
 
                 <div class="form-group" style="margin-top: 16px;">
                     <label for="senha_confirmacao">Digite sua senha para confirmar:</label>
@@ -273,6 +364,22 @@ function closeModal(id) {
     document.body.style.overflow = '';
 }
 
+function toggleSetorField(prefix) {
+    const perfilSelect = document.getElementById(prefix + '_perfil');
+    const setorGroup = document.getElementById(prefix + '_setor_group');
+    const setorSelect = document.getElementById(prefix + '_setor');
+    const perfil = perfilSelect.value;
+
+    if (perfil === 'setor') {
+        setorGroup.style.display = 'block';
+        setorSelect.required = true;
+    } else {
+        setorGroup.style.display = 'none';
+        setorSelect.required = false;
+        setorSelect.value = '';
+    }
+}
+
 function openEditModal(id, nome, email, telefone, perfil, setorId, ativo) {
     document.getElementById('formEditarUsuario').action = '/admin/usuarios/' + id + '/editar';
     document.getElementById('edit_nome').value = nome;
@@ -282,7 +389,37 @@ function openEditModal(id, nome, email, telefone, perfil, setorId, ativo) {
     document.getElementById('edit_setor').value = setorId || '';
     document.getElementById('edit_ativo').checked = ativo;
     document.getElementById('edit_senha').value = '';
+    toggleSetorField('edit');
     openModal('modalEditarUsuario');
+}
+
+function openToggleStatusModal(id, nome, ativar) {
+    const form = document.getElementById('formToggleStatus');
+    const title = document.getElementById('toggleStatusTitle');
+    const alertBox = document.getElementById('toggleStatusAlert');
+    const message = document.getElementById('toggleStatusMessage');
+    const description = document.getElementById('toggleStatusDescription');
+    const btn = document.getElementById('toggleStatusBtn');
+
+    form.action = '/admin/usuarios/' + id + '/toggle-status';
+
+    if (ativar) {
+        title.innerHTML = '<i class="fas fa-user-check" style="color: #28a745"></i> Reativar Usuário';
+        alertBox.className = 'alert alert-success';
+        message.textContent = ' Você está prestes a reativar um usuário.';
+        description.innerHTML = 'O usuário <strong>' + nome + '</strong> poderá acessar o sistema novamente e visualizar seus chamados.';
+        btn.className = 'btn btn-success';
+        btn.innerHTML = '<i class="fas fa-user-check"></i> Reativar Usuário';
+    } else {
+        title.innerHTML = '<i class="fas fa-user-slash" style="color: #ffc107"></i> Desativar Usuário';
+        alertBox.className = 'alert alert-warning';
+        message.textContent = ' Você está prestes a desativar um usuário.';
+        description.innerHTML = 'O usuário <strong>' + nome + '</strong> não poderá mais acessar o sistema, mas seus dados e chamados serão preservados.';
+        btn.className = 'btn btn-warning';
+        btn.innerHTML = '<i class="fas fa-user-slash"></i> Desativar Usuário';
+    }
+
+    openModal('modalToggleStatus');
 }
 
 function openDeleteModal(id, nome) {
@@ -291,5 +428,9 @@ function openDeleteModal(id, nome) {
     document.getElementById('senha_confirmacao').value = '';
     openModal('modalExcluirUsuario');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    toggleSetorField('novo');
+});
 </script>
 {% endblock %}

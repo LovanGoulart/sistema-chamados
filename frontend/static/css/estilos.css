@@ -2364,3 +2364,251 @@ a:hover {
     background: rgba(244, 108, 108, 0.2);
     color: var(--accent);
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ESTILOS ADICIONAIS PARA GESTÃO DE USUÁRIOS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Linha de usuário inativo na tabela */
+.row-inactive {
+    opacity: 0.6;
+    background-color: #f8f9fa;
+}
+
+.row-inactive td {
+    text-decoration: none;
+    color: #6c757d;
+}
+
+/* Avatar inativo */
+.avatar-inactive {
+    background-color: #adb5bd !important;
+    opacity: 0.7;
+}
+
+/* Botão desabilitado na tabela de ações */
+.btn-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Botão de desativar (amarelo/laranja) */
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+    border: 1px solid #ffc107;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+}
+
+/* Botão de reativar (verde) */
+.btn-success {
+    background-color: #28a745;
+    color: #fff;
+    border: 1px solid #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+/* Alertas do modal de toggle status */
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* Texto de ajuda do formulário */
+.form-help {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.85em;
+    color: #6c757d;
+}
+
+/* Ações da tabela - espaçamento */
+.table-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.table-actions .btn-sm {
+    padding: 4px 8px;
+    font-size: 0.85em;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ESTILOS PARA ORDENAÇÃO DE USUÁRIOS (Ativos → Inativos)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Separador visual entre ativos e inativos ─── */
+.row-separator {
+    background-color: #f8f9fa !important;
+    pointer-events: none;
+}
+
+.row-separator td {
+    padding: 12px 16px !important;
+    border-top: 2px solid #dee2e6;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.separator-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 0.95em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.separator-content i {
+    font-size: 1.1em;
+}
+
+.separator-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, #dee2e6, transparent);
+    margin-left: 10px;
+}
+
+/* ─── Linha de usuário inativo ─── */
+.row-inactive {
+    opacity: 0.65;
+    background-color: #f8f9fa;
+}
+
+.row-inactive:hover {
+    opacity: 0.85;
+}
+
+.row-inactive td {
+    color: #6c757d;
+}
+
+/* ─── Avatar inativo ─── */
+.avatar-inactive {
+    background-color: #adb5bd !important;
+    opacity: 0.7;
+}
+
+/* ─── Badge "Novo" para usuários recentes ─── */
+.badge-novo {
+    display: inline-block;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    font-size: 0.65em;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 8px;
+    animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* ─── Botão desabilitado ─── */
+.btn-disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+    color: #6c757d;
+}
+
+/* ─── Botão de desativar (amarelo) ─── */
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+    border: 1px solid #ffc107;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+}
+
+/* ─── Botão de reativar (verde) ─── */
+.btn-success {
+    background-color: #28a745;
+    color: #fff;
+    border: 1px solid #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+/* ─── Alertas do modal de toggle status ─── */
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+/* ─── Texto de ajuda do formulário ─── */
+.form-help {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.85em;
+    color: #6c757d;
+}
+
+/* ─── Ações da tabela ─── */
+.table-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.table-actions .btn-sm {
+    padding: 4px 8px;
+    font-size: 0.85em;
+}
+
+/* ─── Texto muted ─── */
+.text-muted {
+    color: #6c757d;
+    font-size: 0.9em;
+}
