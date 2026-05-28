@@ -73,7 +73,14 @@ def criar_app(config_name='default'):
     # Criar tabelas e dados iniciais
     with app.app_context():
         db.create_all()
-        criar_dados_iniciais()
+
+        # Verificar se é a primeira execução (nenhum setor cadastrado)
+        # Se já existirem dados, NÃO recria os de demonstração
+        if not Setor.query.first():
+            print("🆕 Primeira execução detectada. Criando dados de demonstração...")
+            criar_dados_iniciais()
+        else:
+            print("✅ Banco de dados já existe. Dados preservados.")
 
 
     # Context processor para funções utilitárias disponíveis em todos os templates
@@ -99,11 +106,11 @@ def criar_app(config_name='default'):
 
 
 def criar_dados_iniciais():
-    """Cria dados de exemplo no banco de dados."""
+    """Cria dados de exemplo no banco de dados.
 
-    # Verificar se já existem setores
-    if Setor.query.first():
-        return
+    Esta função só é chamada na PRIMEIRA execução do sistema,
+    quando o banco de dados está vazio.
+    """
 
     # Criar setores
     setores_data = [
@@ -145,7 +152,6 @@ def criar_dados_iniciais():
         {'nome': 'Fernanda Lima', 'email': 'fernanda@colegiomaua.edu.br', 'perfil': 'setor', 'setor_id': setores[2].id},
         {'nome': 'Ricardo Souza', 'email': 'ricardo@colegiomaua.edu.br', 'perfil': 'usuario'},
         {'nome': 'Juliana Martins', 'email': 'juliana@colegiomaua.edu.br', 'perfil': 'usuario'},
-        # Colaboradores adicionais dos setores
         {'nome': 'Bruno TI', 'email': 'bruno.ti@colegiomaua.edu.br', 'perfil': 'setor', 'setor_id': setores[0].id},
         {'nome': 'Lucas Manutencao', 'email': 'lucas.man@colegiomaua.edu.br', 'perfil': 'setor', 'setor_id': setores[1].id},
     ]
@@ -175,7 +181,7 @@ def criar_dados_iniciais():
             'area_patrimonial': 'Bloco A',
             'prioridade': 'alta',
             'status': 'em_andamento',
-            'data_preferencial': ontem,  # Data vencida para testar destaque
+            'data_preferencial': ontem,
             'setor_destino_id': setores[0].id,
             'usuario_id': usuarios[2].id,
             'atendente_id': usuarios[0].id,
@@ -187,7 +193,7 @@ def criar_dados_iniciais():
             'area_patrimonial': 'Bloco Principal',
             'prioridade': 'media',
             'status': 'aberto',
-            'data_preferencial': hoje,  # Data de hoje para testar destaque
+            'data_preferencial': hoje,
             'setor_destino_id': setores[1].id,
             'usuario_id': usuarios[3].id,
         },
@@ -347,7 +353,7 @@ def criar_dados_iniciais():
 
     db.session.commit()
 
-    print("Dados iniciais criados com sucesso!")
+    print("✅ Dados de demonstração criados com sucesso!")
 
 
 # Criar aplicação
