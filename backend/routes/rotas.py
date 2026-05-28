@@ -309,9 +309,29 @@ def novo_chamado():
             return render_template('novo_chamado.html', setores=setores, dados=dados)
 
         try:
-            # Converter data preferencial
-            if dados['data_preferencial']:
-                dados['data_preferencial'] = datetime.fromisoformat(dados['data_preferencial'])
+            # CORREÇÃO: Converter data preferencial de string para datetime
+            data_str = dados.pop('data_preferencial')  # Remove string dos dados
+            data_preferencial = None
+
+            if data_str and data_str.strip():
+                # Tenta converter do formato do input datetime-local (YYYY-MM-DDTHH:MM)
+                try:
+                    data_preferencial = datetime.strptime(data_str, '%Y-%m-%dT%H:%M')
+                except ValueError:
+                    # Tenta formato com segundos
+                    try:
+                        data_preferencial = datetime.strptime(data_str, '%Y-%m-%dT%H:%M:%S')
+                    except ValueError:
+                        # Tenta formato ISO
+                        try:
+                            data_preferencial = datetime.fromisoformat(data_str.replace('Z', '+00:00'))
+                        except ValueError:
+                            flash('Data preferencial inválida.', 'error')
+                            return render_template('novo_chamado.html', setores=setores, dados=dados)
+
+            # Adiciona o datetime convertido aos dados
+            dados['data_preferencial'] = data_preferencial
+            # FIM CORREÇÃO
 
             chamado = ChamadoService.criar_chamado(dados, current_user.id)
 
@@ -420,6 +440,7 @@ def atualizar_status_chamado(chamado_id):
 
         flash('Status atualizado com sucesso!', 'success')
     except Exception as e:
+        db.session.rollback()
         flash(f'Erro ao atualizar status: {str(e)}', 'error')
 
     return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
@@ -443,6 +464,7 @@ def atribuir_chamado(chamado_id):
         ChamadoService.atribuir_chamado(chamado_id, atendente_id, current_user.id)
         flash('Chamado atribuído com sucesso!', 'success')
     except Exception as e:
+        db.session.rollback()
         flash(f'Erro ao atribuir chamado: {str(e)}', 'error')
 
     return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
@@ -473,6 +495,7 @@ def enviar_mensagem(chamado_id):
         MensagemService.enviar_mensagem(chamado_id, current_user.id, conteudo)
         flash('Mensagem enviada!', 'success')
     except Exception as e:
+        db.session.rollback()
         flash(f'Erro ao enviar mensagem: {str(e)}', 'error')
 
     return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
@@ -527,12 +550,89 @@ def upload_anexo(chamado_id):
 
             flash('Arquivo enviado com sucesso!', 'success')
         except Exception as e:
+            db.session.rollback()
             flash(f'Erro ao enviar arquivo: {str(e)}', 'error')
     else:
         flash('Tipo de arquivo não permitido.', 'error')
 
     return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
 
+
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ROTA PARA VISUALIZAR/BAIXAR ANEXOS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@main.route('/anexos/<int:anexo_id>')
+@login_required
+def ver_anexo(anexo_id):
+    """Visualiza ou faz download de um anexo.
+
+    Verifica permissões:
+    - ADMIN: pode ver qualquer anexo
+    - SETOR: pode ver anexos de chamados do seu setor
+    - USUARIO: pode ver anexos dos seus próprios chamados
+    """
+    anexo = Anexo.query.get_or_404(anexo_id)
+    chamado = Chamado.query.get_or_404(anexo.chamado_id)
+
+    # Verificar permissão
+    if current_user.perfil == PerfilUsuario.USUARIO and chamado.usuario_id != current_user.id:
+        flash('Você não tem permissão para acessar este anexo.', 'error')
+        return redirect(url_for('main.chamados'))
+
+    if current_user.perfil == PerfilUsuario.SETOR and chamado.setor_destino_id != current_user.setor_id:
+        flash('Você não tem permissão para acessar este anexo.', 'error')
+        return redirect(url_for('main.chamados'))
+
+    # Construir caminho completo do arquivo
+    upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+    file_path = os.path.join(upload_folder, anexo.caminho_arquivo)
+
+    # Verificar se arquivo existe
+    if not os.path.exists(file_path):
+        flash('Arquivo não encontrado no servidor.', 'error')
+        return redirect(url_for('main.chamado_detalhe', chamado_id=anexo.chamado_id))
+
+    # Determinar tipo MIME para visualização inline
+    extensao = anexo.tipo_arquivo.lower()
+    mimetypes = {
+        'pdf': 'application/pdf',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+        'txt': 'text/plain',
+        'csv': 'text/csv',
+        'json': 'application/json',
+        'doc': 'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls': 'application/vnd.ms-excel',
+        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'ppt': 'application/vnd.ms-powerpoint',
+        'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'zip': 'application/zip',
+        'rar': 'application/x-rar-compressed',
+    }
+    mimetype = mimetypes.get(extensao, 'application/octet-stream')
+
+    # Para imagens e PDFs, tentar abrir inline; para outros, forçar download
+    as_attachment = extensao not in ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'txt', 'csv', 'json']
+
+    try:
+        return send_from_directory(
+            upload_folder,
+            anexo.caminho_arquivo,
+            mimetype=mimetype,
+            as_attachment=as_attachment,
+            download_name=anexo.nome_arquivo
+        )
+    except Exception as e:
+        current_app.logger.error(f"Erro ao enviar anexo {anexo_id}: {str(e)}")
+        flash('Erro ao abrir o arquivo.', 'error')
+        return redirect(url_for('main.chamado_detalhe', chamado_id=anexo.chamado_id))
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ROTAS PROTEGIDAS - RELATÓRIOS
@@ -665,6 +765,7 @@ def admin_criar_usuario():
         UsuarioService.criar_usuario(dados)
         flash('Usuário criado com sucesso!', 'success')
     except Exception as e:
+        db.session.rollback()
         flash(f'Erro ao criar usuário: {str(e)}', 'error')
 
     return redirect(url_for('main.admin_usuarios'))
@@ -709,6 +810,7 @@ def admin_editar_usuario(usuario_id):
         UsuarioService.atualizar_usuario(usuario_id, dados, current_user.id)
         flash('Usuário atualizado com sucesso!', 'success')
     except Exception as e:
+        db.session.rollback()
         flash(f'Erro ao atualizar usuário: {str(e)}', 'error')
 
     return redirect(url_for('main.admin_usuarios'))
@@ -809,22 +911,22 @@ def admin_excluir_usuario(usuario_id):
     try:
         nome_usuario = usuario.nome
 
-        # EXCLUSÃO PERMANENTE do banco de dados
-        db.session.delete(usuario)
+        # SOFT DELETE: desativa ao invés de excluir para preservar chamados e histórico
+        usuario.ativo = False
         db.session.commit()
 
         registrar_log(
             current_user.id, 
-            'excluir_permanente', 
+            'desativar', 
             'usuario', 
             usuario_id,
-            f'Usuário {nome_usuario} excluído permanentemente do banco de dados'
+            f'Usuário {nome_usuario} desativado (soft delete) - chamados preservados'
         )
 
-        flash(f'Usuário {nome_usuario} excluído permanentemente!', 'success')
+        flash(f'Usuário {nome_usuario} desativado com sucesso! Chamados e histórico preservados.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Erro ao excluir usuário: {str(e)}', 'error')
+        flash(f'Erro ao desativar usuário: {str(e)}', 'error')
 
     return redirect(url_for('main.admin_usuarios'))
 
@@ -870,6 +972,7 @@ def admin_criar_setor():
         registrar_log(current_user.id, 'criar', 'setor', setor.id, f'Setor {nome} criado')
         flash('Setor criado com sucesso!', 'success')
     except Exception as e:
+        db.session.rollback()
         flash(f'Erro ao criar setor: {str(e)}', 'error')
 
     return redirect(url_for('main.admin_setores'))
