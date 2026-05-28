@@ -19,7 +19,8 @@ from backend.services.servicos import (
 from backend.utils.utilitarios import (
     allowed_file, sanitize_filename, registrar_log,
     formatar_data, formatar_data_curta, get_prioridade_cor, get_status_cor,
-    get_prioridade_label, get_status_label
+    get_prioridade_label, get_status_label,
+    agora_brasil_naive
 )
 
 main = Blueprint('main', __name__)
@@ -85,7 +86,7 @@ def verificar_data_destaque(data_preferencial):
     """Verifica se a data preferencial é hoje ou próxima."""
     if not data_preferencial:
         return False
-    hoje = datetime.utcnow().date()
+    hoje = agora_brasil_naive().date()
     if isinstance(data_preferencial, str):
         try:
             data_preferencial = datetime.fromisoformat(data_preferencial.replace('Z', '+00:00')).date()
@@ -126,7 +127,7 @@ def login():
 
         if usuario and usuario.check_senha(senha):
             login_user(usuario, remember=True)
-            usuario.ultimo_acesso = datetime.utcnow()
+            usuario.ultimo_acesso = agora_brasil_naive()
             db.session.commit()
             registrar_log(usuario.id, 'login', 'usuario', usuario.id, 'Login realizado')
 

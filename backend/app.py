@@ -17,6 +17,7 @@ from flask import Flask
 from flask_login import LoginManager
 from backend.models.modelos import db, Usuario, Setor, Chamado, Mensagem, Anexo, LogOperacao, Notificacao
 from backend.routes.rotas import main, api
+from backend.utils.utilitarios import agora_brasil_naive
 from config import config
 
 
@@ -166,7 +167,7 @@ def criar_dados_iniciais():
     db.session.commit()
 
     # Datas de exemplo
-    hoje = datetime.utcnow()
+    hoje = agora_brasil_naive()
     ontem = hoje - timedelta(days=1)
     amanha = hoje + timedelta(days=1)
     semana_passada = hoje - timedelta(days=5)

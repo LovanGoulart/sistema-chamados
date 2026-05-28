@@ -3,9 +3,26 @@ Funções utilitárias do Sistema de Chamados - Colégio Mauá
 """
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from flask import request, current_app
-from backend.models.modelos import LogOperacao, db
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FUSO HORÁRIO DO BRASIL (UTC-3)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Fuso horário do Brasil (UTC-3) — não considera horário de verão (extinto desde 2019)
+FUSO_BRASIL = timezone(timedelta(hours=-3))
+
+
+def agora_brasil():
+    """Retorna o datetime atual no fuso horário do Brasil (UTC-3), com tzinfo."""
+    return datetime.now(FUSO_BRASIL)
+
+
+def agora_brasil_naive():
+    """Retorna o datetime atual no fuso horário do Brasil, sem tzinfo (compatível com SQLAlchemy)."""
+    return datetime.now(FUSO_BRASIL).replace(tzinfo=None)
 
 
 def allowed_file(filename):
@@ -18,13 +35,15 @@ def sanitize_filename(filename):
     """Sanitiza o nome do arquivo removendo caracteres especiais."""
     filename = os.path.basename(filename)
     filename = re.sub(r"[^\w\s.-]", "", filename)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = agora_brasil_naive().strftime("%Y%m%d_%H%M%S")
     name, ext = os.path.splitext(filename)
     return f"{name}_{timestamp}{ext}"
 
 
 def registrar_log(usuario_id, acao, entidade, entidade_id=None, detalhes=None):
     """Registra uma operação no log do sistema."""
+    # Import local para evitar circular import
+    from backend.models.modelos import LogOperacao, db
     try:
         log = LogOperacao(
             usuario_id=usuario_id,

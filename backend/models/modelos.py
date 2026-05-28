@@ -4,6 +4,7 @@ Modelos SQLAlchemy do Sistema de Chamados - Colégio Mauá
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
+from backend.utils.utilitarios import agora_brasil_naive
 from enum import Enum
 import bcrypt
 
@@ -42,7 +43,7 @@ class Setor(db.Model):
     nome = db.Column(db.String(100), nullable=False, unique=True)
     descricao = db.Column(db.String(255))
     ativo = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=agora_brasil_naive)
 
     # Relacionamentos
     usuarios = db.relationship('Usuario', backref='setor', lazy=True)
@@ -73,7 +74,7 @@ class Usuario(db.Model, UserMixin):
     perfil = db.Column(db.Enum(PerfilUsuario), default=PerfilUsuario.USUARIO, nullable=False)
     ativo = db.Column(db.Boolean, default=True)
     setor_id = db.Column(db.Integer, db.ForeignKey('setores.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=agora_brasil_naive)
     ultimo_acesso = db.Column(db.DateTime)
 
     # Relacionamentos
@@ -133,8 +134,8 @@ class Chamado(db.Model):
     atendente_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
 
     # Timestamps
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=agora_brasil_naive)
+    updated_at = db.Column(db.DateTime, default=agora_brasil_naive, onupdate=agora_brasil_naive)
     data_resolucao = db.Column(db.DateTime)
 
     # Relacionamentos adicionais
@@ -175,7 +176,7 @@ class Mensagem(db.Model):
     chamado_id = db.Column(db.Integer, db.ForeignKey('chamados.id'), nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     conteudo = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=agora_brasil_naive)
 
     def __repr__(self):
         return f'<Mensagem #{self.id}>'
@@ -201,7 +202,7 @@ class Anexo(db.Model):
     caminho_arquivo = db.Column(db.String(500), nullable=False)
     tipo_arquivo = db.Column(db.String(50))
     tamanho = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=agora_brasil_naive)
 
     def __repr__(self):
         return f'<Anexo {self.nome_arquivo}>'
@@ -229,7 +230,7 @@ class LogOperacao(db.Model):
     entidade_id = db.Column(db.Integer)
     detalhes = db.Column(db.Text)
     ip_address = db.Column(db.String(45))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=agora_brasil_naive)
 
     def __repr__(self):
         return f'<Log {self.acao} - {self.entidade}>'
@@ -257,7 +258,7 @@ class Notificacao(db.Model):
     mensagem = db.Column(db.Text, nullable=False)
     lida = db.Column(db.Boolean, default=False)
     link = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=agora_brasil_naive)
 
     def __repr__(self):
         return f'<Notificacao {self.titulo}>'

@@ -7,7 +7,7 @@ from backend.models.modelos import (
     db, Usuario, Setor, Chamado, Mensagem, Anexo, 
     LogOperacao, Notificacao, StatusChamado, Prioridade, PerfilUsuario
 )
-from backend.utils.utilitarios import registrar_log
+from backend.utils.utilitarios import registrar_log, agora_brasil_naive
 
 
 class ChamadoService:
@@ -60,7 +60,7 @@ class ChamadoService:
         chamado.status = StatusChamado(novo_status)
 
         if novo_status in ['resolvido', 'fechado']:
-            chamado.data_resolucao = datetime.utcnow()
+            chamado.data_resolucao = agora_brasil_naive()
 
         db.session.commit()
 
@@ -161,7 +161,7 @@ class ChamadoService:
             por_prioridade[prioridade.value] = query.filter(Chamado.prioridade == prioridade).count()
 
         # Chamados do mês atual
-        hoje = datetime.utcnow()
+        hoje = agora_brasil_naive()
         inicio_mes = hoje.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         chamados_mes = query.filter(Chamado.created_at >= inicio_mes).count()
 
@@ -196,7 +196,7 @@ class ChamadoService:
     @staticmethod
     def get_chamados_por_mes(usuario=None, meses=6):
         """Retorna contagem de chamados por mês para gráficos."""
-        hoje = datetime.utcnow()
+        hoje = agora_brasil_naive()
         resultado = []
 
         for i in range(meses - 1, -1, -1):
