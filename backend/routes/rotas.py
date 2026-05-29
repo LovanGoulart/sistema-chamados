@@ -416,6 +416,7 @@ def chamado_detalhe(chamado_id):
                          verificar_data_destaque=verificar_data_destaque)
 
 
+
 @main.route('/chamados/<int:chamado_id>/status', methods=['POST'])
 @login_required
 def atualizar_status_chamado(chamado_id):
@@ -429,12 +430,21 @@ def atualizar_status_chamado(chamado_id):
 
     novo_status = request.form.get('status')
     observacao = request.form.get('observacao', '')
+    solucao_tecnica = request.form.get('solucao_tecnica', '').strip()
 
     if novo_status not in [s.value for s in StatusChamado]:
         flash('Status inválido.', 'error')
         return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
 
     try:
+        # Se o status for resolvido ou fechado, exige solução técnica
+        if novo_status in ['resolvido', 'fechado']:
+            if not solucao_tecnica or len(solucao_tecnica) < 5:
+                flash('Para resolver ou fechar um chamado, é obrigatório descrever o que foi realizado (mínimo 5 caracteres).', 'error')
+                return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
+            # Salvar a solução técnica no chamado
+            chamado.solucao_tecnica = solucao_tecnica
+
         ChamadoService.atualizar_status(chamado_id, novo_status, current_user.id, observacao)
 
         # Se houver observação, adicionar como mensagem

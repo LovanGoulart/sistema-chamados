@@ -1528,7 +1528,14 @@ a:hover {
 }
 
 .observacao-status {
-    margin-bottom: 8px;
+    margin: 10px 0;
+    padding: 12px;
+    background: #f8fff8;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    animation: fadeIn 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .observacao-status label {
@@ -2611,4 +2618,73 @@ a:hover {
 .text-muted {
     color: #6c757d;
     font-size: 0.9em;
+}
+
+
+/* Card de Solução Técnica */
+.card-solucao {
+    border-left: 4px solid #28a745;
+    background: linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%);
+}
+
+.card-solucao .card-header {
+    background: rgba(40, 167, 69, 0.1);
+    border-bottom: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.card-solucao .card-header h3 {
+    color: #155724;
+}
+
+.solucao-conteudo {
+    background: #fff;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.solucao-conteudo p {
+    margin: 0;
+    line-height: 1.7;
+    color: #155724;
+    font-size: 15px;
+    white-space: pre-wrap;
+}
+
+.solucao-meta {
+    display: flex;
+    gap: 20px;
+    color: #28a745;
+    font-size: 13px;
+}
+
+.solucao-meta small {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Campo de solução no formulário */
+#campo-solucao {
+    animation: fadeIn 0.3s ease;
+}
+
+#campo-solucao label {
+    color: #28a745;
+    font-weight: 600;
+}
+
+#campo-solucao textarea {
+    border-color: #28a745;
+    background: #f8fff8;
+}
+
+#campo-solucao textarea:focus {
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

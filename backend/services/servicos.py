@@ -52,6 +52,7 @@ class ChamadoService:
         db.session.commit()
         return chamado
 
+    
     @staticmethod
     def atualizar_status(chamado_id, novo_status, usuario_id, observacao=None):
         """Atualiza o status de um chamado."""
@@ -65,8 +66,10 @@ class ChamadoService:
         db.session.commit()
 
         # Registrar log
-        registrar_log(usuario_id, 'atualizar_status', 'chamado', chamado.id,
-                     f'Status alterado de {status_anterior} para {novo_status}')
+        log_detalhes = f'Status alterado de {status_anterior} para {novo_status}'
+        if chamado.solucao_tecnica:
+            log_detalhes += f' | Solução: {chamado.solucao_tecnica[:100]}...'
+        registrar_log(usuario_id, 'atualizar_status', 'chamado', chamado.id, log_detalhes)
 
         # Notificar o criador do chamado
         notificacao = Notificacao(

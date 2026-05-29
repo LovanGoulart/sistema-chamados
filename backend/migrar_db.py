@@ -1,102 +1,81 @@
-"""
-Script de migração do banco de dados - Sistema de Chamados
 
-Este script adiciona colunas novas ao schema existente SEM apagar dados.
-Use quando você adicionou novos campos nos modelos mas o banco já existe.
+"""
+Script de migração para adicionar coluna 'solucao_tecnica' na tabela 'chamados'
+Execute este script UMA VEZ para atualizar o banco de dados existente.
 
 Como usar:
-    python backend/migrar_db.py
-
-O que ele faz:
-    1. Verifica se a coluna já existe na tabela
-    2. Se não existir, adiciona a coluna
-    3. Nunca apaga dados existentes
+1. Certifique-se de que o servidor Flask está PARADO
+2. Execute: python migrar_solucao_tecnica.py
+3. O script adicionará a coluna ao banco SQLite existente
+4. Inicie o servidor normalmente
 """
+
+import sqlite3
 import os
 import sys
 
-project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if project_dir not in sys.path:
-    sys.path.insert(0, project_dir)
+# Ajuste o caminho conforme sua estrutura de projeto
+# Exemplo: database_path = 'instance/chamados.db'
+# Ou descubra o caminho pela config do Flask
 
-from backend.app import app
-from backend.models.modelos import db
-import sqlite3
+def descobrir_caminho_db():
+    """Tenta descobrir o caminho do banco de dados."""
+    possiveis_caminhos = [
+        'database/chamados.db',
+        'chamados.db',
+        'backend/database/chamados.db',
+        '../database/chamados.db',
+        os.path.join(os.path.dirname(__file__), 'database', 'chamados.db'),
+        os.path.join(os.path.dirname(__file__), '..', 'database', 'chamados.db'),
+    ]
+    for caminho in possiveis_caminhos:
+        if os.path.exists(caminho):
+            return caminho
+    return None
 
-def verificar_e_adicionar_coluna(conn, tabela, coluna, tipo_sql, padrao=None):
-    """Verifica se a coluna existe e a adiciona se necessário."""
-    cursor = conn.cursor()
+def migrar():
+    db_path = descobrir_caminho_db()
 
-    # Verificar colunas existentes
-    cursor.execute(f"PRAGMA table_info({tabela})")
-    colunas_existentes = [row[1] for row in cursor.fetchall()]
+    if not db_path:
+        print("❌ Não foi possível encontrar o banco de dados.")
+        print("   Caminhos tentados:")
+        for p in ['database/chamados.db', 'chamados.db', 'backend/database/chamados.db']:
+            print(f"   - {p}")
+        print("\n   Informe o caminho manualmente editando este script.")
+        return
 
-    if coluna in colunas_existentes:
-        print(f"   ✅ Coluna '{coluna}' já existe em '{tabela}'")
-        return False
+    print(f"📁 Banco encontrado: {db_path}")
+    print("🔧 Adicionando coluna 'solucao_tecnica' à tabela 'chamados'...")
 
-    # Adicionar coluna
-    sql = f"ALTER TABLE {tabela} ADD COLUMN {coluna} {tipo_sql}"
-    if padrao is not None:
-        sql += f" DEFAULT {padrao}"
-
-    cursor.execute(sql)
-    conn.commit()
-    print(f"   ➕ Coluna '{coluna}' adicionada em '{tabela}'")
-    return True
-
-
-def migrar_banco():
-    with app.app_context():
-        # Pegar caminho do banco SQLite
-        db_uri = app.config['SQLALCHEMY_DATABASE_URI']
-        if not db_uri.startswith('sqlite:///'):
-            print("❌ Este script só funciona com SQLite.")
-            print(f"   URI atual: {db_uri}")
-            return
-
-        db_path = db_uri.replace('sqlite:///', '')
-
-        if not os.path.exists(db_path):
-            print(f"❌ Banco de dados não encontrado: {db_path}")
-            print("   O banco será criado automaticamente na primeira execução.")
-            return
-
-        print(f"🔧 Migrando banco: {db_path}")
-        print()
-
+    try:
         conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
 
-        # Migrações necessárias
-        # Adicione aqui novas colunas conforme você altera os modelos
+        # Verificar se a coluna já existe
+        cursor.execute("PRAGMA table_info(chamados)")
+        colunas = [col[1] for col in cursor.fetchall()]
 
-        print("📋 Verificando tabela 'setores'...")
-        verificar_e_adicionar_coluna(conn, 'setores', 'updated_at', 'DATETIME', 'CURRENT_TIMESTAMP')
+        if 'solucao_tecnica' in colunas:
+            print("✅ Coluna 'solucao_tecnica' já existe. Nada a fazer.")
+            conn.close()
+            return
 
-        print("📋 Verificando tabela 'usuarios'...")
-        verificar_e_adicionar_coluna(conn, 'usuarios', 'updated_at', 'DATETIME', 'CURRENT_TIMESTAMP')
+        # Adicionar a coluna
+        cursor.execute("ALTER TABLE chamados ADD COLUMN solucao_tecnica TEXT")
+        conn.commit()
 
-        print("📋 Verificando tabela 'chamados'...")
-        verificar_e_adicionar_coluna(conn, 'chamados', 'updated_at', 'DATETIME', 'CURRENT_TIMESTAMP')
+        print("✅ Coluna 'solucao_tecnica' adicionada com sucesso!")
+        print("\n🚀 Agora você pode:")
+        print("   1. Atualizar o modelo (modelos.py)")
+        print("   2. Atualizar as rotas (rotas.py)")
+        print("   3. Atualizar o template (chamado_detalhe.html)")
+        print("   4. Iniciar o servidor Flask")
 
-        print("📋 Verificando tabela 'mensagens'...")
-        # Nenhuma coluna nova por enquanto
-
-        print("📋 Verificando tabela 'anexos'...")
-        # Nenhuma coluna nova por enquanto
-
-        print("📋 Verificando tabela 'logs_operacoes'...")
-        # Nenhuma coluna nova por enquanto
-
-        print("📋 Verificando tabela 'notificacoes'...")
-        # Nenhuma coluna nova por enquanto
-
-        conn.close()
-
-        print()
-        print("✅ Migração concluída! Seu banco está atualizado.")
-        print("   Agora você pode iniciar a aplicação normalmente.")
-
+    except sqlite3.Error as e:
+        print(f"❌ Erro ao migrar: {e}")
+    finally:
+        if conn:
+            conn.close()
 
 if __name__ == '__main__':
-    migrar_banco()
+    migrar()

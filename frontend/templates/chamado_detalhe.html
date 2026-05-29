@@ -53,9 +53,24 @@
                     <option value="fechado" {% if chamado.status.value == 'fechado' %}selected{% endif %}>Fechado</option>
                 </select>
 
+                <!-- CAMPO DE SOLUÇÃO TÉCNICA (resolvido/fechado) -->
+                <div class="observacao-status" id="campoSolucao" style="display:none;">
+                    <label for="solucao_tecnica">
+                        <i class="fas fa-clipboard-check"></i> O que foi realizado:
+                    </label>
+                    <textarea name="solucao_tecnica" id="solucao_tecnica" rows="3" 
+                        placeholder="Descreva o que foi feito para resolver o problema..."></textarea>
+                    <small class="form-ajuda">Obrigatório ao marcar como Resolvido ou Fechado</small>
+                </div>
+
+                <!-- CAMPO DE OBSERVAÇÃO (pendente) -->
                 <div class="observacao-status" id="observacaoStatus" style="display:none;">
-                    <label for="observacao">Motivo/Observação:</label>
-                    <textarea name="observacao" id="observacao" rows="3" placeholder="Descreva o motivo da alteração de status..."></textarea>
+                    <label for="observacao">
+                        <i class="fas fa-exclamation-circle"></i> Motivo/Observação:
+                    </label>
+                    <textarea name="observacao" id="observacao" rows="3" 
+                        placeholder="Descreva o motivo da alteração de status..."></textarea>
+                    <small class="form-ajuda">Obrigatório ao marcar como Pendente</small>
                 </div>
 
                 <button type="submit" class="btn btn-sm btn-primary">Atualizar Status</button>
@@ -80,6 +95,30 @@
     <div class="chamado-grid">
         <!-- Coluna principal -->
         <div class="chamado-main">
+
+            <!-- SOLUÇÃO TÉCNICA (exibida quando existir) -->
+            {% if chamado.solucao_tecnica %}
+            <div class="card card-solucao">
+                <div class="card-header">
+                    <h3><i class="fas fa-tools"></i> Solução Técnica</h3>
+                    <span class="badge badge-success">Registrada</span>
+                </div>
+                <div class="card-body">
+                    <div class="solucao-conteudo">
+                        <p>{{ chamado.solucao_tecnica }}</p>
+                    </div>
+                    {% if chamado.data_resolucao %}
+                    <div class="solucao-meta">
+                        <small><i class="fas fa-clock"></i> {{ formatar_data(chamado.data_resolucao) }}</small>
+                        {% if chamado.atendente %}
+                        <small><i class="fas fa-user"></i> {{ chamado.atendente.nome }}</small>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Descrição -->
             <div class="card">
                 <div class="card-header">
@@ -259,8 +298,213 @@
 {% block extra_css %}
 <style>
 /* ═══════════════════════════════════════════════════════════════
+   ESTILOS DO CARD DE SOLUÇÃO TÉCNICA
+   ═══════════════════════════════════════════════════════════════ */
+
+.card-solucao {
+    border-left: 4px solid #28a745;
+    background: linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%);
+    margin-bottom: 20px;
+}
+
+.card-solucao .card-header {
+    background: rgba(40, 167, 69, 0.08);
+    border-bottom: 1px solid rgba(40, 167, 69, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-solucao .card-header h3 {
+    color: #155724;
+    font-size: 16px;
+    margin: 0;
+}
+
+.card-solucao .card-header h3 i {
+    margin-right: 6px;
+    color: #28a745;
+}
+
+.card-solucao .badge-success {
+    background: #28a745;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.solucao-conteudo {
+    background: #fff;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.solucao-conteudo p {
+    margin: 0;
+    line-height: 1.7;
+    color: #155724;
+    font-size: 14px;
+    white-space: pre-wrap;
+}
+
+.solucao-meta {
+    display: flex;
+    gap: 20px;
+    color: #28a745;
+    font-size: 12px;
+}
+
+.solucao-meta small {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FIX: Todos os elementos do status-form com mesma largura
+   ═══════════════════════════════════════════════════════════════ */
+
+.status-form {
+    width: 100%;
+    max-width: 280px;
+}
+
+/* Forçar box-sizing em TUDO dentro do form */
+.status-form,
+.status-form *,
+.status-form *::before,
+.status-form *::after {
+    box-sizing: border-box !important;
+}
+
+/* Select e button base */
+.status-form select,
+.status-form button[type="submit"] {
+    width: 100% !important;
+    height: 40px;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-family: inherit;
+    font-size: 0.85rem;
+    background: var(--bg-input);
+    margin-bottom: 8px;
+}
+
+.status-form button[type="submit"] {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 0;
+    margin-top: 8px;
+}
+
+.status-form button[type="submit"]:hover {
+    background: var(--primary-dark);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FIX: Observação/Solução - mesma largura que select/button
+   ═══════════════════════════════════════════════════════════════ */
+
+.observacao-status {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 8px 0 !important;
+    padding: 10px !important;
+    background: #f8fff8;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+.observacao-status label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #28a745;
+    margin-bottom: 6px;
+}
+
+.observacao-status label i {
+    margin-right: 4px;
+}
+
+/* Textarea preenche 100% do .observacao-status (já com padding) */
+.observacao-status textarea {
+    width: 100% !important;
+    min-width: 100% !important;
+    padding: 8px !important;
+    border: 1px solid #28a745;
+    border-radius: 6px;
+    font-size: 13px;
+    resize: vertical;
+    background: #fff;
+    font-family: inherit;
+    min-height: 70px;
+    margin: 0 !important;
+}
+
+.observacao-status textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.15);
+}
+
+.form-ajuda {
+    display: block;
+    font-size: 11px;
+    color: #dc3545;
+    margin-top: 6px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORMULÁRIO ATRIBUIR - mesma largura
+   ═══════════════════════════════════════════════════════════════ */
+
+.atribuir-form {
+    width: 100%;
+    max-width: 280px;
+    margin-top: 10px;
+}
+
+.atribuir-form,
+.atribuir-form *,
+.atribuir-form *::before,
+.atribuir-form *::after {
+    box-sizing: border-box !important;
+}
+
+.atribuir-form select,
+.atribuir-form button {
+    width: 100% !important;
+    height: 40px;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-family: inherit;
+    font-size: 0.85rem;
+    background: var(--bg-input);
+    margin-bottom: 8px;
+}
+
+.atribuir-form button {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 0;
+    margin-top: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    CHAT ESTILO MESSENGER / FACEBOOK
-   Mensagens antigas em cima, novas embaixo
    ═══════════════════════════════════════════════════════════════ */
 
 .card-messenger {
@@ -498,38 +742,77 @@
 {% block extra_js %}
 <script>
 function mostrarCampoObservacao(select) {
+    const campoSolucao = document.getElementById('campoSolucao');
+    const textareaSolucao = document.getElementById('solucao_tecnica');
     const observacaoDiv = document.getElementById('observacaoStatus');
+    const textareaObservacao = document.getElementById('observacao');
+
+    if (select.value === 'resolvido' || select.value === 'fechado') {
+        campoSolucao.style.display = 'block';
+        textareaSolucao.setAttribute('required', 'required');
+    } else {
+        campoSolucao.style.display = 'none';
+        textareaSolucao.removeAttribute('required');
+        textareaSolucao.value = '';
+    }
+
     if (select.value === 'pendente') {
         observacaoDiv.style.display = 'block';
-        document.getElementById('observacao').setAttribute('required', 'required');
+        textareaObservacao.setAttribute('required', 'required');
     } else {
         observacaoDiv.style.display = 'none';
-        document.getElementById('observacao').removeAttribute('required');
+        textareaObservacao.removeAttribute('required');
+        textareaObservacao.value = '';
     }
 }
 
 // Verificar status atual ao carregar
 (function() {
     const statusSelect = document.getElementById('status');
-    if (statusSelect && statusSelect.value === 'pendente') {
+    if (statusSelect) {
         mostrarCampoObservacao(statusSelect);
     }
 })();
 
 /* ═══════════════════════════════════════════════════════════════
-   AUTO-SCROLL PARA A MENSAGEM MAIS RECENTE (embaixo)
+   TOGGLE DESCRIÇÃO
+   ═══════════════════════════════════════════════════════════════ */
+function toggleDescricao(btn) {
+    const conteudo = document.getElementById('descricaoConteudo');
+    const span = btn.querySelector('span');
+    const icon = btn.querySelector('i');
+
+    if (conteudo.style.display === 'none') {
+        conteudo.style.display = 'block';
+        span.textContent = 'Ocultar descrição';
+        btn.classList.add('ativo');
+    } else {
+        conteudo.style.display = 'none';
+        span.textContent = 'Ver descrição completa';
+        btn.classList.remove('ativo');
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLL AO TOPO DA PÁGINA (SEMPRE)
+   ═══════════════════════════════════════════════════════════════ */
+// Garante que a página sempre inicie no topo
+window.scrollTo(0, 0);
+document.documentElement.scrollTop = 0;
+document.body.scrollTop = 0;
+
+// Se veio da lista de chamados, limpa a flag
+if (sessionStorage.getItem('scrollToTop') === 'true') {
+    sessionStorage.removeItem('scrollToTop');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTO-SCROLL DAS MENSAGENS (apenas dentro do container)
    ═══════════════════════════════════════════════════════════════ */
 (function() {
     const container = document.getElementById('mensagensContainer');
     if (container) {
-        // Scroll para o final (mensagem mais recente embaixo)
         container.scrollTop = container.scrollHeight;
-    }
-
-    // Focar no input ao carregar a página
-    const input = document.getElementById('inputMensagem');
-    if (input) {
-        input.focus();
     }
 })();
 </script>

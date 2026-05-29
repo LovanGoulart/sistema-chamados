@@ -172,3 +172,22 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+// ═══════════════════════════════════════════════════════════════
+// SCROLL AO TOPO ao clicar em qualquer link para detalhe do chamado
+// ═══════════════════════════════════════════════════════════════
+(function() {
+    // Seleciona todos os links que levam à página de detalhe do chamado
+    const detalheLinks = document.querySelectorAll('a[href*="chamado_detalhe"]');
+
+    detalheLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            // Salva no sessionStorage que devemos fazer scroll ao topo
+            sessionStorage.setItem('scrollToTop', 'true');
+        });
+    });
+})();
+</script>
+{% endblock %}

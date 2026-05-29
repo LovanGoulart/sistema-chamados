@@ -128,6 +128,9 @@ class Chamado(db.Model):
     status = db.Column(db.Enum(StatusChamado), default=StatusChamado.ABERTO, nullable=False)
     data_preferencial = db.Column(db.DateTime)
 
+    # NOVO CAMPO: Solução técnica registrada pelo técnico ao resolver
+    solucao_tecnica = db.Column(db.Text, nullable=True)
+
     # Relacionamentos
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     setor_destino_id = db.Column(db.Integer, db.ForeignKey('setores.id'), nullable=False)
@@ -156,6 +159,7 @@ class Chamado(db.Model):
             'prioridade': self.prioridade.value,
             'status': self.status.value,
             'data_preferencial': self.data_preferencial.isoformat() if self.data_preferencial else None,
+            'solucao_tecnica': self.solucao_tecnica,
             'usuario_id': self.usuario_id,
             'usuario_nome': self.usuario.nome if self.usuario else None,
             'setor_destino_id': self.setor_destino_id,
