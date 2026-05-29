@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     {% block extra_css %}{% endblock %}
+<base target="_blank">
 </head>
 <body>
     {% if current_user.is_authenticated %}
@@ -111,6 +112,11 @@
             </button>
             <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
             <div class="topbar-actions">
+                <!-- Botão Novo Chamado (+) -->
+                <a href="{{ url_for('main.novo_chamado') }}" class="btn-novo-chamado" title="Novo Chamado">
+                    <i class="fas fa-plus"></i>
+                    <span class="btn-text">Novo</span>
+                </a>
                 <button class="btn-icon notification-btn" id="notificationBtn" title="Notificações">
                     <i class="fas fa-bell"></i>
                     <span class="badge" id="topNotifCount" style="display:none">0</span>
@@ -153,6 +159,11 @@
             <a href="{{ url_for('main.notificacoes') }}">Ver todas</a>
         </div>
     </div>
+
+    <!-- Botão Scroll to Top -->
+    <button class="scroll-to-top" id="scrollToTop" onclick="scrollToTop()" title="Voltar ao topo">
+        <i class="fas fa-chevron-up"></i>
+    </button>
 
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
     {% block extra_js %}{% endblock %}

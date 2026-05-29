@@ -213,9 +213,9 @@ def dashboard():
     estatisticas = ChamadoService.get_estatisticas(current_user)
 
     # Buscar chamados ativos (aberto, pendente, em_andamento)
-    if current_user.perfil == PerfilUsuario.ADMIN:
+    if current_user.perfil.value == PerfilUsuario.ADMIN.value:
         query = Chamado.query
-    elif current_user.perfil == PerfilUsuario.SETOR:
+    elif current_user.perfil.value == PerfilUsuario.SETOR.value:
         query = Chamado.query.filter_by(setor_destino_id=current_user.setor_id)
     else:
         query = Chamado.query.filter_by(usuario_id=current_user.id)
@@ -382,11 +382,11 @@ def chamado_detalhe(chamado_id):
     chamado = Chamado.query.get_or_404(chamado_id)
 
     # Verificar permissão - SETOR: todos do setor veem todos os chamados do setor
-    if current_user.perfil == PerfilUsuario.USUARIO and chamado.usuario_id != current_user.id:
+    if current_user.perfil.value == PerfilUsuario.USUARIO.value and chamado.usuario_id != current_user.id:
         flash('Você não tem permissão para visualizar este chamado.', 'error')
         return redirect(url_for('main.chamados'))
 
-    if current_user.perfil == PerfilUsuario.SETOR and chamado.setor_destino_id != current_user.setor_id:
+    if current_user.perfil.value == PerfilUsuario.SETOR.value and chamado.setor_destino_id != current_user.setor_id:
         flash('Você não tem permissão para visualizar este chamado.', 'error')
         return redirect(url_for('main.chamados'))
 
@@ -395,7 +395,7 @@ def chamado_detalhe(chamado_id):
 
     # Usuários do setor para atribuição (todos os colaboradores do setor)
     usuarios_setor = []
-    if current_user.perfil in [PerfilUsuario.ADMIN, PerfilUsuario.SETOR]:
+    if current_user.perfil.value in [PerfilUsuario.ADMIN.value, PerfilUsuario.SETOR.value]:
         usuarios_setor = Usuario.query.filter(
             Usuario.setor_id == chamado.setor_destino_id,
             Usuario.ativo == True,
@@ -420,11 +420,15 @@ def chamado_detalhe(chamado_id):
 @main.route('/chamados/<int:chamado_id>/status', methods=['POST'])
 @login_required
 def atualizar_status_chamado(chamado_id):
-    """Atualiza o status de um chamado."""
+    """Atualiza o status de um chamado.
+
+    NOVO: Se o usuário for admin/setor e clicar em resolver/fechar,
+    o chamado é automaticamente atribuído a ele.
+    """
     chamado = Chamado.query.get_or_404(chamado_id)
 
     # Verificar permissão
-    if current_user.perfil == PerfilUsuario.USUARIO and chamado.usuario_id != current_user.id:
+    if current_user.perfil.value == PerfilUsuario.USUARIO.value and chamado.usuario_id != current_user.id:
         flash('Permissão negada.', 'error')
         return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
 
@@ -437,6 +441,18 @@ def atualizar_status_chamado(chamado_id):
         return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
 
     try:
+        # NOVO: Auto-atribuição para admin/setor ao resolver/fechar
+        if current_user.perfil.value in [PerfilUsuario.ADMIN.value, PerfilUsuario.SETOR.value]:
+            if not chamado.atendente_id:
+                chamado.atendente_id = current_user.id
+                registrar_log(current_user.id, 'atribuir', 'chamado', chamado.id,
+                             f'Chamado auto-atribuído ao usuário {current_user.id} ao atualizar status')
+            elif chamado.atendente_id != current_user.id and novo_status in ['resolvido', 'fechado']:
+                # Se já tem atendente mas é diferente, atualiza para quem está resolvendo
+                chamado.atendente_id = current_user.id
+                registrar_log(current_user.id, 'atribuir', 'chamado', chamado.id,
+                             f'Chamado reatribuído ao usuário {current_user.id}')
+
         # Se o status for resolvido ou fechado, exige solução técnica
         if novo_status in ['resolvido', 'fechado']:
             if not solucao_tecnica or len(solucao_tecnica) < 5:
@@ -469,7 +485,7 @@ def atualizar_status_chamado(chamado_id):
 @login_required
 def atribuir_chamado(chamado_id):
     """Atribui um chamado a um atendente."""
-    if current_user.perfil not in [PerfilUsuario.ADMIN, PerfilUsuario.SETOR]:
+    if current_user.perfil.value not in [PerfilUsuario.ADMIN.value, PerfilUsuario.SETOR.value]:
         flash('Permissão negada.', 'error')
         return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
 
@@ -496,11 +512,11 @@ def enviar_mensagem(chamado_id):
     chamado = Chamado.query.get_or_404(chamado_id)
 
     # Verificar permissão - SETOR: todos do setor podem enviar mensagem
-    if current_user.perfil == PerfilUsuario.USUARIO and chamado.usuario_id != current_user.id:
+    if current_user.perfil.value == PerfilUsuario.USUARIO.value and chamado.usuario_id != current_user.id:
         flash('Permissão negada.', 'error')
         return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
 
-    if current_user.perfil == PerfilUsuario.SETOR and chamado.setor_destino_id != current_user.setor_id:
+    if current_user.perfil.value == PerfilUsuario.SETOR.value and chamado.setor_destino_id != current_user.setor_id:
         flash('Permissão negada.', 'error')
         return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
 
@@ -527,11 +543,11 @@ def upload_anexo(chamado_id):
     chamado = Chamado.query.get_or_404(chamado_id)
 
     # Verificar permissão
-    if current_user.perfil == PerfilUsuario.USUARIO and chamado.usuario_id != current_user.id:
+    if current_user.perfil.value == PerfilUsuario.USUARIO.value and chamado.usuario_id != current_user.id:
         flash('Permissão negada.', 'error')
         return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
 
-    if current_user.perfil == PerfilUsuario.SETOR and chamado.setor_destino_id != current_user.setor_id:
+    if current_user.perfil.value == PerfilUsuario.SETOR.value and chamado.setor_destino_id != current_user.setor_id:
         flash('Permissão negada.', 'error')
         return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
 
@@ -597,11 +613,11 @@ def ver_anexo(anexo_id):
     chamado = Chamado.query.get_or_404(anexo.chamado_id)
 
     # Verificar permissão
-    if current_user.perfil == PerfilUsuario.USUARIO and chamado.usuario_id != current_user.id:
+    if current_user.perfil.value == PerfilUsuario.USUARIO.value and chamado.usuario_id != current_user.id:
         flash('Você não tem permissão para acessar este anexo.', 'error')
         return redirect(url_for('main.chamados'))
 
-    if current_user.perfil == PerfilUsuario.SETOR and chamado.setor_destino_id != current_user.setor_id:
+    if current_user.perfil.value == PerfilUsuario.SETOR.value and chamado.setor_destino_id != current_user.setor_id:
         flash('Você não tem permissão para acessar este anexo.', 'error')
         return redirect(url_for('main.chamados'))
 
@@ -669,9 +685,9 @@ def relatorios():
     chamados_por_setor = []
     for setor in setores:
         query = Chamado.query.filter_by(setor_destino_id=setor.id)
-        if current_user.perfil == PerfilUsuario.USUARIO:
+        if current_user.perfil.value == PerfilUsuario.USUARIO.value:
             query = query.filter_by(usuario_id=current_user.id)
-        elif current_user.perfil == PerfilUsuario.SETOR:
+        elif current_user.perfil.value == PerfilUsuario.SETOR.value:
             query = query.filter_by(setor_destino_id=current_user.setor_id)
 
         chamados_por_setor.append({
@@ -858,7 +874,7 @@ def admin_toggle_status_usuario(usuario_id):
     usuario = Usuario.query.get_or_404(usuario_id)
 
     # Impedir desativação do último admin ativo
-    if usuario.perfil == PerfilUsuario.ADMIN and usuario.ativo:
+    if usuario.perfil.value == PerfilUsuario.ADMIN.value and usuario.ativo:
         total_admins_ativos = Usuario.query.filter_by(
             perfil=PerfilUsuario.ADMIN, 
             ativo=True
@@ -918,7 +934,7 @@ def admin_excluir_usuario(usuario_id):
         return redirect(url_for('main.admin_usuarios'))
 
     # Impedir exclusão do último admin
-    if usuario.perfil == PerfilUsuario.ADMIN:
+    if usuario.perfil.value == PerfilUsuario.ADMIN.value:
         total_admins = Usuario.query.filter_by(
             perfil=PerfilUsuario.ADMIN, 
             ativo=True
@@ -1137,7 +1153,7 @@ def api_chamado(chamado_id):
     """Retorna detalhes de um chamado em formato JSON."""
     chamado = Chamado.query.get_or_404(chamado_id)
 
-    if current_user.perfil == PerfilUsuario.USUARIO and chamado.usuario_id != current_user.id:
+    if current_user.perfil.value == PerfilUsuario.USUARIO.value and chamado.usuario_id != current_user.id:
         return jsonify({'error': 'Permissão negada'}), 403
 
     return jsonify(chamado.to_dict())

@@ -16,7 +16,20 @@
     </div>
 </div>
 
-<!-- Filtros -->
+<!-- Banner informativo para usuários -->
+    <div class="card card-info-banner">
+        <div class="card-body">
+            <div class="info-banner-content">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <strong>Você está visualizando seus chamados</strong>
+                    <p>Aqui você encontra todos os chamados que você abriu. Use o chat para comunicar-se com o técnico responsável.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
 <div class="card card-filters">
     <div class="card-body">
         <form method="GET" action="{{ url_for('main.chamados') }}" class="filter-form">
@@ -171,6 +184,55 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Banner informativo */
+.card-info-banner {
+    margin-bottom: 16px;
+    border-left: 4px solid var(--info);
+    background: linear-gradient(135deg, #e3f2fd 0%, #f5f9ff 100%);
+}
+
+.card-info-banner .card-body {
+    padding: 16px 20px;
+}
+
+.info-banner-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.info-banner-content i {
+    font-size: 1.5rem;
+    color: var(--info);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.info-banner-content strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.info-banner-content p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .info-banner-content {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}

@@ -51,6 +51,42 @@
         </div>
     </div>
 
+    <!-- Card Meus Chamados -->
+    <div class="card card-meus-chamados">
+        <div class="card-header">
+            <h3><i class="fas fa-user-circle"></i> Meus Chamados</h3>
+            <a href="{{ url_for('main.chamados') }}" class="btn btn-sm btn-outline">Ver todos</a>
+        </div>
+        <div class="card-body">
+            <div class="meus-chamados-resumo">
+                <div class="resumo-item">
+                    <span class="resumo-numero">{{ estatisticas.abertos }}</span>
+                    <span class="resumo-label">Abertos</span>
+                </div>
+                <div class="resumo-item">
+                    <span class="resumo-numero">{{ estatisticas.em_andamento }}</span>
+                    <span class="resumo-label">Em Andamento</span>
+                </div>
+                <div class="resumo-item">
+                    <span class="resumo-numero">{{ estatisticas.resolvidos }}</span>
+                    <span class="resumo-label">Resolvidos</span>
+                </div>
+                <div class="resumo-item resumo-total">
+                    <span class="resumo-numero">{{ estatisticas.total }}</span>
+                    <span class="resumo-label">Total</span>
+                </div>
+            </div>
+            <div class="meus-chamados-acoes">
+                <a href="{{ url_for('main.novo_chamado') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Abrir Novo Chamado
+                </a>
+                <a href="{{ url_for('main.chamados') }}" class="btn btn-outline">
+                    <i class="fas fa-list"></i> Ver Meus Chamados
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Tabela de Chamados Ativos -->
     <div class="card">
         <div class="card-header">
@@ -60,7 +96,7 @@
         <div class="card-body">
             {% if chamados_ativos %}
             <div class="table-responsive">
-                <table class="data-table">
+                <table class="data-table data-table-hover">
                     <thead>
                         <tr>
                             <th>Status</th>
@@ -70,6 +106,7 @@
                             <th>Setor</th>
                             <th>Data</th>
                             <th>Data Prevista</th>
+                            <th style="text-align:center">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -108,6 +145,18 @@
                                     -
                                 {% endif %}
                             </td>
+                            <td>
+                                <div class="table-actions">
+                                    <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="btn-icon" title="Ver detalhes">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if current_user.perfil.value in ['admin', 'setor'] and chamado.status.value not in ['resolvido', 'fechado'] %}
+                                    <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="btn-icon btn-icon-success" title="Atualizar status">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -125,4 +174,100 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.btn-icon-success {
+    background: var(--success);
+    color: white;
+}
+.btn-icon-success:hover {
+    background: #218838;
+}
+
+/* Card Meus Chamados */
+.card-meus-chamados {
+    margin-bottom: 20px;
+    border-left: 4px solid var(--primary);
+}
+
+.meus-chamados-resumo {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.resumo-item {
+    text-align: center;
+    padding: 16px;
+    background: var(--bg-body);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.resumo-item:hover {
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+}
+
+.resumo-numero {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.2;
+}
+
+.resumo-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.resumo-total .resumo-numero {
+    color: var(--primary);
+}
+
+.meus-chamados-acoes {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .meus-chamados-resumo {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .resumo-numero {
+        font-size: 1.4rem;
+    }
+
+    .meus-chamados-acoes {
+        flex-direction: column;
+    }
+
+    .meus-chamados-acoes .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .meus-chamados-resumo {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
 {% endblock %}

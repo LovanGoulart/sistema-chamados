@@ -2,6 +2,7 @@
 Modelos SQLAlchemy do Sistema de Chamados - Colégio Mauá
 """
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.ext.hybrid import hybrid_property
 from flask_login import UserMixin
 from datetime import datetime
 from backend.utils.utilitarios import agora_brasil_naive
@@ -99,6 +100,11 @@ class Usuario(db.Model, UserMixin):
     def is_setor(self):
         """Verifica se o usuário pertence a um setor."""
         return self.perfil == PerfilUsuario.SETOR
+
+    @hybrid_property
+    def perfil_str(self):
+        """Retorna o perfil como string para comparação segura em queries."""
+        return self.perfil.value if hasattr(self.perfil, 'value') else str(self.perfil)
 
     def to_dict(self):
         return {

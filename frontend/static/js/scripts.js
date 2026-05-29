@@ -4,6 +4,20 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+
+    // ═══════════════════════════════════════════════════════════════
+    // PROTEÇÃO: Evitar que links abram em nova aba indevidamente
+    // ═══════════════════════════════════════════════════════════════
+    document.querySelectorAll('a[target="_blank"]').forEach(function(link) {
+        link.removeAttribute('target');
+    });
+
+    // Remover qualquer <base target="_blank"> se existir
+    const baseTag = document.querySelector('base[target]');
+    if (baseTag) {
+        baseTag.removeAttribute('target');
+    }
+
     // ── Sidebar Toggle ──
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
@@ -155,6 +169,18 @@ document.addEventListener('DOMContentLoaded', function() {
     atualizarContadorNotificacoes();
     setInterval(atualizarContadorNotificacoes, 30000); // Atualizar a cada 30s
 
+    // ── Scroll to Top Button ──
+    const scrollToTopBtn = document.getElementById('scrollToTop');
+    if (scrollToTopBtn) {
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+    }
+
     // ── File Input Label Update ──
     document.querySelectorAll('input[type="file"]').forEach(function(input) {
         input.addEventListener('change', function() {
@@ -184,7 +210,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!valid) {
                 e.preventDefault();
-                // Mostrar toast de erro
                 mostrarToast('Preencha todos os campos obrigatórios.', 'error');
             }
         });
@@ -252,6 +277,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+/**
+ * Scroll to top - função global
+ */
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 /**
  * Atualiza o contador de notificações na interface
@@ -354,4 +386,63 @@ function formatarData(dataStr) {
         hour: '2-digit',
         minute: '2-digit'
     });
+}
+
+/**
+ * Modais - Abrir/Fechar (funções globais)
+ */
+function openModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+/**
+ * Toggle Setor Field (Admin Usuários)
+ */
+function toggleSetorField(prefix) {
+    const perfilSelect = document.getElementById(prefix + '_perfil');
+    const setorGroup = document.getElementById(prefix + '_setor_group');
+    const setorSelect = document.getElementById(prefix + '_setor');
+
+    if (perfilSelect && setorGroup && setorSelect) {
+        const perfil = perfilSelect.value;
+        if (perfil === 'setor') {
+            setorGroup.style.display = 'block';
+            setorSelect.required = true;
+        } else {
+            setorGroup.style.display = 'none';
+            setorSelect.required = false;
+            setorSelect.value = '';
+        }
+    }
+}
+
+/**
+ * Abrir Editar Setor Modal
+ */
+function openEditSetorModal(id, nome, descricao, ativo) {
+    const form = document.getElementById('formEditarSetor');
+    if (form) {
+        form.action = '/admin/setores/' + id + '/editar';
+    }
+    const nomeInput = document.getElementById('edit_nome_setor');
+    const descInput = document.getElementById('edit_descricao_setor');
+    const ativoInput = document.getElementById('edit_ativo_setor');
+
+    if (nomeInput) nomeInput.value = nome;
+    if (descInput) descInput.value = descricao;
+    if (ativoInput) ativoInput.checked = ativo;
+
+    openModal('modalEditarSetor');
 }
