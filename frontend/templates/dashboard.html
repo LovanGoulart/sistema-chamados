@@ -50,30 +50,36 @@
             </div>
         </div>
     </div>
-    <!-- Últimos chamados -->
+
+    <!-- Tabela de Chamados Ativos -->
     <div class="card">
         <div class="card-header">
-            <h3><i class="fas fa-list"></i> Chamados Prioritários</h3>
+            <h3><i class="fas fa-list"></i> Chamados em Aberto, Pendente e Em Andamento</h3>
             <a href="{{ url_for('main.chamados') }}" class="btn btn-sm btn-outline">Ver todos</a>
         </div>
         <div class="card-body">
-            {% if ultimos_chamados %}
+            {% if chamados_ativos %}
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
                         <tr>
+                            <th>Status</th>
                             <th>Prioridade</th>
                             <th>ID</th>
                             <th>Título</th>
                             <th>Setor</th>
-                            <th>Status</th>
                             <th>Data</th>
                             <th>Data Prevista</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for chamado in ultimos_chamados %}
+                        {% for chamado in chamados_ativos %}
                         <tr class="{% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% endif %}">
+                            <td>
+                                <span class="badge-status" style="background: {{ get_status_cor(chamado.status.value) }}">
+                                    {{ get_status_label(chamado.status.value) }}
+                                </span>
+                            </td>
                             <td>
                                 <span class="badge-prioridade" style="background: {{ get_prioridade_cor(chamado.prioridade.value) }}">
                                     {{ get_prioridade_label(chamado.prioridade.value) }}
@@ -89,11 +95,6 @@
                                 {% endif %}
                             </td>
                             <td>{{ chamado.setor_destino.nome }}</td>
-                            <td>
-                                <span class="badge-status" style="background: {{ get_status_cor(chamado.status.value) }}">
-                                    {{ get_status_label(chamado.status.value) }}
-                                </span>
-                            </td>
                             <td>{{ formatar_data(chamado.created_at) }}</td>
                             <td>
                                 {% if chamado.data_preferencial %}
@@ -115,7 +116,7 @@
             {% else %}
             <div class="empty-state">
                 <i class="fas fa-inbox"></i>
-                <p>Nenhum chamado encontrado</p>
+                <p>Nenhum chamado ativo encontrado</p>
                 <a href="{{ url_for('main.novo_chamado') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Criar primeiro chamado
                 </a>
@@ -123,111 +124,5 @@
             {% endif %}
         </div>
     </div>
-            <!-- Gráfico por prioridade -->
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="fas fa-exclamation-triangle"></i> Chamados por Prioridade</h3>
-        </div>
-        <div class="card-body">
-            <div class="prioridade-bars">
-                {% for prioridade, quantidade in estatisticas.por_prioridade.items() %}
-                <div class="prioridade-bar-item">
-                    <div class="prioridade-bar-header">
-                        <span class="prioridade-label">
-                            <span class="badge-prioridade" style="background: {{ get_prioridade_cor(prioridade) }}">
-                                {{ get_prioridade_label(prioridade) }}
-                            </span>
-                        </span>
-                        <span class="prioridade-count">{{ quantidade }}</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: {{ (quantidade / estatisticas.total * 100) if estatisticas.total > 0 else 0 }}%; background: {{ get_prioridade_cor(prioridade) }}"></div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    <!-- Gráficos e tabelas -->
-    <div class="dashboard-grid">
-        <!-- Gráfico de chamados por mês -->
-        <div class="card card-chart">
-            <div class="card-header">
-                <h3><i class="fas fa-chart-line"></i> Chamados por Mês</h3>
-            </div>
-            <div class="card-body">
-                <canvas id="chartChamadosMes" data-values='{{ chamados_por_mes|tojson }}'></canvas>
-            </div>
-        </div>
-
-        <!-- Gráfico por status -->
-        <div class="card card-chart">
-            <div class="card-header">
-                <h3><i class="fas fa-chart-pie"></i> Chamados por Status</h3>
-            </div>
-            <div class="card-body">
-                <canvas id="chartStatus" data-values='{{ estatisticas.por_status|tojson }}'></canvas>
-            </div>
-        </div>
-    </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Gráfico de chamados por mês
-    const mesData = JSON.parse(document.getElementById('chartChamadosMes').dataset.values);
-    new Chart(document.getElementById('chartChamadosMes'), {
-        type: 'bar',
-        data: {
-            labels: mesData.map(d => d.mes),
-            datasets: [{
-                label: 'Chamados',
-                data: mesData.map(d => d.total),
-                backgroundColor: '#f46c6c',
-                borderRadius: 6,
-                borderSkipped: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                x: { grid: { display: false } }
-            }
-        }
-    });
-
-    // Gráfico de status (doughnut)
-    const statusData = JSON.parse(document.getElementById('chartStatus').dataset.values);
-    new Chart(document.getElementById('chartStatus'), {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(statusData).map(s => {
-                const labels = {aberto: 'Aberto', em_andamento: 'Em Andamento', pendente: 'Pendente', resolvido: 'Resolvido', fechado: 'Fechado'};
-                return labels[s] || s;
-            }),
-            datasets: [{
-                data: Object.values(statusData),
-                backgroundColor: ['#17a2b8', '#ffc107', '#6f42c1', '#28a745', '#6c757d'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'right' }
-            },
-            cutout: '65%'
-        }
-    });
-});
-</script>
 {% endblock %}

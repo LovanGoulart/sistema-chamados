@@ -211,9 +211,8 @@ def logout():
 def dashboard():
     """Painel principal do sistema."""
     estatisticas = ChamadoService.get_estatisticas(current_user)
-    chamados_por_mes = ChamadoService.get_chamados_por_mes(current_user, 6)
 
-    # Últimos chamados ordenados por status e prioridade
+    # Buscar chamados ativos (aberto, pendente, em_andamento)
     if current_user.perfil == PerfilUsuario.ADMIN:
         query = Chamado.query
     elif current_user.perfil == PerfilUsuario.SETOR:
@@ -221,12 +220,21 @@ def dashboard():
     else:
         query = Chamado.query.filter_by(usuario_id=current_user.id)
 
-    ultimos_chamados = get_chamados_ordenados(query)[:5]
+    # Filtrar apenas status ativos: aberto, pendente, em_andamento
+    query = query.filter(
+        Chamado.status.in_([
+            StatusChamado.ABERTO,
+            StatusChamado.PENDENTE,
+            StatusChamado.EM_ANDAMENTO
+        ])
+    )
+
+    # Ordenar: status (aberto → pendente → em_andamento), depois prioridade (urgente → alta → media → baixa)
+    chamados_ativos = get_chamados_ordenados(query)
 
     return render_template('dashboard.html',
                          estatisticas=estatisticas,
-                         chamados_por_mes=chamados_por_mes,
-                         ultimos_chamados=ultimos_chamados,
+                         chamados_ativos=chamados_ativos,
                          formatar_data=formatar_data,
                          formatar_data_curta=formatar_data_curta,
                          get_status_label=get_status_label,
