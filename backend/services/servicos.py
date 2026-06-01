@@ -112,12 +112,12 @@ class ChamadoService:
         query = Chamado.query
 
         # Filtrar por perfil
-        # Usar perfil_str para garantir compatibilidade com SQLAlchemy Enum
-        perfil_str = usuario.perfil_str if hasattr(usuario, 'perfil_str') else str(usuario.perfil)
+        # Usar hybrid_property perfil_str para comparação segura em queries SQL
+        perfil_atual = usuario.perfil_str
 
-        if perfil_str == PerfilUsuario.USUARIO.value:
+        if perfil_atual == PerfilUsuario.USUARIO.value:
             query = query.filter(Chamado.usuario_id == usuario.id)
-        elif perfil_str == PerfilUsuario.SETOR.value:
+        elif perfil_atual == PerfilUsuario.SETOR.value:
             query = query.filter(Chamado.setor_destino_id == usuario.setor_id)
         # Admin vê todos
 
