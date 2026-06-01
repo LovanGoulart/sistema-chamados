@@ -778,15 +778,15 @@ def relatorios():
     for setor in setores:
         query = Chamado.query.filter_by(setor_destino_id=setor.id)
         if current_user.perfil.value == PerfilUsuario.USUARIO.value:
-            query = query.filter(
-                db.or_(
-                    Chamado.usuario_id == current_user.id,
-                    db.and_(
-                        current_user.setor_id.isnot(None),
+            if current_user.setor_id is not None:
+                query = query.filter(
+                    db.or_(
+                        Chamado.usuario_id == current_user.id,
                         Chamado.setor_destino_id == current_user.setor_id
                     )
                 )
-            )
+            else:
+                query = query.filter(Chamado.usuario_id == current_user.id)
         elif current_user.perfil.value == PerfilUsuario.SETOR.value:
             query = query.filter_by(setor_destino_id=current_user.setor_id)
 

@@ -122,15 +122,15 @@ class ChamadoService:
 
         if perfil_str == PerfilUsuario.USUARIO.value:
             # NOVO: Usuário vê seus chamados + chamados do mesmo setor
-            query = query.filter(
-                or_(
-                    Chamado.usuario_id == usuario.id,
-                    and_(
-                        usuario.setor_id.isnot(None),
+            if usuario.setor_id is not None:
+                query = query.filter(
+                    or_(
+                        Chamado.usuario_id == usuario.id,
                         Chamado.setor_destino_id == usuario.setor_id
                     )
                 )
-            )
+            else:
+                query = query.filter(Chamado.usuario_id == usuario.id)
         elif perfil_str == PerfilUsuario.SETOR.value:
             query = query.filter(Chamado.setor_destino_id == usuario.setor_id)
         # Admin vê todos
@@ -203,15 +203,15 @@ class ChamadoService:
 
         if usuario and usuario.perfil == PerfilUsuario.USUARIO:
             # NOVO: Usuário vê estatísticas dos seus chamados + do setor
-            query = query.filter(
-                or_(
-                    Chamado.usuario_id == usuario.id,
-                    and_(
-                        usuario.setor_id.isnot(None),
+            if usuario.setor_id is not None:
+                query = query.filter(
+                    or_(
+                        Chamado.usuario_id == usuario.id,
                         Chamado.setor_destino_id == usuario.setor_id
                     )
                 )
-            )
+            else:
+                query = query.filter(Chamado.usuario_id == usuario.id)
         elif usuario and usuario.perfil == PerfilUsuario.SETOR:
             query = query.filter(Chamado.setor_destino_id == usuario.setor_id)
 
@@ -281,15 +281,15 @@ class ChamadoService:
 
             if usuario and usuario.perfil == PerfilUsuario.USUARIO:
                 # NOVO: Usuário vê seus chamados + do setor
-                query = query.filter(
-                    or_(
-                        Chamado.usuario_id == usuario.id,
-                        and_(
-                            usuario.setor_id.isnot(None),
+                if usuario.setor_id is not None:
+                    query = query.filter(
+                        or_(
+                            Chamado.usuario_id == usuario.id,
                             Chamado.setor_destino_id == usuario.setor_id
                         )
                     )
-                )
+                else:
+                    query = query.filter(Chamado.usuario_id == usuario.id)
             elif usuario and usuario.perfil == PerfilUsuario.SETOR:
                 query = query.filter(Chamado.setor_destino_id == usuario.setor_id)
 
