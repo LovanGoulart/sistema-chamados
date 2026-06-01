@@ -21,6 +21,51 @@ from backend.utils.utilitarios import agora_brasil_naive
 from config import config
 
 
+def formatar_tempo(valor):
+    """
+    Formata um valor de tempo (float em horas ou timedelta)
+    para exibição em horas e minutos.
+
+    Exemplos:
+        12.1    -> "12h 06m"
+        2.5     -> "2h 30m"
+        0.75    -> "45m"
+        0       -> "0m"
+        None    -> "-"
+    """
+    if valor is None:
+        return "-"
+
+    if isinstance(valor, timedelta):
+        total_segundos = int(valor.total_seconds())
+        horas = total_segundos // 3600
+        minutos = (total_segundos % 3600) // 60
+
+        if horas > 0 and minutos > 0:
+            return f"{horas}h {minutos:02d}m"
+        elif horas > 0:
+            return f"{horas}h"
+        else:
+            return f"{minutos}m"
+
+    try:
+        horas_total = float(valor)
+        if horas_total <= 0:
+            return "0m"
+
+        horas = int(horas_total)
+        minutos = int((horas_total - horas) * 60)
+
+        if horas > 0 and minutos > 0:
+            return f"{horas}h {minutos:02d}m"
+        elif horas > 0:
+            return f"{horas}h"
+        else:
+            return f"{minutos}m"
+    except (ValueError, TypeError):
+        return str(valor)
+
+
 def criar_app(config_name='default'):
     """Factory de criação da aplicação Flask."""
 
@@ -88,7 +133,7 @@ def criar_app(config_name='default'):
     @app.context_processor
     def inject_utilities():
         from backend.utils.utilitarios import (
-            formatar_data, formatar_data_curta, 
+            formatar_data, formatar_data_curta,
             get_prioridade_cor, get_status_cor,
             get_prioridade_label, get_status_label
         )
@@ -100,7 +145,8 @@ def criar_app(config_name='default'):
             get_status_cor=get_status_cor,
             get_prioridade_label=get_prioridade_label,
             get_status_label=get_status_label,
-            verificar_data_destaque=verificar_data_destaque
+            verificar_data_destaque=verificar_data_destaque,
+            formatar_tempo=formatar_tempo
         )
 
     return app

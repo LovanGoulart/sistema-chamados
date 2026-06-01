@@ -38,7 +38,7 @@
         <div class="stat-card stat-purple">
             <div class="stat-icon"><i class="fas fa-clock"></i></div>
             <div class="stat-info">
-                <span class="stat-value">{{ estatisticas.tempo_medio_resolucao }}h</span>
+                <span class="stat-value">{{ formatar_tempo(estatisticas.tempo_medio_resolucao) }}</span>
                 <span class="stat-label">Tempo Médio</span>
             </div>
         </div>
@@ -51,42 +51,6 @@
         </div>
     </div>
 
-    <!-- Card Meus Chamados -->
-    <div class="card card-meus-chamados">
-        <div class="card-header">
-            <h3><i class="fas fa-user-circle"></i> Meus Chamados</h3>
-            <a href="{{ url_for('main.chamados') }}" class="btn btn-sm btn-outline">Ver todos</a>
-        </div>
-        <div class="card-body">
-            <div class="meus-chamados-resumo">
-                <div class="resumo-item">
-                    <span class="resumo-numero">{{ estatisticas.abertos }}</span>
-                    <span class="resumo-label">Abertos</span>
-                </div>
-                <div class="resumo-item">
-                    <span class="resumo-numero">{{ estatisticas.em_andamento }}</span>
-                    <span class="resumo-label">Em Andamento</span>
-                </div>
-                <div class="resumo-item">
-                    <span class="resumo-numero">{{ estatisticas.resolvidos }}</span>
-                    <span class="resumo-label">Resolvidos</span>
-                </div>
-                <div class="resumo-item resumo-total">
-                    <span class="resumo-numero">{{ estatisticas.total }}</span>
-                    <span class="resumo-label">Total</span>
-                </div>
-            </div>
-            <div class="meus-chamados-acoes">
-                <a href="{{ url_for('main.novo_chamado') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Abrir Novo Chamado
-                </a>
-                <a href="{{ url_for('main.chamados') }}" class="btn btn-outline">
-                    <i class="fas fa-list"></i> Ver Meus Chamados
-                </a>
-            </div>
-        </div>
-    </div>
-
     <!-- Tabela de Chamados Ativos -->
     <div class="card">
         <div class="card-header">
@@ -95,23 +59,26 @@
         </div>
         <div class="card-body">
             {% if chamados_ativos %}
-            <div class="table-responsive">
+
+            <!-- VIEW: TABELA (desktop e tablet) -->
+            <div class="table-responsive table-desktop-view">
                 <table class="data-table data-table-hover">
                     <thead>
                         <tr>
-                            <th>Status</th>
-                            <th>Prioridade</th>
-                            <th>ID</th>
-                            <th>Título</th>
-                            <th>Setor</th>
-                            <th>Data</th>
-                            <th>Data Prevista</th>
-                            <th style="text-align:center">Ações</th>
+                            <th style="width:50px">ID</th>
+                            <th style="width:100px">Status</th>
+                            <th style="width:100px">Prioridade</th>
+                            <th style="width:120px">Data</th>
+                            <th style="width:25%">Título</th>
+                            <th style="width:13%">Local</th>
+                            <th style="width:120px">Data Prevista</th>
+                            <th style="width:70px;text-align:center">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for chamado in chamados_ativos %}
                         <tr class="{% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% endif %}">
+                            <td><a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}">#{{ chamado.id }}</a></td>
                             <td>
                                 <span class="badge-status" style="background: {{ get_status_cor(chamado.status.value) }}">
                                     {{ get_status_label(chamado.status.value) }}
@@ -122,7 +89,16 @@
                                     {{ get_prioridade_label(chamado.prioridade.value) }}
                                 </span>
                             </td>
-                            <td><a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}">#{{ chamado.id }}</a></td>
+                            <td>
+                                {% set data_formatada = formatar_data(chamado.created_at) %}
+                                {% set partes = data_formatada.split(' ') %}
+                                <div class="data-hora">
+                                    <span class="data-parte">{{ partes[0] }}</span>
+                                    {% if partes|length > 1 %}
+                                    <span class="hora-parte">{{ partes[1] }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
                             <td>
                                 <div class="chamado-titulo">{{ chamado.titulo }}</div>
                                 {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}
@@ -131,8 +107,7 @@
                                 </div>
                                 {% endif %}
                             </td>
-                            <td>{{ chamado.setor_destino.nome }}</td>
-                            <td>{{ formatar_data(chamado.created_at) }}</td>
+                            <td>{{ chamado.local }}</td>
                             <td>
                                 {% if chamado.data_preferencial %}
                                     <span class="{% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}text-danger{% endif %}">
@@ -150,11 +125,6 @@
                                     <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="btn-icon" title="Ver detalhes">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    {% if current_user.perfil.value in ['admin', 'setor'] and chamado.status.value not in ['resolvido', 'fechado'] %}
-                                    <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="btn-icon btn-icon-success" title="Atualizar status">
-                                        <i class="fas fa-check"></i>
-                                    </a>
-                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
@@ -162,6 +132,62 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- VIEW: CARDS (mobile) -->
+            <div class="mobile-cards-view">
+                {% for chamado in chamados_ativos %}
+                <div class="chamado-card {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% endif %}">
+                    <div class="chamado-card-header">
+                        <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="chamado-card-id">#{{ chamado.id }}</a>
+                        <div class="chamado-card-badges">
+                            <span class="badge-status" style="background: {{ get_status_cor(chamado.status.value) }}">
+                                {{ get_status_label(chamado.status.value) }}
+                            </span>
+                            <span class="badge-prioridade" style="background: {{ get_prioridade_cor(chamado.prioridade.value) }}">
+                                {{ get_prioridade_label(chamado.prioridade.value) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="chamado-card-body">
+                        <div class="chamado-card-titulo">{{ chamado.titulo }}</div>
+                        {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}
+                        <div class="data-destaque-inline">
+                            <i class="fas fa-exclamation-triangle"></i> Data vencida: {{ formatar_data(chamado.data_preferencial) }}
+                        </div>
+                        {% elif chamado.data_preferencial %}
+                        <div class="data-destaque-inline data-futura">
+                            <i class="fas fa-calendar-alt"></i> {{ formatar_data(chamado.data_preferencial) }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="chamado-card-meta">
+                        <div class="chamado-card-meta-item">
+                            <i class="fas fa-map-marker-alt"></i> {{ chamado.local or '-' }}
+                        </div>
+                        <div class="chamado-card-meta-item">
+                            <i class="fas fa-calendar"></i> {{ formatar_data(chamado.created_at) }}
+                        </div>
+                        <div class="chamado-card-meta-item">
+                            <i class="fas fa-clock"></i> 
+                            {% if chamado.data_preferencial %}
+                                {{ formatar_data(chamado.data_preferencial) }}
+                            {% else %}
+                                Sem previsão
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="chamado-card-footer">
+                        <span class="chamado-card-data">{{ formatar_data(chamado.created_at) }}</span>
+                        <div class="chamado-card-acoes">
+                            <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="btn-icon" title="Ver detalhes">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
             {% else %}
             <div class="empty-state">
                 <i class="fas fa-inbox"></i>
@@ -178,96 +204,543 @@
 
 {% block extra_css %}
 <style>
-.btn-icon-success {
-    background: var(--success);
-    color: white;
-}
-.btn-icon-success:hover {
-    background: #218838;
-}
+/* ═══════════════════════════════════════════════════════════════
+   DASHBOARD - RESPONSIVIDADE COMPLETA
+   ═══════════════════════════════════════════════════════════════ */
 
-/* Card Meus Chamados */
-.card-meus-chamados {
-    margin-bottom: 20px;
-    border-left: 4px solid var(--primary);
-}
-
-.meus-chamados-resumo {
+/* ─── Stats Grid ─── */
+.stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 16px;
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 24px;
 }
 
-.resumo-item {
-    text-align: center;
-    padding: 16px;
-    background: var(--bg-body);
-    border-radius: var(--border-radius-sm);
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 16px;
+    border-radius: var(--border-radius-md, 12px);
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
-    transition: var(--transition);
+    transition: all 0.2s ease;
+    min-width: 0;
+    overflow: hidden;
 }
 
-.resumo-item:hover {
-    border-color: var(--primary-light);
+.stat-card:hover {
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.resumo-numero {
-    display: block;
-    font-size: 1.8rem;
+.stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+}
+
+.stat-value {
+    font-size: 1.5rem;
     font-weight: 700;
-    color: var(--accent);
     line-height: 1.2;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
-.resumo-label {
-    display: block;
-    font-size: 0.75rem;
+.stat-label {
+    font-size: 0.72rem;
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-weight: 600;
-    margin-top: 4px;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
+    margin-top: 2px;
 }
 
-.resumo-total .resumo-numero {
-    color: var(--primary);
-}
+/* Cores dos stats */
+.stat-primary .stat-icon { background: rgba(0, 132, 255, 0.15); color: #0084ff; }
+.stat-info .stat-icon { background: rgba(23, 162, 184, 0.15); color: #17a2b8; }
+.stat-warning .stat-icon { background: rgba(255, 193, 7, 0.15); color: #ffc107; }
+.stat-success .stat-icon { background: rgba(40, 167, 69, 0.15); color: #28a745; }
+.stat-purple .stat-icon { background: rgba(111, 66, 193, 0.15); color: #6f42c1; }
+.stat-orange .stat-icon { background: rgba(253, 126, 20, 0.15); color: #fd7e14; }
 
-.meus-chamados-acoes {
+.stat-primary .stat-value { color: #0084ff; }
+.stat-info .stat-value { color: #17a2b8; }
+.stat-warning .stat-value { color: #ffc107; }
+.stat-success .stat-value { color: #28a745; }
+.stat-purple .stat-value { color: #6f42c1; }
+.stat-orange .stat-value { color: #fd7e14; }
+
+/* ─── Card Header ─── */
+.card-header {
     display: flex;
-    gap: 12px;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
     flex-wrap: wrap;
+    gap: 10px;
 }
 
+.card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ─── Container da tabela com scroll horizontal ─── */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--border-radius-sm);
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+.table-responsive::-webkit-scrollbar-track {
+    background: var(--bg-body);
+    border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Tabela base */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    table-layout: fixed;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    overflow: hidden;
+}
+
+.data-table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+/* Coluna de título pode quebrar */
+.data-table td:nth-child(5) {
+    white-space: normal !important;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Coluna de local pode quebrar */
+.data-table td:nth-child(6) {
+    white-space: normal !important;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Coluna de ações */
+.data-table th:last-child,
+.data-table td:last-child {
+    text-align: center !important;
+    width: 70px;
+    white-space: nowrap;
+}
+
+/* Badges */
+.badge-status,
+.badge-prioridade {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+    min-width: 70px;
+}
+
+/* Ações da tabela */
+.table-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.table-actions .btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--border-radius-sm, 6px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-body);
+    color: var(--text-secondary);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.table-actions .btn-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: var(--primary, #0084ff);
+    color: white;
+}
+
+/* Data e Hora em linhas separadas */
+.data-hora {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.4;
+}
+
+.data-parte {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.hora-parte {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Título e descrição */
+.chamado-titulo {
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Destaque de data */
+.data-destaque-inline {
+    font-size: 0.8rem;
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #dc3545;
+}
+
+.data-destaque-inline.data-futura {
+    color: #0084ff;
+}
+
+.text-danger {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Linhas destacadas */
+.row-urgente {
+    background: rgba(220, 53, 69, 0.05) !important;
+}
+.row-alta {
+    background: rgba(255, 193, 7, 0.05) !important;
+}
+.row-data-vencida {
+    background: rgba(220, 53, 69, 0.08) !important;
+}
+.data-table tr:hover {
+    background: var(--bg-hover, rgba(0,0,0,0.03)) !important;
+}
+
+/* ─── VIEW MOBILE: CARDS ─── */
+.mobile-cards-view {
+    display: none;
+}
+
+/* ─── RESPONSIVIDADE ─── */
+
+/* Tablets grandes e desktops médios: 3 colunas */
+@media (max-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Tablets: 2 colunas */
 @media (max-width: 768px) {
-    .meus-chamados-resumo {
+    .stats-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
     }
 
-    .resumo-numero {
-        font-size: 1.4rem;
+    .stat-card {
+        padding: 14px;
+        flex-direction: row;
+        text-align: left;
+        gap: 10px;
     }
 
-    .meus-chamados-acoes {
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+
+    .stat-value {
+        font-size: 1.3rem;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+    }
+
+    /* Esconde tabela, mostra cards */
+    .table-desktop-view {
+        display: none;
+    }
+
+    .mobile-cards-view {
+        display: block;
+    }
+
+    .chamado-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md, 8px);
+        padding: 16px;
+        margin-bottom: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .chamado-card:hover {
+        border-color: var(--primary-light, #66b3ff);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .chamado-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .chamado-card-id {
+        font-weight: 700;
+        color: var(--primary, #0084ff);
+        font-size: 0.95rem;
+        text-decoration: none;
+    }
+
+    .chamado-card-badges {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .chamado-card-body {
+        margin-bottom: 12px;
+    }
+
+    .chamado-card-titulo {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 4px;
+        color: var(--text-primary);
+        line-height: 1.3;
+    }
+
+    .chamado-card-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .chamado-card-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .chamado-card-meta-item i {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .chamado-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 10px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .chamado-card-data {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .chamado-card-acoes {
+        display: flex;
+        gap: 8px;
+    }
+
+    /* Badges menores */
+    .badge-status,
+    .badge-prioridade {
+        padding: 3px 8px;
+        font-size: 0.7rem;
+        min-width: 65px;
+    }
+
+    /* Botões menores */
+    .btn-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 0.85rem;
+    }
+
+    /* Card header */
+    .card-header {
         flex-direction: column;
+        align-items: flex-start;
     }
 
-    .meus-chamados-acoes .btn {
+    .card-header .btn {
         width: 100%;
         justify-content: center;
     }
 }
 
+/* Celulares pequenos: 2 colunas menores */
 @media (max-width: 480px) {
-    .meus-chamados-resumo {
+    .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
     }
+
+    .stat-card {
+        padding: 12px 10px;
+        gap: 8px;
+    }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.2rem;
+    }
+
+    .stat-label {
+        font-size: 0.65rem;
+        line-height: 1.2;
+    }
+
+    .chamado-card {
+        padding: 14px;
+    }
+
+    .chamado-card-meta {
+        grid-template-columns: 1fr;
+    }
+
+    .chamado-card-header {
+        flex-direction: column;
+    }
+}
+
+/* ─── Empty state ─── */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    color: var(--text-muted);
+}
+
+.empty-state p {
+    font-size: 1rem;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 480px) {
+    .empty-state {
+        padding: 30px 16px;
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+    }
+
+    .empty-state p {
+        font-size: 0.9rem;
+    }
+
+    .empty-state .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Botão outline */
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.btn-outline:hover {
+    background: var(--bg-body);
+    color: var(--text-primary);
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
 }
 </style>
 {% endblock %}
