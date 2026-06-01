@@ -52,7 +52,7 @@ class ChamadoService:
         db.session.commit()
         return chamado
 
-    
+
     @staticmethod
     def atualizar_status(chamado_id, novo_status, usuario_id, observacao=None):
         """Atualiza o status de um chamado."""
@@ -108,16 +108,30 @@ class ChamadoService:
 
     @staticmethod
     def listar_chamados(usuario, filtros=None, pagina=1, por_pagina=10):
-        """Lista chamados com base no perfil do usuário."""
+        """Lista chamados com base no perfil do usuário.
+
+        NOVA REGRA:
+        - ADMIN: vê todos
+        - SETOR: vê chamados do setor
+        - USUÁRIO: vê seus próprios chamados + chamados do mesmo setor
+        """
         query = Chamado.query
 
-        # Filtrar por perfil
-        # Usar hybrid_property perfil_str para comparação segura em queries SQL
-        perfil_atual = usuario.perfil_str
+        # Usar perfil_str para garantir compatibilidade com SQLAlchemy Enum
+        perfil_str = usuario.perfil_str if hasattr(usuario, 'perfil_str') else str(usuario.perfil)
 
-        if perfil_atual == PerfilUsuario.USUARIO.value:
-            query = query.filter(Chamado.usuario_id == usuario.id)
-        elif perfil_atual == PerfilUsuario.SETOR.value:
+        if perfil_str == PerfilUsuario.USUARIO.value:
+            # NOVO: Usuário vê seus chamados + chamados do mesmo setor
+            query = query.filter(
+                or_(
+                    Chamado.usuario_id == usuario.id,
+                    and_(
+                        usuario.setor_id.isnot(None),
+                        Chamado.setor_destino_id == usuario.setor_id
+                    )
+                )
+            )
+        elif perfil_str == PerfilUsuario.SETOR.value:
             query = query.filter(Chamado.setor_destino_id == usuario.setor_id)
         # Admin vê todos
 
@@ -144,13 +158,60 @@ class ChamadoService:
 
         return query.paginate(page=pagina, per_page=por_pagina, error_out=False)
 
+
+
+    @staticmethod
+    def listar_meus_chamados(usuario, filtros=None, pagina=1, por_pagina=10):
+        """Lista APENAS os chamados CRIADOS pelo usuário logado.
+
+        Diferente de 'listar_chamados', esta função retorna SOMENTE
+        os chamados onde o usuário é o solicitante (autor).
+        """
+        query = Chamado.query.filter(Chamado.usuario_id == usuario.id)
+
+        # Aplicar filtros
+        if filtros:
+            if filtros.get('status'):
+                query = query.filter(Chamado.status == StatusChamado(filtros['status']))
+            if filtros.get('prioridade'):
+                query = query.filter(Chamado.prioridade == Prioridade(filtros['prioridade']))
+            if filtros.get('busca'):
+                busca = f"%{filtros['busca']}%"
+                query = query.filter(
+                    or_(
+                        Chamado.titulo.ilike(busca),
+                        Chamado.descricao.ilike(busca),
+                        Chamado.local.ilike(busca)
+                    )
+                )
+
+        # Ordenar por data de criação decrescente
+        query = query.order_by(Chamado.created_at.desc())
+
+        return query.paginate(page=pagina, per_page=por_pagina, error_out=False)
+
     @staticmethod
     def get_estatisticas(usuario=None):
-        """Retorna estatísticas dos chamados."""
+        """Retorna estatísticas dos chamados.
+
+        NOVA REGRA:
+        - ADMIN: estatísticas de todos
+        - SETOR: estatísticas do setor
+        - USUÁRIO: estatísticas dos seus chamados + chamados do setor
+        """
         query = Chamado.query
 
         if usuario and usuario.perfil == PerfilUsuario.USUARIO:
-            query = query.filter(Chamado.usuario_id == usuario.id)
+            # NOVO: Usuário vê estatísticas dos seus chamados + do setor
+            query = query.filter(
+                or_(
+                    Chamado.usuario_id == usuario.id,
+                    and_(
+                        usuario.setor_id.isnot(None),
+                        Chamado.setor_destino_id == usuario.setor_id
+                    )
+                )
+            )
         elif usuario and usuario.perfil == PerfilUsuario.SETOR:
             query = query.filter(Chamado.setor_destino_id == usuario.setor_id)
 
@@ -219,7 +280,16 @@ class ChamadoService:
             )
 
             if usuario and usuario.perfil == PerfilUsuario.USUARIO:
-                query = query.filter(Chamado.usuario_id == usuario.id)
+                # NOVO: Usuário vê seus chamados + do setor
+                query = query.filter(
+                    or_(
+                        Chamado.usuario_id == usuario.id,
+                        and_(
+                            usuario.setor_id.isnot(None),
+                            Chamado.setor_destino_id == usuario.setor_id
+                        )
+                    )
+                )
             elif usuario and usuario.perfil == PerfilUsuario.SETOR:
                 query = query.filter(Chamado.setor_destino_id == usuario.setor_id)
 

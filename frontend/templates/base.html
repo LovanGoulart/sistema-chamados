@@ -22,9 +22,6 @@
                 <i class="fas fa-school"></i>
                 <span>Colégio Mauá</span>
             </div>
-            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
-                <i class="fas fa-bars"></i>
-            </button>
         </div>
 
         <nav class="sidebar-nav" aria-label="Menu principal">
@@ -52,6 +49,13 @@
                         <i class="fas fa-bell"></i>
                         <span>Notificações</span>
                         <span class="badge" id="notifCount" style="display:none">0</span>
+                    </a>
+                </li>
+
+                <li class="{% if request.endpoint == 'main.meus_chamados' %}active{% endif %}">
+                    <a href="{{ url_for('main.meus_chamados') }}">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Meus Chamados</span>
                     </a>
                 </li>
 
@@ -108,6 +112,9 @@
         <!-- Topbar -->
         <header class="topbar">
             <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
                 <i class="fas fa-bars"></i>
             </button>
             <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
