@@ -666,13 +666,23 @@ a:hover {
 /* ── Tables ── */
 .table-responsive {
     overflow-x: auto;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    max-height: 65vh;
+    position: relative;
 }
 
 .data-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 0.9rem;
+}
+
+.data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 20;
 }
 
 .data-table th {
@@ -685,6 +695,11 @@ a:hover {
     letter-spacing: 0.5px;
     border-bottom: 2px solid var(--border-color);
     white-space: nowrap;
+    background: var(--bg-card);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
 }
 
 .data-table td {
@@ -692,6 +707,7 @@ a:hover {
     border-bottom: 1px solid var(--border-color);
     color: var(--text-primary);
     vertical-align: middle;
+    background: var(--bg-card);
 }
 
 .data-table tbody tr {
@@ -699,6 +715,10 @@ a:hover {
 }
 
 .data-table-hover tbody tr:hover {
+    background: rgba(244, 108, 108, 0.03);
+}
+
+.data-table-hover tbody tr:hover td {
     background: rgba(244, 108, 108, 0.03);
 }
 
@@ -2189,6 +2209,20 @@ a:hover {
     .data-table th,
     .data-table td {
         padding: 10px 12px;
+    }
+
+    /* Desativar cabeçalho fixo no mobile */
+    .table-responsive {
+        max-height: none;
+    }
+
+    .data-table thead,
+    .data-table th {
+        position: static;
+    }
+
+    .data-table th {
+        box-shadow: none;
     }
 
     .content-wrapper {

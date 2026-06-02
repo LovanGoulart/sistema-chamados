@@ -11,7 +11,7 @@
     </div>
     <div class="page-header-right">
         <button class="btn btn-primary" onclick="openModal('modalNovoUsuario')">
-            <i class="fas fa-user-plus"></i>
+            <i class="fas fa-user-plus"></i> Novo
         </button>
     </div>
 </div>
@@ -36,19 +36,21 @@
 <div class="card">
     <div class="card-body">
         {% if usuarios.items %}
-        <div class="table-responsive">
+
+        <!-- ═══ VIEW: TABELA (desktop e tablet) ═══ -->
+        <div class="table-responsive table-desktop-view">
             <table class="data-table data-table-hover">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>E-mail</th>
-                        <th>Telefone</th>
-                        <th>Perfil</th>
-                        <th>Setor</th>
-                        <th>Status</th>
-                        <th>Cadastro</th>
-                        <th style="text-align: center; white-space: nowrap;">Ações</th>
+                        <th style="width:40px">ID</th>
+                        <th style="width:22%">Nome</th>
+                        <th style="width:22%">E-mail</th>
+                        <th style="width:100px">Tel</th>
+                        <th style="width:80px">Perfil</th>
+                        <th style="width:14%">Setor</th>
+                        <th style="width:80px">Status</th>
+                        <th style="width:110px">Cadastro</th>
+                        <th style="width:120px;text-align:center">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -74,13 +76,13 @@
                         <td>
                             <div class="user-cell">
                                 <div class="user-avatar-small {{ 'avatar-inactive' if not usuario.ativo else '' }}">{{ usuario.nome[0]|upper }}</div>
-                                <span>{{ usuario.nome }}</span>
+                                <span class="user-name-truncate">{{ usuario.nome }}</span>
                             </div>
                         </td>
-                        <td>{{ usuario.email }}</td>
+                        <td><span class="email-truncate">{{ usuario.email }}</span></td>
                         <td>{{ usuario.telefone or '-' }}</td>
                         <td><span class="badge-perfil badge-perfil-{{ usuario.perfil.value }}">{{ usuario.perfil.value|title }}</span></td>
-                        <td>{{ usuario.setor.nome if usuario.setor else '-' }}</td>
+                        <td><span class="setor-truncate">{{ usuario.setor.nome if usuario.setor else '-' }}</span></td>
                         <td>
                             {% if usuario.ativo %}
                             <span class="badge-status" style="background: #28a745"><i class="fas fa-check-circle"></i> Ativo</span>
@@ -89,30 +91,27 @@
                             {% endif %}
                         </td>
                         <td>
-                            {{ formatar_data(usuario.created_at) }}
+                            <span class="data-compact">{{ formatar_data(usuario.created_at) }}</span>
                             <br><small class="text-muted">{{ formatar_data_curta(usuario.created_at) }}</small>
                         </td>
                         <td>
                             <div class="table-actions">
-                                <!-- EDITAR -->
                                 <button class="btn btn-sm btn-outline" 
                                     onclick="openEditModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}', '{{ usuario.email }}', '{{ usuario.telefone or '' }}', '{{ usuario.perfil.value }}', {{ usuario.setor_id or 'null' }}, {{ 'true' if usuario.ativo else 'false' }})" 
                                     title="Editar usuário">
                                     <i class="fas fa-edit"></i>
                                 </button>
-
-                                <!-- DESATIVAR / REATIVAR -->
                                 {% if usuario.id != current_user.id %}
                                     {% if usuario.ativo %}
                                     <button class="btn btn-sm btn-warning" 
                                         onclick="openToggleStatusModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}', false)" 
-                                        title="Desativar usuário (pode reativar depois)">
+                                        title="Desativar">
                                         <i class="fas fa-user-slash"></i>
                                     </button>
                                     {% else %}
                                     <button class="btn btn-sm btn-success" 
                                         onclick="openToggleStatusModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}', true)" 
-                                        title="Reativar usuário">
+                                        title="Reativar">
                                         <i class="fas fa-user-check"></i>
                                     </button>
                                     {% endif %}
@@ -121,19 +120,6 @@
                                         <i class="fas fa-lock"></i>
                                     </button>
                                 {% endif %}
-
-                                <!-- EXCLUIR PERMANENTE 
-                                {% if usuario.id != current_user.id %}
-                                <button class="btn btn-sm btn-danger" 
-                                    onclick="openDeleteModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}')" 
-                                    title="Excluir PERMANENTEMENTE (não pode desfazer!)">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                                {% else %}
-                                    <button class="btn btn-sm btn-disabled" disabled title="Não pode excluir a si mesmo">
-                                        <i class="fas fa-lock"></i>
-                                    </button>
-                                {% endif %}-->
                             </div>
                         </td>
                     </tr>
@@ -142,6 +128,86 @@
             </table>
         </div>
 
+        <!-- ═══ VIEW: CARDS (mobile) ═══ -->
+        <div class="mobile-cards-view">
+            {% set mostrou_separador_mobile = false %}
+            {% for usuario in usuarios.items %}
+
+            {# SEPARADOR MOBILE #}
+            {% if not usuario.ativo and not mostrou_separador_mobile %}
+                {% set mostrou_separador_mobile = true %}
+                <div class="mobile-separator">
+                    <i class="fas fa-ban"></i>
+                    <span>Usuários Inativos</span>
+                    <div class="mobile-separator-line"></div>
+                </div>
+            {% endif %}
+
+            <div class="usuario-card {{ 'card-inactive' if not usuario.ativo else '' }}">
+                <div class="usuario-card-header">
+                    <div class="usuario-card-avatar {{ 'avatar-inactive' if not usuario.ativo else '' }}">
+                        {{ usuario.nome[0]|upper }}
+                    </div>
+                    <div class="usuario-card-info">
+                        <div class="usuario-card-nome">{{ usuario.nome }}</div>
+                        <div class="usuario-card-email">{{ usuario.email }}</div>
+                    </div>
+                    <div class="usuario-card-badges">
+                        <span class="badge-perfil badge-perfil-{{ usuario.perfil.value }}">{{ usuario.perfil.value|title }}</span>
+                        {% if usuario.ativo %}
+                        <span class="badge-status badge-status-sm" style="background: #28a745">Ativo</span>
+                        {% else %}
+                        <span class="badge-status badge-status-sm" style="background: #6c757d">Inativo</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="usuario-card-body">
+                    <div class="usuario-card-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-phone"></i>
+                            <span>{{ usuario.telefone or '-' }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-building"></i>
+                            <span>{{ usuario.setor.nome if usuario.setor else '-' }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>{{ formatar_data(usuario.created_at) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="usuario-card-footer">
+                    <button class="btn btn-sm btn-outline" 
+                        onclick="openEditModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}', '{{ usuario.email }}', '{{ usuario.telefone or '' }}', '{{ usuario.perfil.value }}', {{ usuario.setor_id or 'null' }}, {{ 'true' if usuario.ativo else 'false' }})" 
+                        title="Editar">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                    {% if usuario.id != current_user.id %}
+                        {% if usuario.ativo %}
+                        <button class="btn btn-sm btn-warning" 
+                            onclick="openToggleStatusModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}', false)" 
+                            title="Desativar">
+                            <i class="fas fa-user-slash"></i> Desativar
+                        </button>
+                        {% else %}
+                        <button class="btn btn-sm btn-success" 
+                            onclick="openToggleStatusModal({{ usuario.id }}, '{{ usuario.nome|replace("'", "\'") }}', true)" 
+                            title="Reativar">
+                            <i class="fas fa-user-check"></i> Reativar
+                        </button>
+                        {% endif %}
+                    {% else %}
+                        <button class="btn btn-sm btn-disabled" disabled>
+                            <i class="fas fa-lock"></i> Você
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paginação -->
         {% if usuarios.pages > 1 %}
         <div class="pagination">
             {% if usuarios.has_prev %}
@@ -163,6 +229,7 @@
             {% endif %}
         </div>
         {% endif %}
+
         {% else %}
         <div class="empty-state">
             <i class="fas fa-users-slash"></i>
@@ -172,7 +239,7 @@
     </div>
 </div>
 
-<!-- MODAL NOVO USUÁRIO -->
+<!-- MODAIS (mantidos iguais) -->
 <div class="modal" id="modalNovoUsuario">
     <div class="modal-overlay" onclick="closeModal('modalNovoUsuario')"></div>
     <div class="modal-content">
@@ -211,7 +278,7 @@
                         <option value="{{ setor.id }}">{{ setor.nome }}</option>
                         {% endfor %}
                     </select>
-                    <small class="form-help">Obrigatório para perfis de Setor. Todos os chamados direcionados a este setor serão visíveis para este usuário.</small>
+                    <small class="form-help">Obrigatório para perfis de Setor.</small>
                 </div>
                 <div class="form-group">
                     <label for="novo_senha">Senha *</label>
@@ -226,7 +293,6 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR USUÁRIO -->
 <div class="modal" id="modalEditarUsuario">
     <div class="modal-overlay" onclick="closeModal('modalEditarUsuario')"></div>
     <div class="modal-content">
@@ -265,7 +331,7 @@
                         <option value="{{ setor.id }}">{{ setor.nome }}</option>
                         {% endfor %}
                     </select>
-                    <small class="form-help">Obrigatório para perfis de Setor. Todos os chamados direcionados a este setor serão visíveis para este usuário.</small>
+                    <small class="form-help">Obrigatório para perfis de Setor.</small>
                 </div>
                 <div class="form-group">
                     <label for="edit_senha">Nova senha (deixe em branco para manter)</label>
@@ -284,7 +350,6 @@
     </div>
 </div>
 
-<!-- MODAL DESATIVAR / REATIVAR USUÁRIO -->
 <div class="modal" id="modalToggleStatus">
     <div class="modal-overlay" onclick="closeModal('modalToggleStatus')"></div>
     <div class="modal-content modal-content-small">
@@ -314,7 +379,6 @@
     </div>
 </div>
 
-<!-- MODAL EXCLUIR USUÁRIO PERMANENTEMENTE -->
 <div class="modal" id="modalExcluirUsuario">
     <div class="modal-overlay" onclick="closeModal('modalExcluirUsuario')"></div>
     <div class="modal-content modal-content-small" style="border-top: 4px solid #dc3545;">
@@ -329,7 +393,6 @@
                     <strong>ATENÇÃO!</strong> Esta ação é <strong>IRREVERSÍVEL</strong>.
                 </div>
                 <p>Você está prestes a <strong>EXCLUIR PERMANENTEMENTE</strong> o usuário <strong id="deleteUserName"></strong> do banco de dados.</p>
-
                 <div class="delete-consequences" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin: 12px 0; border-radius: 4px;">
                     <p style="margin: 0; font-weight: 600; color: #856404;"><i class="fas fa-skull-crossbones"></i> Consequências:</p>
                     <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #856404; font-size: 0.95em;">
@@ -339,7 +402,6 @@
                         <li><strong>NÃO é possível desfazer</strong> esta ação</li>
                     </ul>
                 </div>
-
                 <div class="form-group" style="margin-top: 16px;">
                     <label for="senha_confirmacao">Digite sua senha de administrador para confirmar:</label>
                     <div class="input-group">
@@ -355,6 +417,361 @@
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   ADMIN USUÁRIOS - TABELA RESPONSIVA SEM SCROLL HORIZONTAL
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── VIEW DESKTOP: TABELA COM CABEÇALHO STICKY ─── */
+.table-desktop-view {
+    display: block;
+    overflow-x: visible;
+    max-height: none;
+}
+
+.table-desktop-view .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    table-layout: fixed;
+}
+
+.table-desktop-view .data-table thead {
+    display: table-header-group;
+}
+
+.table-desktop-view .data-table th {
+    padding: 10px 8px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-color);
+    background: var(--bg-card);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table-desktop-view .data-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    background: var(--bg-card);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Quebra de linha controlada para campos longos */
+.table-desktop-view .data-table td:nth-child(2),
+.table-desktop-view .data-table td:nth-child(3),
+.table-desktop-view .data-table td:nth-child(6) {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.3;
+}
+
+/* Truncar nomes e emails muito longos */
+.user-name-truncate {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.email-truncate {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    font-size: 0.8rem;
+}
+
+.setor-truncate {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    font-size: 0.8rem;
+}
+
+.data-compact {
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+/* Badges menores para caber */
+.badge-perfil {
+    padding: 3px 8px;
+    font-size: 0.7rem;
+}
+
+.badge-status {
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    min-width: auto;
+}
+
+.badge-status i {
+    margin-right: 3px;
+    font-size: 0.65rem;
+}
+
+/* Avatar menor */
+.user-avatar-small {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+}
+
+/* Ações compactas */
+.table-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.table-actions .btn-sm {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+}
+
+/* Hover */
+.table-desktop-view .data-table-hover tbody tr:hover {
+    background: rgba(244, 108, 108, 0.03);
+}
+
+/* Separador */
+.row-separator td {
+    padding: 8px !important;
+    background: #f8f9fa !important;
+}
+
+.separator-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.separator-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, #dee2e6, transparent);
+}
+
+/* ─── VIEW MOBILE: CARDS ─── */
+.mobile-cards-view {
+    display: none;
+}
+
+.mobile-separator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    margin: 12px 0 10px 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mobile-separator i {
+    font-size: 0.9rem;
+}
+
+.mobile-separator-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, #dee2e6, transparent);
+    margin-left: 6px;
+}
+
+.usuario-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+}
+
+.usuario-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.usuario-card.card-inactive {
+    opacity: 0.65;
+    background: #f8f9fa;
+}
+
+.usuario-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.usuario-card-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.usuario-card-avatar.avatar-inactive {
+    background: #adb5bd;
+    opacity: 0.7;
+}
+
+.usuario-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.usuario-card-nome {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.usuario-card-email {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+.usuario-card-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.badge-status-sm {
+    padding: 2px 6px;
+    font-size: 0.6rem;
+    min-width: auto;
+}
+
+.usuario-card-body {
+    margin-bottom: 12px;
+}
+
+.usuario-card-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+}
+
+.meta-item i {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    width: 14px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.meta-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.usuario-card-footer {
+    display: flex;
+    gap: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+.usuario-card-footer .btn {
+    flex: 1;
+    justify-content: center;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+}
+
+/* ─── RESPONSIVIDADE ─── */
+@media (max-width: 768px) {
+    .table-desktop-view {
+        display: none;
+    }
+
+    .mobile-cards-view {
+        display: block;
+    }
+
+    .page-header-right .btn .btn-text {
+        display: none;
+    }
+
+    .page-header-right .btn {
+        padding: 8px 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .usuario-card {
+        padding: 12px;
+    }
+
+    .usuario-card-meta {
+        grid-template-columns: 1fr;
+    }
+
+    .usuario-card-header {
+        flex-wrap: wrap;
+    }
+
+    .usuario-card-badges {
+        flex-direction: row;
+        width: 100%;
+        justify-content: flex-start;
+        margin-top: 4px;
+    }
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}
