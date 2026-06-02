@@ -21,7 +21,6 @@
     <div class="card-body">
         <form method="GET" action="{{ url_for('main.admin_usuarios') }}" class="filter-form">
             <div class="filter-group filter-group-large">
-                <label for="busca"><i class="fas fa-search"></i> Buscar usuário</label>
                 <input type="text" id="busca" name="busca" placeholder="Nome ou e-mail..." value="{{ busca or '' }}">
             </div>
             <div class="filter-actions">
@@ -92,7 +91,6 @@
                         </td>
                         <td>
                             <span class="data-compact">{{ formatar_data(usuario.created_at) }}</span>
-                            <br><small class="text-muted">{{ formatar_data_curta(usuario.created_at) }}</small>
                         </td>
                         <td>
                             <div class="table-actions">
@@ -429,7 +427,22 @@
 .table-desktop-view {
     display: block;
     overflow-x: visible;
-    max-height: none;
+    overflow-y: auto;
+    max-height: 65vh;
+    position: relative;
+}
+
+.table-desktop-view .data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+}
+
+.table-desktop-view .data-table th {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
 }
 
 .table-desktop-view .data-table {
