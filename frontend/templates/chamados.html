@@ -105,7 +105,7 @@
                         <th style="width:120px">Data</th>
                         <th style="width:25%">Título</th>
                         <th style="width:15%">Local</th>
-                        <th style="width:13%">Aberto por</th>
+                        <th style="width:13%">Responsável</th>
                         <th style="width:70px;text-align:center">Ações</th>
                     </tr>
                 </thead>
@@ -147,7 +147,7 @@
                             {% endif %}
                         </td>
                         <td>{{ chamado.local }}</td>
-                        <td>{{ chamado.usuario.nome }}</td>
+                        <td>{% if chamado.atendente %}<span class="user-cell"><div class="user-avatar-small">{{ chamado.atendente.nome[0]|upper }}</div><span>{{ chamado.atendente.nome }}</span></span>{% else %}<span class="text-muted"><i class="fas fa-user-clock"></i> Não atribuído</span>{% endif %}</td>
                         <td>
                             <div class="table-actions">
                                 <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="btn-icon" title="Ver detalhes">
@@ -194,7 +194,7 @@
                         <i class="fas fa-map-marker-alt"></i> {{ chamado.local or '-' }}
                     </div>
                     <div class="chamado-card-meta-item">
-                        <i class="fas fa-user"></i> {{ chamado.usuario.nome }}
+                        <i class="fas fa-user-check"></i> {{ chamado.atendente.nome if chamado.atendente else "Não atribuído" }}
                     </div>
                     <div class="chamado-card-meta-item">
                         <i class="fas fa-calendar"></i> {{ formatar_data(chamado.created_at) }}
@@ -401,7 +401,7 @@
     overflow-wrap: break-word;
 }
 
-/* Aberto por */
+/* Responsável */
 .data-table th:nth-child(7),
 .data-table td:nth-child(7) {
     width: 13%;
