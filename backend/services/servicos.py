@@ -201,7 +201,13 @@ class ChamadoService:
         """
         query = Chamado.query
 
-        if usuario and usuario.perfil == PerfilUsuario.USUARIO:
+        # CORREÇÃO: Usar perfil_str para compatibilidade com SQLAlchemy Enum
+        if usuario:
+            perfil_str = usuario.perfil_str if hasattr(usuario, 'perfil_str') else str(usuario.perfil)
+        else:
+            perfil_str = None
+
+        if perfil_str == PerfilUsuario.USUARIO.value:
             # NOVO: Usuário vê estatísticas dos seus chamados + do setor
             if usuario.setor_id is not None:
                 query = query.filter(
@@ -212,7 +218,7 @@ class ChamadoService:
                 )
             else:
                 query = query.filter(Chamado.usuario_id == usuario.id)
-        elif usuario and usuario.perfil == PerfilUsuario.SETOR:
+        elif perfil_str == PerfilUsuario.SETOR.value:
             query = query.filter(Chamado.setor_destino_id == usuario.setor_id)
 
         total = query.count()
@@ -279,7 +285,13 @@ class ChamadoService:
                 and_(Chamado.created_at >= inicio_mes, Chamado.created_at <= fim_mes)
             )
 
-            if usuario and usuario.perfil == PerfilUsuario.USUARIO:
+            # CORREÇÃO: Usar perfil_str para compatibilidade com SQLAlchemy Enum
+            if usuario:
+                perfil_str = usuario.perfil_str if hasattr(usuario, 'perfil_str') else str(usuario.perfil)
+            else:
+                perfil_str = None
+
+            if perfil_str == PerfilUsuario.USUARIO.value:
                 # NOVO: Usuário vê seus chamados + do setor
                 if usuario.setor_id is not None:
                     query = query.filter(
@@ -290,7 +302,7 @@ class ChamadoService:
                     )
                 else:
                     query = query.filter(Chamado.usuario_id == usuario.id)
-            elif usuario and usuario.perfil == PerfilUsuario.SETOR:
+            elif perfil_str == PerfilUsuario.SETOR.value:
                 query = query.filter(Chamado.setor_destino_id == usuario.setor_id)
 
             resultado.append({

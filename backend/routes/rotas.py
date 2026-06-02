@@ -106,14 +106,18 @@ def pode_ver_chamado(chamado):
 
     REGRAS:
     - ADMIN: pode ver todos os chamados
-    - SETOR: pode ver chamados do seu setor
+    - SETOR: pode ver chamados do seu setor DESTINO ou que ELE MESMO CRIOU
     - USUÁRIO: pode ver APENAS seus próprios chamados
     """
     if current_user.perfil.value == PerfilUsuario.ADMIN.value:
         return True
 
     if current_user.perfil.value == PerfilUsuario.SETOR.value:
-        return chamado.setor_destino_id == current_user.setor_id
+        # CORREÇÃO: Setor pode ver se é o destino OU se é o criador
+        return (
+            chamado.setor_destino_id == current_user.setor_id or
+            chamado.usuario_id == current_user.id
+        )
 
     # USUÁRIO: pode ver APENAS seus próprios chamados
     if current_user.perfil.value == PerfilUsuario.USUARIO.value:
@@ -127,7 +131,7 @@ def pode_enviar_mensagem(chamado):
 
     REGRAS:
     - ADMIN: pode enviar em todos os chamados
-    - SETOR: pode enviar em chamados do seu setor
+    - SETOR: pode enviar em chamados do seu setor DESTINO ou que ELE MESMO CRIOU
     - USUÁRIO: pode enviar APENAS em seus próprios chamados
     """
     # Forçar comparação como int para evitar problemas de tipo (str vs int)
@@ -140,7 +144,11 @@ def pode_enviar_mensagem(chamado):
         return True
 
     if current_user.perfil.value == PerfilUsuario.SETOR.value:
-        return chamado_setor_id == user_setor_id
+        # CORREÇÃO: Setor pode enviar mensagem se é o destino OU se é o criador
+        return (
+            chamado_setor_id == user_setor_id or
+            chamado_autor_id == user_id
+        )
 
     # USUÁRIO: pode enviar APENAS em seus próprios chamados
     if current_user.perfil.value == PerfilUsuario.USUARIO.value:

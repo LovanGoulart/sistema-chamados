@@ -2411,6 +2411,38 @@ a:hover {
    ESTILOS ADICIONAIS PARA GESTÃO DE USUÁRIOS
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─── CABEÇALHO FIXO DA TABELA DE USUÁRIOS ─── */
+.table-desktop-view {
+    max-height: 65vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+}
+
+.table-desktop-view .data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+}
+
+.table-desktop-view .data-table th {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--bg-card);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+/* Garantir que o separador não quebre o sticky */
+.table-desktop-view .data-table tbody tr.row-separator {
+    position: static;
+}
+
+.table-desktop-view .data-table tbody tr.row-separator td {
+    position: static;
+    z-index: auto;
+}
+
 /* Linha de usuário inativo na tabela */
 .row-inactive {
     opacity: 0.6;
