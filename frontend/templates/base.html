@@ -10,7 +10,106 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ========== CORREÇÃO: TÍTULO ALINHADO À ESQUERDA ========== */
+        .topbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary, #1a1a2e);
+            flex: 1;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ========== CORREÇÃO: DOIS MENUS HAMBÚRGUER ========== */
+        /* Desktop: sidebar-toggle visível, mobile-menu-btn escondido */
+        .sidebar-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-secondary, #666);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-hover, rgba(0,0,0,0.05));
+        }
+
+        .mobile-menu-btn {
+            display: none;
+        }
+
+        /* Mobile: apenas mobile-menu-btn visível, sidebar-toggle escondido */
+        @media (max-width: 768px) {
+            .sidebar-toggle {
+                display: none !important;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: none;
+                border: none;
+                font-size: 1.2rem;
+                color: var(--text-secondary, #666);
+                cursor: pointer;
+                padding: 8px;
+                border-radius: 8px;
+            }
+
+            .topbar {
+                padding: 10px 16px;
+            }
+
+            .page-title {
+                font-size: 1.1rem;
+                max-width: 200px;
+            }
+
+            .btn-novo-chamado .btn-text {
+                display: none;
+            }
+
+            .btn-novo-chamado {
+                width: 36px;
+                height: 36px;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        /* Topbar actions alinhados à direita */
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+    </style>
+
     {% block extra_css %}{% endblock %}
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>

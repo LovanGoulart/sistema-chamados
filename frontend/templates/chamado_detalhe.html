@@ -1536,4 +1536,33 @@ function limparPreview() {
     }
 })();
 </script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   AUTO-FOCUS NO CHAT AO CARREGAR A PÁGINA
+   ═══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+    const chatCard = document.querySelector('.card-messenger');
+    const container = document.getElementById('mensagensContainer');
+
+    if (chatCard) {
+        // Rola até o chat com comportamento suave
+        setTimeout(function() {
+            chatCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Scroll interno para o final das mensagens (última mensagem visível)
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+
+            // Foca no input de mensagem se o chamado estiver aberto
+            const inputMensagem = document.getElementById('inputMensagem');
+            if (inputMensagem && !inputMensagem.disabled) {
+                inputMensagem.focus();
+            }
+        }, 300);
+    }
+});
+</script>
+
 {% endblock %}
