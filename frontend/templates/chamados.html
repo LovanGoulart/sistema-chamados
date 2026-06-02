@@ -100,8 +100,8 @@
                 <thead>
                     <tr>
                         <th style="width:50px">ID</th>
-                        <th style="width:100px">Status</th>
-                        <th style="width:100px">Prioridade</th>
+                        <th style="width:130px">Status</th>
+                        <th style="width:130px">Prioridade</th>
                         <th style="width:120px">Data</th>
                         <th style="width:25%">Título</th>
                         <th style="width:15%">Local</th>
@@ -211,35 +211,6 @@
             </div>
             {% endfor %}
         </div>
-
-        <!-- Paginação -->
-        {% if chamados.pages > 1 %}
-        <div class="pagination">
-            {% if chamados.has_prev %}
-            <a href="{{ url_for('main.chamados', page=chamados.prev_num, **filtros) }}" class="pagination-item">
-                <i class="fas fa-chevron-left"></i>
-            </a>
-            {% endif %}
-
-            {% for page_num in chamados.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                {% if page_num %}
-                    {% if page_num == chamados.page %}
-                    <span class="pagination-item active">{{ page_num }}</span>
-                    {% else %}
-                    <a href="{{ url_for('main.chamados', page=page_num, **filtros) }}" class="pagination-item">{{ page_num }}</a>
-                    {% endif %}
-                {% else %}
-                    <span class="pagination-item disabled">...</span>
-                {% endif %}
-            {% endfor %}
-
-            {% if chamados.has_next %}
-            <a href="{{ url_for('main.chamados', page=chamados.next_num, **filtros) }}" class="pagination-item">
-                <i class="fas fa-chevron-right"></i>
-            </a>
-            {% endif %}
-        </div>
-        {% endif %}
 
         {% else %}
         <div class="empty-state">
@@ -363,15 +334,15 @@
 /* Status */
 .data-table th:nth-child(2),
 .data-table td:nth-child(2) {
-    width: 100px;
-    min-width: 100px;
+    width: 130px;
+    min-width: 130px;
 }
 
 /* Prioridade */
 .data-table th:nth-child(3),
 .data-table td:nth-child(3) {
-    width: 100px;
-    min-width: 100px;
+    width: 130px;
+    min-width: 130px;
 }
 
 /* Data */
