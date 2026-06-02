@@ -2834,3 +2834,73 @@ a:hover {
         gap: 8px;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESTAQUE DE DATA PREVISTA - HOJE (AMARELO) vs VENCIDA (VERMELHO)
+   Adicionado em 02/06/2026
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Data PREVISTA PARA HOJE ─── */
+.row-data-hoje {
+    border-left: 4px solid var(--warning) !important;
+    background: rgba(255, 193, 7, 0.06) !important;
+}
+
+.row-data-hoje:hover td,
+.row-data-hoje:hover {
+    background: rgba(255, 193, 7, 0.12) !important;
+}
+
+/* Badge/data inline para HOJE */
+.data-destaque-inline.data-hoje {
+    color: #856404;
+    font-weight: 700;
+    animation: pulse-hoje 2s infinite;
+}
+
+.data-destaque-inline.data-hoje i {
+    color: var(--warning);
+}
+
+@keyframes pulse-hoje {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* ─── Data VENCIDA ─── */
+.row-data-vencida {
+    border-left: 4px solid var(--danger) !important;
+    background: rgba(220, 53, 69, 0.06) !important;
+}
+
+.row-data-vencida:hover td,
+.row-data-vencida:hover {
+    background: rgba(220, 53, 69, 0.12) !important;
+}
+
+/* Badge/data inline para VENCIDA */
+.data-destaque-inline.data-vencida {
+    color: var(--danger);
+    font-weight: 700;
+    animation: pulse-vencida 2s infinite;
+}
+
+.data-destaque-inline.data-vencida i {
+    color: var(--danger);
+}
+
+@keyframes pulse-vencida {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* ─── Texto de data na coluna da tabela ─── */
+.text-hoje {
+    color: #856404 !important;
+    font-weight: 700;
+}
+
+.text-vencida {
+    color: var(--danger) !important;
+    font-weight: 700;
+}
