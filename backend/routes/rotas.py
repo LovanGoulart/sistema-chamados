@@ -182,7 +182,7 @@ def meus_chamados():
     filtros = {k: v for k, v in filtros.items() if v}
 
     # Usar o novo serviço que filtra APENAS por usuario_id
-    resultado = ChamadoService.listar_meus_chamados(current_user, filtros, pagina)
+    resultado = ChamadoService.listar_meus_chamados(current_user, filtros, pagina, 99999)
 
     # Ordenar por status, prioridade e data
     chamados_ordenados = get_chamados_ordenados(resultado)
@@ -368,7 +368,7 @@ def chamados():
     # Remover filtros vazios
     filtros = {k: v for k, v in filtros.items() if v}
 
-    resultado = ChamadoService.listar_chamados(current_user, filtros, pagina)
+    resultado = ChamadoService.listar_chamados(current_user, filtros, pagina, 99999)
     setores = Setor.query.filter_by(ativo=True).order_by(Setor.nome).all()
 
     # Ordenar por status, prioridade e data
