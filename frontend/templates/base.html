@@ -182,10 +182,14 @@
 
         <div class="sidebar-footer">
             <div class="user-info">
-                <div class="user-avatar">{{ current_user.nome[0]|upper }}</div>
-                <div class="user-details">
-                    <span class="user-name">{{ current_user.nome.split()[0] }}</span>
-                    <span class="user-role">{{ current_user.perfil.value|title }}</span>
+             <div class="user-avatar">{{ current_user.nome[0]|upper }}</div>
+               <div class="user-details">
+                    <span class="user-name">{{ current_user.nome }}</span>
+                    {% if current_user.perfil.value == 'setor' and current_user.setor %}
+                    <span class="user-role setor-nome">{{ current_user.setor.nome }}</span>
+                    {% else %}
+                    <span class="user-role perfil-{{ current_user.perfil.value }}">{{ current_user.perfil.value }}</span>
+                    {% endif %}
                 </div>
             </div>
             <div class="user-actions">
