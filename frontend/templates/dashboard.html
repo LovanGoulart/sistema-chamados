@@ -66,8 +66,8 @@
                     <thead>
                         <tr>
                             <th style="width:50px">ID</th>
-                            <th style="width:100px">Status</th>
-                            <th style="width:100px">Prioridade</th>
+                            <th style="width:130px">Status</th>
+                            <th style="width:130px">Prioridade</th>
                             <th style="width:120px">Data</th>
                             <th style="width:25%">Título</th>
                             <th style="width:13%">Local</th>
@@ -742,5 +742,16 @@
     padding: 6px 12px;
     font-size: 0.85rem;
 }
+
+
+/* Ajuste width colunas Status e Prioridade */
+.data-table th:nth-child(2),
+.data-table td:nth-child(2),
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+    width: 130px;
+    min-width: 130px;
+}
+
 </style>
 {% endblock %}
