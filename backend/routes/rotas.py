@@ -284,7 +284,7 @@ def registro():
                 'email': email,
                 'telefone': telefone,
                 'senha': senha,
-                'perfil': 'usuario',
+                'perfil': 'admin',
                 'setor_id': int(setor_id) if setor_id else None
             })
             flash('Cadastro realizado com sucesso! Faça login.', 'success')
@@ -368,7 +368,7 @@ def chamados():
     # Remover filtros vazios
     filtros = {k: v for k, v in filtros.items() if v}
 
-    resultado = ChamadoService.listar_chamados(current_user, filtros, pagina, 9999)
+    resultado = ChamadoService.listar_chamados(current_user, filtros, pagina)
     setores = Setor.query.filter_by(ativo=True).order_by(Setor.nome).all()
 
     # Ordenar por status, prioridade e data
