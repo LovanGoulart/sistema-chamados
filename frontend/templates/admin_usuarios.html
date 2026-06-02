@@ -11,7 +11,7 @@
     </div>
     <div class="page-header-right">
         <button class="btn btn-primary" onclick="openModal('modalNovoUsuario')">
-            <i class="fas fa-user-plus"></i> Novo
+            <i class="fas fa-user-plus"></i>
         </button>
     </div>
 </div>
@@ -21,7 +21,7 @@
     <div class="card-body">
         <form method="GET" action="{{ url_for('main.admin_usuarios') }}" class="filter-form">
             <div class="filter-group filter-group-large">
-                <input type="text" id="busca" name="busca" placeholder="Nome ou e-mail..." value="{{ busca or '' }}">
+                <input type="text" id="busca" name="busca" placeholder="Digite nome ou e-mail..." value="{{ busca or '' }}">
             </div>
             <div class="filter-actions">
                 <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
