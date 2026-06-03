@@ -4,12 +4,62 @@
 {% block page_title %}Relatórios{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<!--<div class="page-header">
     <div class="page-header-left">
         <h2><i class="fas fa-chart-bar"></i> Relatórios e Analytics</h2>
         <p class="page-subtitle">Análise completa dos chamados do sistema</p>
     </div>
-</div>
+</div>-->
+
+<style>
+/* Ajuste mobile para cards de estatísticas - ícone à esquerda, texto à direita, grid 2 colunas */
+@media (max-width: 768px) {
+    .stats-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px !important;
+    }
+    .stats-grid .stat-card {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 12px !important;
+        padding: 16px !important;
+        text-align: left !important;
+    }
+    .stats-grid .stat-card .stat-icon {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+        border-radius: 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 20px !important;
+        margin: 0 !important;
+        order: 0 !important;
+    }
+    .stats-grid .stat-card .stat-info {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        order: 1 !important;
+    }
+    .stats-grid .stat-card .stat-value {
+        font-size: 24px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+        margin-bottom: 4px !important;
+    }
+    .stats-grid .stat-card .stat-label {
+        font-size: 12px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        opacity: 0.8 !important;
+    }
+}
+</style>
 
 <!-- Cards de resumo -->
 <div class="stats-grid stats-grid-4">
@@ -17,7 +67,7 @@
         <div class="stat-icon"><i class="fas fa-headset"></i></div>
         <div class="stat-info">
             <span class="stat-value">{{ estatisticas.total }}</span>
-            <span class="stat-label">Total</span>
+            <span class="stat-label">Total de Chamados</span>
         </div>
     </div>
     <div class="stat-card stat-info">
@@ -37,9 +87,20 @@
     <div class="stat-card stat-purple">
         <div class="stat-icon"><i class="fas fa-clock"></i></div>
         <div class="stat-info">
-            <span class="stat-value">{{ estatisticas.tempo_medio_resolucao }}h</span>
+            <span class="stat-value">
+                {% if estatisticas.tempo_medio_resolucao %}
+                    {% set horas_int = estatisticas.tempo_medio_resolucao|int %}
+                    {% set minutos = ((estatisticas.tempo_medio_resolucao - horas_int) * 60)|int %}
+                    {% if horas_int > 0 %}{{ horas_int }}h{% endif %}{% if minutos > 0 %}{{ minutos }}min{% endif %}
+                    {% if horas_int == 0 and minutos == 0 %}0min{% endif %}
+                {% else %}
+                    0min
+                {% endif %}
+            </span>
             <span class="stat-label">Tempo Médio</span>
         </div>
+    </div>
+</div>
     </div>
 </div>
 

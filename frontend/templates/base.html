@@ -274,7 +274,6 @@
             }
         }
     </style>
-<base target="_blank">
 </head>
 <body>
     {% if current_user.is_authenticated and current_user.perfil.value != 'usuario' %}
@@ -417,12 +416,10 @@
             {% endif %}
             <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
             <div class="topbar-actions">
-                {% if current_user.perfil.value == 'usuario' %}
-                <!-- Botão Home (usuário comum) -->
-                <a href="{{ url_for('main.meus_chamados') }}" class="btn-icon btn-home" title="Meus Chamados">
+                <!-- Botão Home (todos os usuários) -->
+                <a href="{{ url_for('main.dashboard') }}" class="btn-icon btn-home" title="Home - Meus Chamados">
                     <i class="fas fa-home"></i>
                 </a>
-                {% endif %}
                 <!-- Botão Novo Chamado (+) -->
                 <a href="{{ url_for('main.novo_chamado') }}" class="btn-novo-chamado" title="Novo Chamado">
                     <i class="fas fa-plus"></i>
