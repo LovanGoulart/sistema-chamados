@@ -133,7 +133,7 @@
             <h3><i class="fas fa-chart-pie"></i> Por Status</h3>
         </div>
         <div class="card-body">
-            <canvas id="chartStatusRel"></canvas>
+            <canvas id="chartStatusRel" data-values='{{ estatisticas.por_status|tojson }}'></canvas>
         </div>
     </div>
 
@@ -143,7 +143,7 @@
             <h3><i class="fas fa-exclamation-triangle"></i> Por Prioridade</h3>
         </div>
         <div class="card-body">
-            <canvas id="chartPrioridadeRel"></canvas>
+            <canvas id="chartPrioridadeRel" data-values='{{ estatisticas.por_prioridade|tojson }}'></canvas>
         </div>
     </div>
 </div>
@@ -166,7 +166,9 @@
             <span class="badge-status" style="background: var(--primary)">{{ dados.total }} chamados</span>
         </div>
         <div class="card-body">
-            <canvas id="chartSetor{{ loop.index }}" data-status='{{ dados.por_status|tojson }}' data-prioridade='{{ dados.por_prioridade|tojson }}'></canvas>
+            <canvas id="chartSetor{{ loop.index }}" 
+                    data-status='{{ dados.por_status|tojson }}' 
+                    data-prioridade='{{ dados.por_prioridade|tojson }}'></canvas>
         </div>
     </div>
     {% endif %}
@@ -185,8 +187,8 @@
                 <thead>
                     <tr>
                         <th>Status</th>
-                        <th>Quantidade</th>
-                        <th>Percentual</th>
+                        <th>Qtd</th>
+                        <th>%</th>
                         <th>Barra</th>
                     </tr>
                 </thead>
@@ -224,8 +226,8 @@
                 <thead>
                     <tr>
                         <th>Prioridade</th>
-                        <th>Quantidade</th>
-                        <th>Percentual</th>
+                        <th>Qtd</th>
+                        <th>%</th>
                         <th>Barra</th>
                     </tr>
                 </thead>
@@ -256,8 +258,46 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
+// ═══════════════════════════════════════════════════════════════
+// MAPEAMENTO DE CORES CONSISTENTE COM O BACKEND
+// Essas cores correspondem exatamente às funções get_status_cor() e get_prioridade_cor()
+// ═══════════════════════════════════════════════════════════════
+const CORES_STATUS = {
+    'aberto':        '#17a2b8',  // info (azul ciano)
+    'em_andamento':  '#ffc107',  // warning (amarelo)
+    'pendente':      '#6f42c1',  // purple (roxo)
+    'resolvido':     '#28a745',  // success (verde)
+    'fechado':       '#6c757d'   // secondary (cinza)
+};
+
+const CORES_PRIORIDADE = {
+    'baixa':   '#28a745',  // success (verde)
+    'media':   '#ffc107',  // warning (amarelo)
+    'alta':    '#fd7e14',  // orange (laranja)
+    'urgente': '#dc3545'   // danger (vermelho)
+};
+
+const LABELS_STATUS = {
+    'aberto': 'Aberto',
+    'em_andamento': 'Em Andamento',
+    'pendente': 'Pendente',
+    'resolvido': 'Resolvido',
+    'fechado': 'Fechado'
+};
+
+const LABELS_PRIORIDADE = {
+    'baixa': 'Baixa',
+    'media': 'Média',
+    'alta': 'Alta',
+    'urgente': 'Urgente'
+};
+
+// Ordem fixa para exibição consistente
+const ORDEM_STATUS = ['aberto', 'em_andamento', 'pendente', 'resolvido', 'fechado'];
+const ORDEM_PRIORIDADE = ['baixa', 'media', 'alta', 'urgente'];
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Gráfico por mês
+    // ── Gráfico por mês ──
     const mesData = JSON.parse(document.getElementById('chartMeses').dataset.values);
     new Chart(document.getElementById('chartMeses'), {
         type: 'line',
@@ -285,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Gráfico por setor
+    // ── Gráfico por setor ──
     const setorData = JSON.parse(document.getElementById('chartSetores').dataset.values);
     new Chart(document.getElementById('chartSetores'), {
         type: 'bar',
@@ -309,18 +349,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Status
-    const statusData = {{ estatisticas.por_status|tojson }};
+    // ── Gráfico de Status (cores dinâmicas do backend) ──
+    const statusData = JSON.parse(document.getElementById('chartStatusRel').dataset.values);
+    const statusKeys = Object.keys(statusData);
     new Chart(document.getElementById('chartStatusRel'), {
         type: 'doughnut',
         data: {
-            labels: Object.keys(statusData).map(s => {
-                const labels = {aberto: 'Aberto', em_andamento: 'Em Andamento', pendente: 'Pendente', resolvido: 'Resolvido', fechado: 'Fechado'};
-                return labels[s] || s;
-            }),
+            labels: statusKeys.map(s => LABELS_STATUS[s] || s),
             datasets: [{
                 data: Object.values(statusData),
-                backgroundColor: ['#17a2b8', '#ffc107', '#6f42c1', '#28a745', '#6c757d'],
+                backgroundColor: statusKeys.map(s => CORES_STATUS[s] || '#6c757d'),
                 borderWidth: 0
             }]
         },
@@ -332,18 +370,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Prioridade
-    const prioridadeData = {{ estatisticas.por_prioridade|tojson }};
+    // ── Gráfico de Prioridade (cores dinâmicas do backend) ──
+    const prioridadeData = JSON.parse(document.getElementById('chartPrioridadeRel').dataset.values);
+    const prioridadeKeys = Object.keys(prioridadeData);
     new Chart(document.getElementById('chartPrioridadeRel'), {
         type: 'doughnut',
         data: {
-            labels: Object.keys(prioridadeData).map(p => {
-                const labels = {baixa: 'Baixa', media: 'Média', alta: 'Alta', urgente: 'Urgente'};
-                return labels[p] || p;
-            }),
+            labels: prioridadeKeys.map(p => LABELS_PRIORIDADE[p] || p),
             datasets: [{
                 data: Object.values(prioridadeData),
-                backgroundColor: ['#28a745', '#ffc107', '#fd7e14', '#dc3545'],
+                backgroundColor: prioridadeKeys.map(p => CORES_PRIORIDADE[p] || '#6c757d'),
                 borderWidth: 0
             }]
         },
@@ -355,43 +391,107 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Gráficos por setor (admin)
+    // ── Gráficos por setor (admin) ──
+    // Cada gráfico mostra barras individuais para cada status e prioridade
+    // com as cores corretas do sistema
     {% if current_user.is_admin() and graficos_por_setor %}
     {% for setor_nome, dados in graficos_por_setor.items() %}
     {% if dados.total > 0 %}
     (function() {
         const ctx = document.getElementById('chartSetor{{ loop.index }}');
         if (!ctx) return;
+
         const statusData = JSON.parse(ctx.dataset.status);
         const prioridadeData = JSON.parse(ctx.dataset.prioridade);
+
+        // Montar dados na ordem fixa: status primeiro, depois prioridade
+        // com um espaço (null) entre os grupos para separação visual
+        const labels = [];
+        const data = [];
+        const colors = [];
+        const grupoInfo = []; // 'status' ou 'prioridade' para cada barra
+
+        // Adicionar status na ordem fixa
+        ORDEM_STATUS.forEach(function(key) {
+            if (statusData.hasOwnProperty(key)) {
+                labels.push(LABELS_STATUS[key]);
+                data.push(statusData[key]);
+                colors.push(CORES_STATUS[key]);
+                grupoInfo.push('status');
+            }
+        });
+
+        // Separador visual (barra invisível)
+        if (Object.keys(prioridadeData).length > 0 && Object.keys(statusData).length > 0) {
+            labels.push('');
+            data.push(0);
+            colors.push('transparent');
+            grupoInfo.push('separador');
+        }
+
+        // Adicionar prioridade na ordem fixa
+        ORDEM_PRIORIDADE.forEach(function(key) {
+            if (prioridadeData.hasOwnProperty(key)) {
+                labels.push(LABELS_PRIORIDADE[key]);
+                data.push(prioridadeData[key]);
+                colors.push(CORES_PRIORIDADE[key]);
+                grupoInfo.push('prioridade');
+            }
+        });
 
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Status', 'Prioridade'],
-                datasets: [
-                    {
-                        label: 'Abertos',
-                        data: [statusData.aberto || 0, prioridadeData.alta || 0],
-                        backgroundColor: '#17a2b8'
-                    },
-                    {
-                        label: 'Em Andamento',
-                        data: [statusData.em_andamento || 0, prioridadeData.media || 0],
-                        backgroundColor: '#ffc107'
-                    },
-                    {
-                        label: 'Resolvidos',
-                        data: [statusData.resolvido || 0, prioridadeData.baixa || 0],
-                        backgroundColor: '#28a745'
-                    }
-                ]
+                labels: labels,
+                datasets: [{
+                    label: 'Quantidade',
+                    data: data,
+                    backgroundColor: colors,
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                const idx = context[0].dataIndex;
+                                const g = grupoInfo[idx];
+                                if (g === 'separador') return '';
+                                return (g === 'status' ? 'Status: ' : 'Prioridade: ') + context[0].label;
+                            },
+                            label: function(context) {
+                                const idx = context.dataIndex;
+                                if (grupoInfo[idx] === 'separador') return '';
+                                return 'Quantidade: ' + context.parsed.y;
+                            }
+                        }
+                    }
+                },
                 scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { stepSize: 1 },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: {
+                            font: { size: 11 },
+                            callback: function(value, index) {
+                                const label = this.getLabelForValue(value);
+                                // Quebrar texto longo
+                                if (label.length > 12) {
+                                    return label.substring(0, 12) + '...';
+                                }
+                                return label;
+                            }
+                        }
+                    }
                 }
             }
         });
