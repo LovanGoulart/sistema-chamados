@@ -4,64 +4,37 @@
 {% block page_title %}Meus Chamados{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<!--<div class="page-header">
     <div class="page-header-left">
         <h2><i class="fas fa-user-circle"></i> Meus Chamados</h2>
         <p class="page-subtitle">Aqui aparecem apenas os chamados que você criou</p>
     </div>
-</div>
+</div>-->
 
 <!-- Banner informativo -->
 <div class="card card-info-banner">
     <div class="card-body">
         <div class="info-banner-content">
             <i class="fas fa-info-circle"></i>
-            <div>
+            
                 <strong>Chamados Realizados por Você</strong>
-                <p>Para ver chamados recebidos pelo seu setor, acesse a página <a href="{{ url_for('main.chamados') }}">Chamados</a>.</p>
-            </div>
+                <!--<p>Para ver chamados recebidos pelo seu setor, acesse a página <a href="{{ url_for('main.chamados') }}">Chamados</a>.</p>-->
+            
         </div>
     </div>
 </div>
 
-<!-- Filtros -->
+<!-- Busca em tempo real (único campo) -->
 <div class="card card-filters">
     <div class="card-body">
-        <form method="GET" action="{{ url_for('main.meus_chamados') }}" class="filter-form">
-            <div class="filter-group filter-group-large">
-                <label for="busca"><i class="fas fa-search"></i> Buscar</label>
-                <input type="text" id="busca" name="busca" placeholder="Título, descrição ou local..." value="{{ filtros.busca or '' }}">
-            </div>
-            <div class="filter-group">
-                <label for="status"><i class="fas fa-filter"></i> Status</label>
-                <select id="status" name="status">
-                    <option value="">Todos</option>
-                    <option value="aberto" {% if filtros.status == 'aberto' %}selected{% endif %}>Aberto</option>
-                    <option value="em_andamento" {% if filtros.status == 'em_andamento' %}selected{% endif %}>Em Andamento</option>
-                    <option value="pendente" {% if filtros.status == 'pendente' %}selected{% endif %}>Pendente</option>
-                    <option value="resolvido" {% if filtros.status == 'resolvido' %}selected{% endif %}>Resolvido</option>
-                    <option value="fechado" {% if filtros.status == 'fechado' %}selected{% endif %}>Fechado</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="prioridade"><i class="fas fa-exclamation-circle"></i> Prioridade</label>
-                <select id="prioridade" name="prioridade">
-                    <option value="">Todas</option>
-                    <option value="urgente" {% if filtros.prioridade == 'urgente' %}selected{% endif %}>Urgente</option>
-                    <option value="alta" {% if filtros.prioridade == 'alta' %}selected{% endif %}>Alta</option>
-                    <option value="media" {% if filtros.prioridade == 'media' %}selected{% endif %}>Média</option>
-                    <option value="baixa" {% if filtros.prioridade == 'baixa' %}selected{% endif %}>Baixa</option>
-                </select>
-            </div>
-            <div class="filter-actions">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-filter"></i> Filtrar
-                </button>
-                <a href="{{ url_for('main.meus_chamados') }}" class="btn btn-outline">
-                    <i class="fas fa-undo"></i> Limpar
-                </a>
-            </div>
-        </form>
+        <div class="search-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="busca-tempo-real" placeholder="Digite uma palavra-chave" autocomplete="off">
+            <button class="search-clear" id="limpar-busca" title="Limpar busca" style="display:none">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="search-results-count" id="resultados-contagem"></div>
     </div>
 </div>
 
@@ -71,7 +44,7 @@
         {% if chamados_ordenados %}
 
         <!-- VIEW: TABELA (desktop e tablet) -->
-        <div class="table-responsive table-desktop-view">
+        <div class="table-responsive table-desktop-view" id="tabela-chamados">
             <table class="data-table data-table-hover">
                 <thead>
                     <tr>
@@ -87,7 +60,14 @@
                 </thead>
                 <tbody>
                     {% for chamado in chamados_ordenados %}
-                    <tr class="{% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% endif %}">
+                    <tr class="chamado-row {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% endif %}"
+                        data-id="{{ chamado.id }}"
+                        data-titulo="{{ chamado.titulo|lower }}"
+                        data-descricao="{{ chamado.descricao|lower }}"
+                        data-local="{{ (chamado.local or '')|lower }}"
+                        data-status="{{ chamado.status.value|lower }}"
+                        data-prioridade="{{ chamado.prioridade.value|lower }}"
+                        data-setor="{{ chamado.setor_destino.nome|lower }}">
                         <td><a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}">#{{ chamado.id }}</a></td>
                         <td>
                             <span class="badge-status" style="background: {{ get_status_cor(chamado.status.value) }}">
@@ -141,9 +121,16 @@
         </div>
 
         <!-- VIEW: CARDS (mobile) -->
-        <div class="mobile-cards-view">
+        <div class="mobile-cards-view" id="cards-chamados">
             {% for chamado in chamados_ordenados %}
-            <div class="chamado-card {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% endif %}">
+            <div class="chamado-card {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% endif %}"
+                 data-id="{{ chamado.id }}"
+                 data-titulo="{{ chamado.titulo|lower }}"
+                 data-descricao="{{ chamado.descricao|lower }}"
+                 data-local="{{ (chamado.local or '')|lower }}"
+                 data-status="{{ chamado.status.value|lower }}"
+                 data-prioridade="{{ chamado.prioridade.value|lower }}"
+                 data-setor="{{ chamado.setor_destino.nome|lower }}">
                 <div class="chamado-card-header">
                     <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="chamado-card-id">#{{ chamado.id }}</a>
                     <div class="chamado-card-badges">
@@ -194,34 +181,14 @@
             {% endfor %}
         </div>
 
-        <!-- Paginação -->
-        {% if chamados.pages > 1 %}
-        <div class="pagination">
-            {% if chamados.has_prev %}
-            <a href="{{ url_for('main.meus_chamados', page=chamados.prev_num, **filtros) }}" class="pagination-item">
-                <i class="fas fa-chevron-left"></i>
-            </a>
-            {% endif %}
-
-            {% for page_num in chamados.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                {% if page_num %}
-                    {% if page_num == chamados.page %}
-                    <span class="pagination-item active">{{ page_num }}</span>
-                    {% else %}
-                    <a href="{{ url_for('main.meus_chamados', page=page_num, **filtros) }}" class="pagination-item">{{ page_num }}</a>
-                    {% endif %}
-                {% else %}
-                    <span class="pagination-item disabled">...</span>
-                {% endif %}
-            {% endfor %}
-
-            {% if chamados.has_next %}
-            <a href="{{ url_for('main.meus_chamados', page=chamados.next_num, **filtros) }}" class="pagination-item">
-                <i class="fas fa-chevron-right"></i>
-            </a>
-            {% endif %}
+        <!-- Estado vazio para busca -->
+        <div class="empty-state" id="busca-vazia" style="display:none">
+            <i class="fas fa-search"></i>
+            <p>Nenhum chamado encontrado para esta busca</p>
+            <button class="btn btn-outline" id="btn-limpar-busca-vazia">
+                <i class="fas fa-undo"></i> Limpar busca
+            </button>
         </div>
-        {% endif %}
 
         {% else %}
         <div class="empty-state">
@@ -236,8 +203,212 @@
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+(function() {
+    const inputBusca = document.getElementById('busca-tempo-real');
+    const btnLimpar = document.getElementById('limpar-busca');
+    const contagem = document.getElementById('resultados-contagem');
+    const vazioBusca = document.getElementById('busca-vazia');
+    const btnLimparVazio = document.getElementById('btn-limpar-busca-vazia');
+
+    // Selecionar todas as linhas da tabela e cards
+    const rows = document.querySelectorAll('.chamado-row');
+    const cards = document.querySelectorAll('.chamado-card');
+
+    function filtrarChamados(termo) {
+        const termoLower = termo.trim().toLowerCase();
+        let visiveis = 0;
+        let total = rows.length;
+
+        // Se não houver termo, mostra tudo
+        if (!termoLower) {
+            rows.forEach(row => row.style.display = '');
+            cards.forEach(card => card.style.display = '');
+            if (contagem) contagem.textContent = '';
+            if (vazioBusca) vazioBusca.style.display = 'none';
+            if (btnLimpar) btnLimpar.style.display = 'none';
+            return;
+        }
+
+        // Mostrar botão limpar
+        if (btnLimpar) btnLimpar.style.display = 'flex';
+
+        rows.forEach(function(row) {
+            const titulo = row.getAttribute('data-titulo') || '';
+            const descricao = row.getAttribute('data-descricao') || '';
+            const local = row.getAttribute('data-local') || '';
+            const status = row.getAttribute('data-status') || '';
+            const prioridade = row.getAttribute('data-prioridade') || '';
+            const setor = row.getAttribute('data-setor') || '';
+            const id = row.getAttribute('data-id') || '';
+
+            const match = titulo.includes(termoLower) ||
+                          descricao.includes(termoLower) ||
+                          local.includes(termoLower) ||
+                          status.includes(termoLower) ||
+                          prioridade.includes(termoLower) ||
+                          setor.includes(termoLower) ||
+                          id.includes(termoLower);
+
+            if (match) {
+                row.style.display = '';
+                visiveis++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Sincronizar cards mobile
+        cards.forEach(function(card) {
+            const titulo = card.getAttribute('data-titulo') || '';
+            const descricao = card.getAttribute('data-descricao') || '';
+            const local = card.getAttribute('data-local') || '';
+            const status = card.getAttribute('data-status') || '';
+            const prioridade = card.getAttribute('data-prioridade') || '';
+            const setor = card.getAttribute('data-setor') || '';
+            const id = card.getAttribute('data-id') || '';
+
+            const match = titulo.includes(termoLower) ||
+                          descricao.includes(termoLower) ||
+                          local.includes(termoLower) ||
+                          status.includes(termoLower) ||
+                          prioridade.includes(termoLower) ||
+                          setor.includes(termoLower) ||
+                          id.includes(termoLower);
+
+            card.style.display = match ? '' : 'none';
+        });
+
+        // Atualizar contagem
+        if (contagem) {
+            if (visiveis === 0) {
+                contagem.textContent = 'Nenhum resultado encontrado';
+                contagem.classList.add('no-results');
+            } else {
+                contagem.textContent = visiveis + ' resultado' + (visiveis !== 1 ? 's' : '') + ' encontrado' + (visiveis !== 1 ? 's' : '');
+                contagem.classList.remove('no-results');
+            }
+        }
+
+        // Mostrar estado vazio se nada encontrado
+        if (vazioBusca) {
+            vazioBusca.style.display = (visiveis === 0) ? 'block' : 'none';
+        }
+    }
+
+    // Evento de digitação (live search)
+    if (inputBusca) {
+        inputBusca.addEventListener('input', function() {
+            filtrarChamados(this.value);
+        });
+
+        // Focar no campo ao carregar a página
+    }
+
+    // Botão limpar (X)
+    if (btnLimpar) {
+        btnLimpar.addEventListener('click', function() {
+            if (inputBusca) {
+                inputBusca.value = '';
+                        filtrarChamados('');
+            }
+        });
+    }
+
+    // Botão limpar do estado vazio
+    if (btnLimparVazio) {
+        btnLimparVazio.addEventListener('click', function() {
+            if (inputBusca) {
+                inputBusca.value = '';
+                        filtrarChamados('');
+            }
+        });
+    }
+
+    // Inicializar limpo (sem filtro)
+    filtrarChamados('');
+})();
+</script>
+{% endblock %}
+
 {% block extra_css %}
 <style>
+/* ═══════════════════════════════════════════════════════════════
+   BUSCA EM TEMPO REAL - ÚNICO CAMPO
+   ═══════════════════════════════════════════════════════════════ */
+
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.search-wrapper .search-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text-muted, #adb5bd);
+    font-size: 1rem;
+    pointer-events: none;
+}
+
+.search-wrapper input {
+    width: 100%;
+    padding: 12px 44px 12px 42px;
+    border: 2px solid var(--border-color, #e9ecef);
+    border-radius: var(--border-radius-md, 10px);
+    background: var(--bg-card, #ffffff);
+    color: var(--text-primary, #1a1a2e);
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s ease;
+}
+
+.search-wrapper input:focus {
+    outline: none;
+    border-color: var(--primary, #f46c6c);
+    box-shadow: 0 0 0 4px rgba(244, 108, 108, 0.1);
+}
+
+.search-wrapper input::placeholder {
+    color: var(--text-muted, #adb5bd);
+}
+
+.search-clear {
+    position: absolute;
+    right: 12px;
+    background: var(--bg-body, #f5f6fa);
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary, #6c757d);
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+}
+
+.search-clear:hover {
+    background: var(--danger, #dc3545);
+    color: white;
+}
+
+.search-results-count {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #6c757d);
+    font-weight: 500;
+    min-height: 20px;
+}
+
+.search-results-count.no-results {
+    color: var(--danger, #dc3545);
+}
+
 /* Banner informativo */
 .card-info-banner {
     margin-bottom: 16px;
@@ -669,6 +840,12 @@
         height: 34px;
         font-size: 0.8rem;
     }
+
+    /* Busca responsiva */
+    .search-wrapper input {
+        padding: 10px 40px 10px 38px;
+        font-size: 0.9rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -686,6 +863,10 @@
 
     .pagination-item:not(.active):not(:first-child):not(:last-child):not(.disabled) {
         display: none;
+    }
+
+    .search-wrapper input {
+        font-size: 0.85rem;
     }
 }
 

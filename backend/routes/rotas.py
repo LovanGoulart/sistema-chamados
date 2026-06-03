@@ -169,20 +169,10 @@ def meus_chamados():
 
     Esta página mostra SOMENTE os chamados onde o usuário é o solicitante
     (autor), diferente da página /chamados que mostra chamados recebidos.
+    A busca é feita em tempo real no frontend via JavaScript (live search).
     """
-    pagina = request.args.get('page', 1, type=int)
-
-    filtros = {
-        'status': request.args.get('status'),
-        'prioridade': request.args.get('prioridade'),
-        'busca': request.args.get('busca')
-    }
-
-    # Remover filtros vazios
-    filtros = {k: v for k, v in filtros.items() if v}
-
-    # Usar o novo serviço que filtra APENAS por usuario_id
-    resultado = ChamadoService.listar_meus_chamados(current_user, filtros, pagina, 99999)
+    # Usar o serviço que filtra APENAS por usuario_id (sem filtros de status/prioridade)
+    resultado = ChamadoService.listar_meus_chamados(current_user, {}, 1, 99999)
 
     # Ordenar por status, prioridade e data
     chamados_ordenados = get_chamados_ordenados(resultado)
@@ -190,7 +180,7 @@ def meus_chamados():
     return render_template('meus_chamados.html',
                          chamados=resultado,
                          chamados_ordenados=chamados_ordenados,
-                         filtros=filtros,
+                         filtros={},
                          formatar_data=formatar_data,
                          formatar_data_curta=formatar_data_curta,
                          get_status_label=get_status_label,
@@ -323,7 +313,7 @@ def dashboard():
     """Painel principal do sistema."""
     # Bloquear acesso para usuário comum
     if current_user.perfil.value == PerfilUsuario.USUARIO.value:
-        flash('Acesso restrito. Redirecionando para seus chamados.', 'warning')
+        
         return redirect(url_for('main.meus_chamados'))
 
     estatisticas = ChamadoService.get_estatisticas(current_user)

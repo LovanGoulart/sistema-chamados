@@ -102,7 +102,6 @@
             <div class="card card-solucao">
                 <div class="card-header">
                     <h3><i class="fas fa-tools"></i> Solução Técnica Registrada</h3>
-                    <span class="badge badge-success">Resolvido</span>
                 </div>
                 <div class="card-body">
                     <div class="solucao-conteudo">
@@ -1397,6 +1396,45 @@
 
     .card-messenger {
         height: 400px;
+    }
+
+    /* Reordenação mobile: Solução Técnica acima do Resumo */
+    .chamado-sidebar-empresarial {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .chamado-sidebar-empresarial .card-timeline {
+        order: 1 !important;
+    }
+    .chamado-sidebar-empresarial .card-info-rapida {
+        order: 2 !important;
+    }
+
+    /* Reordenação mobile: Header no topo, Solução Técnica em 2º */
+    .chamado-detalhe {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .chamado-detalhe .chamado-header-empresarial {
+        order: -10 !important;
+    }
+    .chamado-detalhe .card-solucao {
+        order: -9 !important;
+    }
+    .chamado-detalhe .card-info-rapida {
+        order: -8 !important;
+    }
+    .chamado-detalhe .card-timeline {
+        order: -7 !important;
+    }
+    .chamado-detalhe .card-detalhes {
+        order: -6 !important;
+    }
+    .chamado-detalhe .card-anexos {
+        order: -5 !important;
+    }
+    .chamado-detalhe .card-messenger {
+        order: -4 !important;
     }
 }
 
