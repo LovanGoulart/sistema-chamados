@@ -206,8 +206,11 @@ def meus_chamados():
 
 @main.route('/')
 def index():
-    """Página inicial - redireciona para login ou dashboard."""
+    """Página inicial - redireciona para login ou página correta."""
     if current_user.is_authenticated:
+        # Usuário comum vai para "Meus Chamados"
+        if current_user.perfil.value == PerfilUsuario.USUARIO.value:
+            return redirect(url_for('main.meus_chamados'))
         return redirect(url_for('main.dashboard'))
     return redirect(url_for('main.login'))
 
@@ -235,6 +238,11 @@ def login():
             registrar_log(usuario.id, 'login', 'usuario', usuario.id, 'Login realizado')
 
             next_page = request.args.get('next')
+
+            # Usuário comum vai direto para "Meus Chamados"
+            if usuario.perfil.value == PerfilUsuario.USUARIO.value:
+                return redirect(next_page or url_for('main.meus_chamados'))
+
             return redirect(next_page or url_for('main.dashboard'))
         else:
             flash('E-mail ou senha incorretos.', 'error')
@@ -313,6 +321,11 @@ def logout():
 @login_required
 def dashboard():
     """Painel principal do sistema."""
+    # Bloquear acesso para usuário comum
+    if current_user.perfil.value == PerfilUsuario.USUARIO.value:
+        flash('Acesso restrito. Redirecionando para seus chamados.', 'warning')
+        return redirect(url_for('main.meus_chamados'))
+
     estatisticas = ChamadoService.get_estatisticas(current_user)
 
     # Buscar chamados ativos (aberto, pendente, em_andamento)
@@ -356,6 +369,10 @@ def dashboard():
 @login_required
 def chamados():
     """Lista todos os chamados."""
+    # Usuário comum não acessa a lista geral, vai para "Meus Chamados"
+    if current_user.perfil.value == PerfilUsuario.USUARIO.value:
+        return redirect(url_for('main.meus_chamados'))
+
     pagina = request.args.get('page', 1, type=int)
 
     filtros = {
@@ -777,6 +794,11 @@ def ver_anexo(anexo_id):
 @login_required
 def relatorios():
     """Página de relatórios."""
+    # Bloquear acesso para usuário comum
+    if current_user.perfil.value == PerfilUsuario.USUARIO.value:
+        flash('Acesso restrito.', 'warning')
+        return redirect(url_for('main.meus_chamados'))
+
     estatisticas = ChamadoService.get_estatisticas(current_user)
     chamados_por_mes = ChamadoService.get_chamados_por_mes(current_user, 12)
     setores = Setor.query.filter_by(ativo=True).order_by(Setor.nome).all()

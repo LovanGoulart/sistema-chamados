@@ -109,10 +109,176 @@
     </style>
 
     {% block extra_css %}{% endblock %}
+    <style>
+        /* ═══════════════════════════════════════════════════════════════
+           MENU MOBILE PARA USUÁRIO COMUM (sem sidebar)
+           ═══════════════════════════════════════════════════════════════ */
+        .mobile-user-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--bg-card, #ffffff);
+            z-index: 1100;
+            flex-direction: column;
+            box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+            animation: slideInLeft 0.25s ease;
+        }
+        .mobile-user-menu.active {
+            display: flex;
+        }
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        .mobile-user-menu-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color, #e9ecef);
+            background: linear-gradient(135deg, var(--primary, #f46c6c), var(--primary-dark, #e05555));
+            color: white;
+        }
+        .user-info-mobile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-info-mobile .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .user-info-mobile .user-name {
+            display: block;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .user-info-mobile .user-role {
+            display: block;
+            font-size: 0.75rem;
+            opacity: 0.85;
+            text-transform: capitalize;
+        }
+        .mobile-menu-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .mobile-menu-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .mobile-user-nav {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .mobile-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: 10px;
+            color: var(--text-primary, #2c3e50);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-bottom: 4px;
+        }
+        .mobile-nav-item:hover {
+            background: var(--bg-body, #f5f6fa);
+            color: var(--primary, #f46c6c);
+        }
+        .mobile-nav-item.active {
+            background: rgba(244, 108, 108, 0.1);
+            color: var(--primary, #f46c6c);
+            font-weight: 600;
+        }
+        .mobile-nav-item i {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+        .mobile-nav-divider {
+            height: 1px;
+            background: var(--border-color, #e9ecef);
+            margin: 12px 8px;
+        }
+        .mobile-nav-logout {
+            color: var(--danger, #dc3545);
+        }
+        .mobile-nav-logout:hover {
+            background: rgba(220, 53, 69, 0.08);
+        }
+        .mobile-user-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1099;
+            backdrop-filter: blur(2px);
+        }
+        .mobile-user-overlay.active {
+            display: block;
+        }
+        /* Usuário comum: main-content sem margin-left */
+        .main-content.full-width {
+            margin-left: 0 !important;
+        }
+        /* Botão Home no topbar */
+        .btn-home {
+            background: var(--bg-body, #f5f6fa);
+            color: var(--primary, #f46c6c);
+            transition: all 0.2s ease;
+        }
+        .btn-home:hover {
+            background: var(--primary, #f46c6c);
+            color: white;
+            transform: translateY(-1px);
+        }
+        .btn-home i {
+            font-size: 1rem;
+        }
+        /* Esconder sidebar-toggle no desktop quando não há sidebar */
+        @media (min-width: 769px) {
+            .mobile-menu-btn {
+                display: none !important;
+            }
+        }
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex !important;
+            }
+        }
+    </style>
+<base target="_blank">
 </head>
 <body>
-    {% if current_user.is_authenticated %}
-    <!-- Sidebar -->
+    {% if current_user.is_authenticated and current_user.perfil.value != 'usuario' %}
+    <!-- Sidebar (visível apenas para admin e setor) -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="logo">
@@ -123,6 +289,8 @@
 
         <nav class="sidebar-nav" aria-label="Menu principal">
             <ul>
+                {% if current_user.perfil.value != 'usuario' %}
+                <!-- ADMIN e SETOR: acesso completo -->
                 <li class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
                     <a href="{{ url_for('main.dashboard') }}">
                         <i class="fas fa-chart-line"></i>
@@ -148,13 +316,34 @@
                         <span class="badge" id="notifCount" style="display:none">0</span>
                     </a>
                 </li>
-
                 <li class="{% if request.endpoint == 'main.meus_chamados' %}active{% endif %}">
                     <a href="{{ url_for('main.meus_chamados') }}">
                         <i class="fas fa-user-circle"></i>
                         <span>Meus Chamados</span>
                     </a>
                 </li>
+                {% else %}
+                <!-- USUÁRIO COMUM: acesso restrito -->
+                <li class="{% if request.endpoint == 'main.meus_chamados' %}active{% endif %}">
+                    <a href="{{ url_for('main.meus_chamados') }}">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Meus Chamados</span>
+                    </a>
+                </li>
+                <li class="{% if request.endpoint in ['main.novo_chamado'] %}active{% endif %}">
+                    <a href="{{ url_for('main.novo_chamado') }}">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Novo Chamado</span>
+                    </a>
+                </li>
+                <li class="{% if request.endpoint == 'main.notificacoes' %}active{% endif %}">
+                    <a href="{{ url_for('main.notificacoes') }}">
+                        <i class="fas fa-bell"></i>
+                        <span>Notificações</span>
+                        <span class="badge" id="notifCount" style="display:none">0</span>
+                    </a>
+                </li>
+                {% endif %}
 
                 {% if current_user.is_admin() %}
                 <li class="nav-divider">Administração</li>
@@ -208,18 +397,32 @@
     {% endif %}
 
     <!-- Conteúdo principal -->
-    <main class="main-content {% if not current_user.is_authenticated %}full-width{% endif %}">
+    <main class="main-content {% if not current_user.is_authenticated or current_user.perfil.value == 'usuario' %}full-width{% endif %}">
         {% if current_user.is_authenticated %}
         <!-- Topbar -->
         <header class="topbar">
+            {% if current_user.perfil.value != 'usuario' %}
+            <!-- Menu hamburguer para admin/setor (abre sidebar) -->
             <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
                 <i class="fas fa-bars"></i>
             </button>
             <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
                 <i class="fas fa-bars"></i>
             </button>
+            {% else %}
+            <!-- Usuário comum: menu mobile simples -->
+            <button class="mobile-menu-btn" id="mobileMenuBtnUser" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            {% endif %}
             <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
             <div class="topbar-actions">
+                {% if current_user.perfil.value == 'usuario' %}
+                <!-- Botão Home (usuário comum) -->
+                <a href="{{ url_for('main.meus_chamados') }}" class="btn-icon btn-home" title="Meus Chamados">
+                    <i class="fas fa-home"></i>
+                </a>
+                {% endif %}
                 <!-- Botão Novo Chamado (+) -->
                 <a href="{{ url_for('main.novo_chamado') }}" class="btn-novo-chamado" title="Novo Chamado">
                     <i class="fas fa-plus"></i>
@@ -254,6 +457,41 @@
         </div>
     </main>
 
+    <!-- Menu Mobile para Usuário Comum -->
+    {% if current_user.is_authenticated and current_user.perfil.value == 'usuario' %}
+    <div class="mobile-user-menu" id="mobileUserMenu">
+        <div class="mobile-user-menu-header">
+            <div class="user-info-mobile">
+                <div class="user-avatar">{{ current_user.nome[0]|upper }}</div>
+                <div>
+                    <span class="user-name">{{ current_user.nome }}</span>
+                    <span class="user-role">{{ current_user.perfil.value|title }}</span>
+                </div>
+            </div>
+            <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
+        </div>
+        <nav class="mobile-user-nav">
+            <a href="{{ url_for('main.meus_chamados') }}" class="mobile-nav-item {% if request.endpoint == 'main.meus_chamados' %}active{% endif %}">
+                <i class="fas fa-user-circle"></i> Meus Chamados
+            </a>
+            <a href="{{ url_for('main.novo_chamado') }}" class="mobile-nav-item {% if request.endpoint == 'main.novo_chamado' %}active{% endif %}">
+                <i class="fas fa-plus-circle"></i> Novo Chamado
+            </a>
+            <a href="{{ url_for('main.notificacoes') }}" class="mobile-nav-item {% if request.endpoint == 'main.notificacoes' %}active{% endif %}">
+                <i class="fas fa-bell"></i> Notificações
+            </a>
+            <a href="{{ url_for('main.perfil') }}" class="mobile-nav-item {% if request.endpoint == 'main.perfil' %}active{% endif %}">
+                <i class="fas fa-user-cog"></i> Perfil
+            </a>
+            <div class="mobile-nav-divider"></div>
+            <a href="{{ url_for('main.logout') }}" class="mobile-nav-item mobile-nav-logout">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </a>
+        </nav>
+    </div>
+    <div class="mobile-user-overlay" id="mobileUserOverlay"></div>
+    {% endif %}
+
     <!-- Notificações dropdown -->
     <div class="notifications-dropdown" id="notificationsDropdown">
         <div class="notifications-header">
@@ -274,6 +512,42 @@
     </button>
 
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    {% if current_user.is_authenticated and current_user.perfil.value == 'usuario' %}
+    <script>
+    // Menu mobile para usuário comum (sem sidebar)
+    (function() {
+        const menuBtn = document.getElementById('mobileMenuBtnUser');
+        const menu = document.getElementById('mobileUserMenu');
+        const overlay = document.getElementById('mobileUserOverlay');
+        const closeBtn = document.getElementById('mobileMenuClose');
+
+        if (menuBtn && menu && overlay) {
+            menuBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                menu.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+
+            function fecharMenu() {
+                menu.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (closeBtn) closeBtn.addEventListener('click', fecharMenu);
+            overlay.addEventListener('click', fecharMenu);
+
+            // Fechar ao clicar em link
+            menu.querySelectorAll('a').forEach(function(link) {
+                link.addEventListener('click', function() {
+                    fecharMenu();
+                });
+            });
+        }
+    })();
+    </script>
+    {% endif %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>
