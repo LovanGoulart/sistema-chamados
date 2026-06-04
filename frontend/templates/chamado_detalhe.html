@@ -1447,6 +1447,34 @@
         max-width: 85%;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   OCULTAR RESUMO E TIMELINE APENAS NO MOBILE
+   Adicionado em 04/06/2026
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    /* Esconder card de resumo (info rápida) no mobile */
+    .chamado-sidebar-empresarial .card-info-rapida {
+        display: none !important;
+    }
+
+    /* Esconder card de timeline no mobile */
+    .chamado-sidebar-empresarial .card-timeline {
+        display: none !important;
+    }
+
+    /* Ocultar toda a sidebar lateral no mobile */
+    .chamado-sidebar-empresarial {
+        display: none !important;
+    }
+
+    /* Ajustar grid para ocupar largura total no mobile */
+    .chamado-grid-empresarial {
+        grid-template-columns: 1fr !important;
+    }
+}
+
 </style>
 {% endblock %}
 

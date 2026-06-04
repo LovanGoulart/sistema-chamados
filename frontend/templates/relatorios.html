@@ -4,15 +4,15 @@
 {% block page_title %}Relatórios{% endblock %}
 
 {% block content %}
-<!--<div class="page-header">
-    <div class="page-header-left">
-        <h2><i class="fas fa-chart-bar"></i> Relatórios e Analytics</h2>
-        <p class="page-subtitle">Análise completa dos chamados do sistema</p>
-    </div>
-</div>-->
 
+<!-- ═══════════════════════════════════════════════════════════════
+     CSS RESPONSIVO - RELATÓRIOS
+     ═══════════════════════════════════════════════════════════════ -->
 <style>
-/* Ajuste mobile para cards de estatísticas - ícone à esquerda, texto à direita, grid 2 colunas */
+/* ─────────────────────────────────────────────
+   CARDS DE ESTATÍSTICAS
+   ───────────────────────────────────────────── */
+
 @media (max-width: 768px) {
     .stats-grid {
         display: grid !important;
@@ -38,13 +38,11 @@
         justify-content: center !important;
         font-size: 20px !important;
         margin: 0 !important;
-        order: 0 !important;
     }
     .stats-grid .stat-card .stat-info {
         display: flex !important;
         flex-direction: column !important;
         align-items: flex-start !important;
-        order: 1 !important;
     }
     .stats-grid .stat-card .stat-value {
         font-size: 24px !important;
@@ -61,81 +59,178 @@
 }
 
 
-/* ═══════════════════════════════════════════════════════════════
+/* ─────────────────────────────────────────────
    DETALHAMENTO POR STATUS E PRIORIDADE - MOBILE
-   Mantém layout similar ao desktop com tabela horizontal scrollable
-   ═══════════════════════════════════════════════════════════════ */
+   3 colunas: Status/Prioridade | Qtd | %
+   Coluna Distribuição REMOVIDA no mobile
+   ───────────────────────────────────────────── */
 
 @media (max-width: 768px) {
-    /* Container das tabelas de detalhamento */
+    .card-detalhamento {
+        margin-bottom: 16px;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+    }
+
+    .card-detalhamento .card-header {
+        padding: 16px 20px !important;
+        border-bottom: 1px solid var(--border-color, #e9ecef) !important;
+    }
+
+    .card-detalhamento .card-header h3 {
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        color: var(--text-color, #2d3748) !important;
+        margin: 0 !important;
+    }
+
+    .card-detalhamento .card-body {
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Container com scroll horizontal */
     .card-detalhamento .table-detalhamento {
         overflow-x: auto !important;
+        overflow-y: hidden !important;
         -webkit-overflow-scrolling: touch !important;
-        border-radius: 8px !important;
+        display: block !important;
+        width: 100% !important;
+        position: relative !important;
     }
 
+    /* Tabela - 3 colunas no mobile */
     .card-detalhamento .detalhamento-table {
-        min-width: 100% !important;
-        width: auto !important;
-        font-size: 13px !important;
+        width: 100% !important;
+        min-width: 320px !important;
+        border-collapse: collapse !important;
+        font-size: 14px !important;
+        table-layout: auto !important;
     }
 
-    .card-detalhamento .detalhamento-table thead th {
-        padding: 10px 8px !important;
-        font-size: 11px !important;
-        white-space: nowrap !important;
+    /* Sobrescreve regras genéricas do admin_setores */
+    .card-detalhamento .detalhamento-table thead {
+        display: table-header-group !important;
     }
 
+    .card-detalhamento .detalhamento-table tbody {
+        display: table-row-group !important;
+    }
+
+    .card-detalhamento .detalhamento-table tr {
+        display: table-row !important;
+        margin-bottom: 0 !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    .card-detalhamento .detalhamento-table tr::before {
+        display: none !important;
+    }
+
+    .card-detalhamento .detalhamento-table td {
+        display: table-cell !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+        gap: 0 !important;
+        min-height: auto !important;
+    }
+
+    /* Remove labels genéricos do admin_setores */
+    .card-detalhamento .detalhamento-table td::before {
+        display: none !important;
+        content: none !important;
+    }
+
+    /* Cabeçalho - 3 colunas */
+    /* Reduz padding do cabeçalho da primeira coluna também */
+.card-detalhamento .detalhamento-table thead th:first-child {
+    padding-left: 10px !important;
+    padding-right: 8px !important;
+}
+
+    .card-detalhamento .detalhamento-table thead th:nth-child(2),
+    .card-detalhamento .detalhamento-table thead th:nth-child(3) {
+        text-align: center !important;
+    }
+
+    /* Células do body */
     .card-detalhamento .detalhamento-table tbody td {
-        padding: 10px 8px !important;
+        padding: 12px 16px !important;
         vertical-align: middle !important;
+        border-bottom: 1px solid var(--border-color, #f0f0f0) !important;
     }
 
-    /* Coluna Status/Prioridade - badge menor no mobile */
+    /* Coluna Status/Prioridade */
     .card-detalhamento .detalhamento-table tbody td:first-child {
-        min-width: 110px !important;
-    }
-
+    min-width: auto !important;      /* remove o mínimo de 130px */
+    padding-left: 10px !important;   /* reduz o padding lateral */
+    padding-right: 8px !important;
+    white-space: nowrap !important;
+}
+    /* Badges */
     .card-detalhamento .detalhamento-table .badge-status,
     .card-detalhamento .detalhamento-table .badge-prioridade {
+        display: inline-block !important;
         font-size: 11px !important;
-        padding: 4px 8px !important;
+        padding: 5px 12px !important;
+        border-radius: 20px !important;
+        font-weight: 600 !important;
+        color: #fff !important;
         white-space: nowrap !important;
+        line-height: 1.4 !important;
     }
 
-    /* Coluna Qtd */
+    /* Qtd */
     .card-detalhamento .detalhamento-table tbody td:nth-child(2) {
         text-align: center !important;
         min-width: 50px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        color: var(--text-color, #2d3748) !important;
     }
 
-    /* Coluna % */
+    /* % */
     .card-detalhamento .detalhamento-table tbody td:nth-child(3) {
         text-align: center !important;
-        min-width: 55px !important;
-        font-size: 12px !important;
+        min-width: 60px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        color: var(--text-muted, #718096) !important;
     }
 
-    /* Coluna Barra - mantém proporção */
+    /* ═══ REMOVE COLUNA DISTRIBUIÇÃO NO MOBILE ═══ */
+    .card-detalhamento .detalhamento-table thead th:nth-child(4),
     .card-detalhamento .detalhamento-table tbody td:nth-child(4) {
-        min-width: 120px !important;
-        width: 40% !important;
+        display: none !important;
     }
 
-    /* Progress bar ajustada */
-    .card-detalhamento .progress-bar {
-        height: 8px !important;
-        border-radius: 4px !important;
+    /* Scrollbar */
+    .card-detalhamento .table-detalhamento::-webkit-scrollbar {
+        height: 6px;
     }
-
-    /* Títulos dos cards de detalhamento */
-    .card-detalhamento .card-header h3 {
-        font-size: 15px !important;
+    .card-detalhamento .table-detalhamento::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    .card-detalhamento .table-detalhamento::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+    .card-detalhamento .table-detalhamento::-webkit-scrollbar-thumb:hover {
+        background: #a1a1a1;
     }
 }
 </style>
 
-<!-- Cards de resumo -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CARDS DE RESUMO
+     ═══════════════════════════════════════════════════════════════ -->
 <div class="stats-grid stats-grid-4">
     <div class="stat-card stat-primary">
         <div class="stat-icon"><i class="fas fa-headset"></i></div>
@@ -175,11 +270,12 @@
         </div>
     </div>
 </div>
-    </div>
-</div>
 
+
+<!-- ═══════════════════════════════════════════════════════════════
+     GRÁFICOS PRINCIPAIS
+     ═══════════════════════════════════════════════════════════════ -->
 <div class="dashboard-grid">
-    <!-- Gráfico por mês -->
     <div class="card card-chart-large">
         <div class="card-header">
             <h3><i class="fas fa-chart-line"></i> Chamados por Mês (Últimos 12 meses)</h3>
@@ -188,8 +284,6 @@
             <canvas id="chartMeses" data-values='{{ chamados_por_mes|tojson }}'></canvas>
         </div>
     </div>
-
-    <!-- Gráfico por setor -->
     <div class="card card-chart-large">
         <div class="card-header">
             <h3><i class="fas fa-building"></i> Chamados por Setor</h3>
@@ -201,7 +295,6 @@
 </div>
 
 <div class="dashboard-grid">
-    <!-- Status -->
     <div class="card card-chart">
         <div class="card-header">
             <h3><i class="fas fa-chart-pie"></i> Por Status</h3>
@@ -210,8 +303,6 @@
             <canvas id="chartStatusRel" data-values='{{ estatisticas.por_status|tojson }}'></canvas>
         </div>
     </div>
-
-    <!-- Prioridade -->
     <div class="card card-chart">
         <div class="card-header">
             <h3><i class="fas fa-exclamation-triangle"></i> Por Prioridade</h3>
@@ -222,7 +313,10 @@
     </div>
 </div>
 
-<!-- Gráficos por Setor (apenas Admin) -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     GRÁFICOS POR SETOR (APENAS ADMIN)
+     ═══════════════════════════════════════════════════════════════ -->
 {% if current_user.is_admin() and graficos_por_setor %}
 <div class="page-header" style="margin-top: 24px;">
     <div class="page-header-left">
@@ -250,7 +344,10 @@
 </div>
 {% endif %}
 
-<!-- Tabela detalhada por status -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DETALHAMENTO POR STATUS
+     ═══════════════════════════════════════════════════════════════ -->
 <div class="card card-detalhamento">
     <div class="card-header">
         <h3><i class="fas fa-table"></i> Detalhamento por Status</h3>
@@ -263,7 +360,7 @@
                         <th>Status</th>
                         <th>Qtd</th>
                         <th>%</th>
-                        <th>Barra</th>
+                        <th>Distribuição</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -276,7 +373,7 @@
                         </td>
                         <td><strong>{{ quantidade }}</strong></td>
                         <td>{{ ((quantidade / estatisticas.total * 100) if estatisticas.total > 0 else 0)|round(1) }}%</td>
-                        <td style="width: 40%">
+                        <td>
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: {{ (quantidade / estatisticas.total * 100) if estatisticas.total > 0 else 0 }}%; background: {{ get_status_cor(status) }}"></div>
                             </div>
@@ -289,7 +386,10 @@
     </div>
 </div>
 
-<!-- Tabela detalhada por prioridade -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DETALHAMENTO POR PRIORIDADE
+     ═══════════════════════════════════════════════════════════════ -->
 <div class="card card-detalhamento">
     <div class="card-header">
         <h3><i class="fas fa-table"></i> Detalhamento por Prioridade</h3>
@@ -302,7 +402,7 @@
                         <th>Prioridade</th>
                         <th>Qtd</th>
                         <th>%</th>
-                        <th>Barra</th>
+                        <th>Distribuição</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -315,7 +415,7 @@
                         </td>
                         <td><strong>{{ quantidade }}</strong></td>
                         <td>{{ ((quantidade / estatisticas.total * 100) if estatisticas.total > 0 else 0)|round(1) }}%</td>
-                        <td style="width: 40%">
+                        <td>
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: {{ (quantidade / estatisticas.total * 100) if estatisticas.total > 0 else 0 }}%; background: {{ get_prioridade_cor(prioridade) }}"></div>
                             </div>
@@ -327,28 +427,30 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
+
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
-// MAPEAMENTO DE CORES CONSISTENTE COM O BACKEND
-// Essas cores correspondem exatamente às funções get_status_cor() e get_prioridade_cor()
+// CONFIGURAÇÃO DOS GRÁFICOS
 // ═══════════════════════════════════════════════════════════════
+
 const CORES_STATUS = {
-    'aberto':        '#17a2b8',  // info (azul ciano)
-    'em_andamento':  '#ffc107',  // warning (amarelo)
-    'pendente':      '#6f42c1',  // purple (roxo)
-    'resolvido':     '#28a745',  // success (verde)
-    'fechado':       '#6c757d'   // secondary (cinza)
+    'aberto':        '#17a2b8',
+    'em_andamento':  '#ffc107',
+    'pendente':      '#6f42c1',
+    'resolvido':     '#28a745',
+    'fechado':       '#6c757d'
 };
 
 const CORES_PRIORIDADE = {
-    'baixa':   '#28a745',  // success (verde)
-    'media':   '#ffc107',  // warning (amarelo)
-    'alta':    '#fd7e14',  // orange (laranja)
-    'urgente': '#dc3545'   // danger (vermelho)
+    'baixa':   '#28a745',
+    'media':   '#ffc107',
+    'alta':    '#fd7e14',
+    'urgente': '#dc3545'
 };
 
 const LABELS_STATUS = {
@@ -366,11 +468,12 @@ const LABELS_PRIORIDADE = {
     'urgente': 'Urgente'
 };
 
-// Ordem fixa para exibição consistente
 const ORDEM_STATUS = ['aberto', 'em_andamento', 'pendente', 'resolvido', 'fechado'];
 const ORDEM_PRIORIDADE = ['baixa', 'media', 'alta', 'urgente'];
 
+
 document.addEventListener('DOMContentLoaded', function() {
+
     // ── Gráfico por mês ──
     const mesData = JSON.parse(document.getElementById('chartMeses').dataset.values);
     new Chart(document.getElementById('chartMeses'), {
@@ -399,6 +502,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+
     // ── Gráfico por setor ──
     const setorData = JSON.parse(document.getElementById('chartSetores').dataset.values);
     new Chart(document.getElementById('chartSetores'), {
@@ -423,7 +527,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ── Gráfico de Status (cores dinâmicas do backend) ──
+
+    // ── Gráfico de Status ──
     const statusData = JSON.parse(document.getElementById('chartStatusRel').dataset.values);
     const statusKeys = Object.keys(statusData);
     new Chart(document.getElementById('chartStatusRel'), {
@@ -444,7 +549,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ── Gráfico de Prioridade (cores dinâmicas do backend) ──
+
+    // ── Gráfico de Prioridade ──
     const prioridadeData = JSON.parse(document.getElementById('chartPrioridadeRel').dataset.values);
     const prioridadeKeys = Object.keys(prioridadeData);
     new Chart(document.getElementById('chartPrioridadeRel'), {
@@ -465,9 +571,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+
     // ── Gráficos por setor (admin) ──
-    // Cada gráfico mostra barras individuais para cada status e prioridade
-    // com as cores corretas do sistema
     {% if current_user.is_admin() and graficos_por_setor %}
     {% for setor_nome, dados in graficos_por_setor.items() %}
     {% if dados.total > 0 %}
@@ -478,14 +583,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const statusData = JSON.parse(ctx.dataset.status);
         const prioridadeData = JSON.parse(ctx.dataset.prioridade);
 
-        // Montar dados na ordem fixa: status primeiro, depois prioridade
-        // com um espaço (null) entre os grupos para separação visual
         const labels = [];
         const data = [];
         const colors = [];
-        const grupoInfo = []; // 'status' ou 'prioridade' para cada barra
+        const grupoInfo = [];
 
-        // Adicionar status na ordem fixa
         ORDEM_STATUS.forEach(function(key) {
             if (statusData.hasOwnProperty(key)) {
                 labels.push(LABELS_STATUS[key]);
@@ -495,7 +597,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Separador visual (barra invisível)
         if (Object.keys(prioridadeData).length > 0 && Object.keys(statusData).length > 0) {
             labels.push('');
             data.push(0);
@@ -503,7 +604,6 @@ document.addEventListener('DOMContentLoaded', function() {
             grupoInfo.push('separador');
         }
 
-        // Adicionar prioridade na ordem fixa
         ORDEM_PRIORIDADE.forEach(function(key) {
             if (prioridadeData.hasOwnProperty(key)) {
                 labels.push(LABELS_PRIORIDADE[key]);
@@ -558,7 +658,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             font: { size: 11 },
                             callback: function(value, index) {
                                 const label = this.getLabelForValue(value);
-                                // Quebrar texto longo
                                 if (label.length > 12) {
                                     return label.substring(0, 12) + '...';
                                 }
@@ -573,6 +672,7 @@ document.addEventListener('DOMContentLoaded', function() {
     {% endif %}
     {% endfor %}
     {% endif %}
+
 });
 </script>
 {% endblock %}
