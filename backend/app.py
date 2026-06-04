@@ -25,13 +25,6 @@ def formatar_tempo(valor):
     """
     Formata um valor de tempo (float em horas ou timedelta)
     para exibição em horas e minutos.
-
-    Exemplos:
-        12.1    -> "12h 06m"
-        2.5     -> "2h 30m"
-        0.75    -> "45m"
-        0       -> "0m"
-        None    -> "-"
     """
     if valor is None:
         return "-"
@@ -69,10 +62,15 @@ def formatar_tempo(valor):
 def criar_app(config_name='default'):
     """Factory de criação da aplicação Flask."""
 
+    # PATH ABSOLUTO para templates e static - ESSENCIAL no PythonAnywhere
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    template_dir = os.path.join(base_dir, 'frontend', 'templates')
+    static_dir = os.path.join(base_dir, 'frontend', 'static')
+
     app = Flask(
         __name__,
-        template_folder='../frontend/templates',
-        static_folder='../frontend/static'
+        template_folder=template_dir,
+        static_folder=static_dir
     )
 
     # Configurações
@@ -116,20 +114,12 @@ def criar_app(config_name='default'):
         app.logger.setLevel(logging.INFO)
         app.logger.info('Sistema de Chamados - Colégio Mauá iniciado')
 
-    # Criar tabelas e dados iniciais
+    # Criar tabelas do banco (vazio - sem dados de demonstração)
     with app.app_context():
         db.create_all()
+        print("✅ Banco de dados criado/atualizado. Sistema pronto para uso.")
 
-        # Verificar se é a primeira execução (nenhum setor cadastrado)
-        # Se já existirem dados, NÃO recria os de demonstração
-        if not Setor.query.first():
-            print("🆕 Primeira execução detectada. Criando dados de demonstração...")
-            criar_dados_iniciais()
-        else:
-            print("✅ Banco de dados já existe. Dados preservados.")
-
-
-    # Context processor para funções utilitárias disponíveis em todos os templates
+    # Context processor para funções utilitárias
     @app.context_processor
     def inject_utilities():
         from backend.utils.utilitarios import (
@@ -150,257 +140,6 @@ def criar_app(config_name='default'):
         )
 
     return app
-
-
-def criar_dados_iniciais():
-    """Cria dados de exemplo no banco de dados.
-
-    Esta função só é chamada na PRIMEIRA execução do sistema,
-    quando o banco de dados está vazio.
-    """
-
-    # Criar setores
-    setores_data = [
-        {'nome': 'TI - Tecnologia da Informação', 'descricao': 'Suporte técnico e infraestrutura de TI'},
-        {'nome': 'Manutenção', 'descricao': 'Manutenção predial e equipamentos'},
-        {'nome': 'Limpeza', 'descricao': 'Serviços de limpeza e conservação'},
-        {'nome': 'Segurança', 'descricao': 'Segurança patrimonial e vigilância'},
-        {'nome': 'Administrativo', 'descricao': 'Gestão administrativa e recursos humanos'},
-        {'nome': 'Pedagógico', 'descricao': 'Coordenação pedagógica e acadêmica'},
-        {'nome': 'Biblioteca', 'descricao': 'Biblioteca e acervo'},
-        {'nome': 'Almoxarifado', 'descricao': 'Controle de estoque e suprimentos'},
-    ]
-
-    setores = []
-    for s_data in setores_data:
-        setor = Setor(**s_data)
-        db.session.add(setor)
-        setores.append(setor)
-
-    db.session.commit()
-
-    # Criar usuário administrador
-    admin = Usuario(
-        nome='Administrador',
-        email='admin@colegiomaua.edu.br',
-        perfil='admin',
-        ativo=True
-    )
-    admin.set_senha('admin123')
-    db.session.add(admin)
-
-    # Criar usuários de exemplo (colaboradores dos setores)
-    usuarios_data = [
-        {'nome': 'João Silva', 'email': 'joao@colegiomaua.edu.br', 'perfil': 'setor', 'setor_id': setores[0].id},
-        {'nome': 'Maria Oliveira', 'email': 'maria@colegiomaua.edu.br', 'perfil': 'setor', 'setor_id': setores[1].id},
-        {'nome': 'Carlos Santos', 'email': 'carlos@colegiomaua.edu.br', 'perfil': 'usuario'},
-        {'nome': 'Ana Pereira', 'email': 'ana@colegiomaua.edu.br', 'perfil': 'usuario'},
-        {'nome': 'Pedro Costa', 'email': 'pedro@colegiomaua.edu.br', 'perfil': 'usuario'},
-        {'nome': 'Fernanda Lima', 'email': 'fernanda@colegiomaua.edu.br', 'perfil': 'setor', 'setor_id': setores[2].id},
-        {'nome': 'Ricardo Souza', 'email': 'ricardo@colegiomaua.edu.br', 'perfil': 'usuario'},
-        {'nome': 'Juliana Martins', 'email': 'juliana@colegiomaua.edu.br', 'perfil': 'usuario'},
-        {'nome': 'Bruno TI', 'email': 'bruno.ti@colegiomaua.edu.br', 'perfil': 'setor', 'setor_id': setores[0].id},
-        {'nome': 'Lucas Manutencao', 'email': 'lucas.man@colegiomaua.edu.br', 'perfil': 'setor', 'setor_id': setores[1].id},
-    ]
-
-    usuarios = []
-    for u_data in usuarios_data:
-        usuario = Usuario(**u_data)
-        usuario.set_senha('123456')
-        db.session.add(usuario)
-        usuarios.append(usuario)
-
-    db.session.commit()
-
-    # Datas de exemplo
-    hoje = agora_brasil_naive()
-    ontem = hoje - timedelta(days=1)
-    amanha = hoje + timedelta(days=1)
-    semana_passada = hoje - timedelta(days=5)
-    mes_passado = hoje - timedelta(days=30)
-
-    # Criar chamados de exemplo
-    chamados_data = [
-        {
-            'titulo': 'Projetor não funciona na Sala 101',
-            'descricao': 'O projetor da sala 101 não está ligando. Já verifiquei a tomada e os cabos, mas não há sinal de energia. Preciso para a aula de hoje à tarde.',
-            'local': 'Sala 101 - Bloco A',
-            'area_patrimonial': 'Bloco A',
-            'prioridade': 'alta',
-            'status': 'em_andamento',
-            'data_preferencial': ontem,
-            'setor_destino_id': setores[0].id,
-            'usuario_id': usuarios[2].id,
-            'atendente_id': usuarios[0].id,
-        },
-        {
-            'titulo': 'Vazamento na torneira do banheiro feminino',
-            'descricao': 'A torneira do banheiro feminino do térreo está vazando constantemente. O vazamento está há alguns dias e já está molhando o piso.',
-            'local': 'Banheiro Feminino - Térreo',
-            'area_patrimonial': 'Bloco Principal',
-            'prioridade': 'media',
-            'status': 'aberto',
-            'data_preferencial': hoje,
-            'setor_destino_id': setores[1].id,
-            'usuario_id': usuarios[3].id,
-        },
-        {
-            'titulo': 'Limpeza urgente no laboratório de química',
-            'descricao': 'O laboratório de química precisa de uma limpeza especializada após o experimento de hoje. Há resíduos que precisam de descarte adequado.',
-            'local': 'Laboratório de Química - Bloco B',
-            'area_patrimonial': 'Bloco B',
-            'prioridade': 'urgente',
-            'status': 'aberto',
-            'data_preferencial': amanha,
-            'setor_destino_id': setores[2].id,
-            'usuario_id': usuarios[4].id,
-        },
-        {
-            'titulo': 'Troca de lâmpadas no corredor do 2º andar',
-            'descricao': 'Várias lâmpadas do corredor do 2º andar estão queimadas, dificultando a circulação dos alunos à noite.',
-            'local': 'Corredor 2º Andar - Bloco A',
-            'area_patrimonial': 'Bloco A',
-            'prioridade': 'baixa',
-            'status': 'resolvido',
-            'data_preferencial': semana_passada,
-            'setor_destino_id': setores[1].id,
-            'usuario_id': usuarios[5].id,
-            'atendente_id': usuarios[1].id,
-        },
-        {
-            'titulo': 'Computador da secretaria travando constantemente',
-            'descricao': 'O computador da secretaria administrativa está travando a cada 10 minutos. Já reiniciei várias vezes mas o problema persiste.',
-            'local': 'Secretaria Administrativa',
-            'area_patrimonial': 'Bloco Principal',
-            'prioridade': 'alta',
-            'status': 'pendente',
-            'data_preferencial': hoje,
-            'setor_destino_id': setores[0].id,
-            'usuario_id': usuarios[6].id,
-        },
-        {
-            'titulo': 'Ar condicionado da biblioteca não resfria',
-            'descricao': 'O ar condicionado da biblioteca está ligado mas não está resfriando o ambiente. A temperatura está muito alta para leitura.',
-            'local': 'Biblioteca - 1º Andar',
-            'area_patrimonial': 'Bloco Principal',
-            'prioridade': 'media',
-            'status': 'em_andamento',
-            'data_preferencial': amanha,
-            'setor_destino_id': setores[1].id,
-            'usuario_id': usuarios[7].id,
-            'atendente_id': usuarios[1].id,
-        },
-        {
-            'titulo': 'Portão principal com defeito no motor',
-            'descricao': 'O motor do portão principal está fazendo barulho estranho e demorando muito para abrir. Pode parar de funcionar a qualquer momento.',
-            'local': 'Portão Principal',
-            'area_patrimonial': 'Área Externa',
-            'prioridade': 'alta',
-            'status': 'aberto',
-            'data_preferencial': ontem,
-            'setor_destino_id': setores[3].id,
-            'usuario_id': usuarios[2].id,
-        },
-        {
-            'titulo': 'Falta de papel A4 no almoxarifado',
-            'descricao': 'O estoque de papel A4 está acabando. Precisamos de reposição urgente para as impressões dos relatórios trimestrais.',
-            'local': 'Almoxarifado',
-            'area_patrimonial': 'Bloco Principal',
-            'prioridade': 'media',
-            'status': 'fechado',
-            'data_preferencial': mes_passado,
-            'setor_destino_id': setores[7].id,
-            'usuario_id': usuarios[3].id,
-        },
-        {
-            'titulo': 'Sistema de som da quadra com interferência',
-            'descricao': 'Durante o evento de ontem o sistema de som da quadra apresentou muita interferência e chiado. Precisa de revisão antes do próximo evento.',
-            'local': 'Quadra Poliesportiva',
-            'area_patrimonial': 'Área Externa',
-            'prioridade': 'media',
-            'status': 'aberto',
-            'data_preferencial': amanha,
-            'setor_destino_id': setores[0].id,
-            'usuario_id': usuarios[4].id,
-        },
-        {
-            'titulo': 'Cadeiras quebradas na sala 205',
-            'descricao': 'Três cadeiras da sala 205 estão quebradas (pés soltos). Os alunos estão sentando no chão ou levando cadeiras de outras salas.',
-            'local': 'Sala 205 - Bloco B',
-            'area_patrimonial': 'Bloco B',
-            'prioridade': 'baixa',
-            'status': 'resolvido',
-            'data_preferencial': semana_passada,
-            'setor_destino_id': setores[1].id,
-            'usuario_id': usuarios[5].id,
-            'atendente_id': usuarios[1].id,
-        },
-        {
-            'titulo': 'Wi-Fi caindo constantemente no Bloco C',
-            'descricao': 'A conexão Wi-Fi no Bloco C está caindo a cada poucos minutos. Isso está prejudicando as aulas que usam recursos online.',
-            'local': 'Bloco C - Todas as salas',
-            'area_patrimonial': 'Bloco C',
-            'prioridade': 'urgente',
-            'status': 'em_andamento',
-            'data_preferencial': hoje,
-            'setor_destino_id': setores[0].id,
-            'usuario_id': usuarios[6].id,
-            'atendente_id': usuarios[0].id,
-        },
-        {
-            'titulo': 'Janela do laboratório de informática não fecha',
-            'descricao': 'A janela do laboratório de informática não está fechando direito, deixando entrar poeira e chuva nos equipamentos.',
-            'local': 'Laboratório de Informática - Bloco A',
-            'area_patrimonial': 'Bloco A',
-            'prioridade': 'media',
-            'status': 'aberto',
-            'data_preferencial': amanha,
-            'setor_destino_id': setores[1].id,
-            'usuario_id': usuarios[7].id,
-        },
-    ]
-
-    for c_data in chamados_data:
-        chamado = Chamado(**c_data)
-        db.session.add(chamado)
-
-    db.session.commit()
-
-    # Criar mensagens de exemplo
-    mensagens_data = [
-        {'chamado_id': 1, 'usuario_id': 1, 'conteudo': 'Vou verificar o projetor agora à tarde. Pode deixar a sala aberta?'},
-        {'chamado_id': 1, 'usuario_id': 3, 'conteudo': 'Sim, a chave está com a coordenadora. Obrigado!'},
-        {'chamado_id': 1, 'usuario_id': 1, 'conteudo': 'Projetor trocado. O problema era na lâmpada. Já está funcionando.'},
-        {'chamado_id': 3, 'usuario_id': 6, 'conteudo': 'Vamos enviar a equipe de limpeza especializada ainda hoje.'},
-        {'chamado_id': 5, 'usuario_id': 1, 'conteudo': 'Preciso verificar o computador pessoalmente. Pode agendar um horário?'},
-        {'chamado_id': 5, 'usuario_id': 7, 'conteudo': 'Pode vir amanhã de manhã, estarei na secretaria das 8h às 12h.'},
-        {'chamado_id': 7, 'usuario_id': 3, 'conteudo': 'O motor já foi trocado? O portão está demorando muito para abrir.'},
-        {'chamado_id': 11, 'usuario_id': 1, 'conteudo': 'Identificamos que o roteador do Bloco C está com problema. Vamos trocar amanhã cedo.'},
-    ]
-
-    for m_data in mensagens_data:
-        mensagem = Mensagem(**m_data)
-        db.session.add(mensagem)
-
-    db.session.commit()
-
-    # Criar logs de exemplo
-    logs_data = [
-        {'usuario_id': 1, 'acao': 'login', 'entidade': 'usuario', 'entidade_id': 1, 'detalhes': 'Login realizado'},
-        {'usuario_id': 3, 'acao': 'login', 'entidade': 'usuario', 'entidade_id': 3, 'detalhes': 'Login realizado'},
-        {'usuario_id': 3, 'acao': 'criar', 'entidade': 'chamado', 'entidade_id': 1, 'detalhes': 'Chamado #1 criado'},
-        {'usuario_id': 1, 'acao': 'atribuir', 'entidade': 'chamado', 'entidade_id': 1, 'detalhes': 'Chamado atribuído ao usuário 1'},
-        {'usuario_id': 4, 'acao': 'criar', 'entidade': 'chamado', 'entidade_id': 2, 'detalhes': 'Chamado #2 criado'},
-        {'usuario_id': 5, 'acao': 'criar', 'entidade': 'chamado', 'entidade_id': 3, 'detalhes': 'Chamado #3 criado'},
-    ]
-
-    for l_data in logs_data:
-        log = LogOperacao(**l_data)
-        db.session.add(log)
-
-    db.session.commit()
-
-    print("✅ Dados de demonstração criados com sucesso!")
 
 
 # Criar aplicação
