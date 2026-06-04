@@ -1086,20 +1086,31 @@ def admin_excluir_usuario(usuario_id):
     return redirect(url_for('main.admin_usuarios'))
 
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ALTERAÇÃO NA ROTA admin_setores em rotas.py
+# Substitua a função admin_setores existente por esta:
+# ═══════════════════════════════════════════════════════════════════════════════
+
 @main.route('/admin/setores')
 @login_required
 def admin_setores():
-    """Gerenciamento de setores (apenas admin)."""
+    """Gerenciamento de setores (apenas admin).
+
+    Ordenação: ativos primeiro, depois inativos (mais recentes no topo de cada grupo).
+    """
     if not current_user.is_admin():
         flash('Acesso restrito a administradores.', 'error')
         return redirect(url_for('main.dashboard'))
 
-    setores = Setor.query.order_by(Setor.nome).all()
+    # Ordena: ativos primeiro (ativo=True=1), depois inativos (ativo=False=0)
+    # Dentro de cada grupo, mais recentes primeiro
+    setores = Setor.query.order_by(Setor.ativo.desc(), Setor.created_at.desc()).all()
+
     return render_template('admin_setores.html', 
                          setores=setores,
                          formatar_data=formatar_data,
                          formatar_data_curta=formatar_data_curta)
-
 
 @main.route('/admin/setores/novo', methods=['POST'])
 @login_required

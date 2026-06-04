@@ -5,10 +5,10 @@
 
 {% block content %}
 <div class="page-header">
-    <div class="page-header-left">
+    <!--<div class="page-header-left">
         <h2><i class="fas fa-users"></i> Gerenciar Usuários</h2>
         <p class="page-subtitle">Cadastre, edite e gerencie usuários do sistema</p>
-    </div>
+    </div>-->
     <div class="page-header-right">
         <button class="btn btn-primary" onclick="openModal('modalNovoUsuario')">
             <i class="fas fa-user-plus"></i>
@@ -16,18 +16,17 @@
     </div>
 </div>
 
-<!-- Busca -->
+<!-- Busca em tempo real (único campo, sem botão) -->
 <div class="card card-filters">
     <div class="card-body">
-        <form method="GET" action="{{ url_for('main.admin_usuarios') }}" class="filter-form">
-            <div class="filter-group filter-group-large">
-                <input type="text" id="busca" name="busca" placeholder="Digite nome ou e-mail..." value="{{ busca or '' }}">
-            </div>
-            <div class="filter-actions">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
-                <a href="{{ url_for('main.admin_usuarios') }}" class="btn btn-outline"><i class="fas fa-undo"></i> Limpar</a>
-            </div>
-        </form>
+        <div class="search-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="busca-tempo-real" placeholder="Digite uma palavra-chave" autocomplete="off">
+            <button class="search-clear" id="limpar-busca" title="Limpar busca" style="display:none">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="search-results-count" id="resultados-contagem"></div>
     </div>
 </div>
 
@@ -37,7 +36,7 @@
         {% if usuarios.items %}
 
         <!-- ═══ VIEW: TABELA (desktop e tablet) ═══ -->
-        <div class="table-responsive table-desktop-view">
+        <div class="table-responsive table-desktop-view" id="tabela-usuarios">
             <table class="data-table data-table-hover">
                 <thead>
                     <tr>
@@ -59,7 +58,7 @@
                     {# SEPARADOR VISUAL: quando o primeiro inativo aparece #}
                     {% if not usuario.ativo and not mostrou_separador %}
                         {% set mostrou_separador = true %}
-                        <tr class="row-separator">
+                        <tr class="row-separator separador-row">
                             <td colspan="9">
                                 <div class="separator-content">
                                     <i class="fas fa-ban"></i>
@@ -70,7 +69,14 @@
                         </tr>
                     {% endif %}
 
-                    <tr class="{{ 'row-inactive' if not usuario.ativo else '' }}">
+                    <tr class="usuario-row {{ 'row-inactive' if not usuario.ativo else '' }}"
+                        data-id="{{ usuario.id }}"
+                        data-nome="{{ usuario.nome|lower }}"
+                        data-email="{{ usuario.email|lower }}"
+                        data-telefone="{{ (usuario.telefone or '')|lower }}"
+                        data-perfil="{{ usuario.perfil.value|lower }}"
+                        data-setor="{{ (usuario.setor.nome if usuario.setor else '')|lower }}"
+                        data-status="{{ 'ativo' if usuario.ativo else 'inativo' }}">
                         <td>{{ usuario.id }}</td>
                         <td>
                             <div class="user-cell">
@@ -127,21 +133,28 @@
         </div>
 
         <!-- ═══ VIEW: CARDS (mobile) ═══ -->
-        <div class="mobile-cards-view">
+        <div class="mobile-cards-view" id="cards-usuarios">
             {% set mostrou_separador_mobile = false %}
             {% for usuario in usuarios.items %}
 
             {# SEPARADOR MOBILE #}
             {% if not usuario.ativo and not mostrou_separador_mobile %}
                 {% set mostrou_separador_mobile = true %}
-                <div class="mobile-separator">
+                <div class="mobile-separator separador-card">
                     <i class="fas fa-ban"></i>
                     <span>Usuários Inativos</span>
                     <div class="mobile-separator-line"></div>
                 </div>
             {% endif %}
 
-            <div class="usuario-card {{ 'card-inactive' if not usuario.ativo else '' }}">
+            <div class="usuario-card {{ 'card-inactive' if not usuario.ativo else '' }}"
+                 data-id="{{ usuario.id }}"
+                 data-nome="{{ usuario.nome|lower }}"
+                 data-email="{{ usuario.email|lower }}"
+                 data-telefone="{{ (usuario.telefone or '')|lower }}"
+                 data-perfil="{{ usuario.perfil.value|lower }}"
+                 data-setor="{{ (usuario.setor.nome if usuario.setor else '')|lower }}"
+                 data-status="{{ 'ativo' if usuario.ativo else 'inativo' }}">
                 <div class="usuario-card-header">
                     <div class="usuario-card-avatar {{ 'avatar-inactive' if not usuario.ativo else '' }}">
                         {{ usuario.nome[0]|upper }}
@@ -205,9 +218,18 @@
             {% endfor %}
         </div>
 
+        <!-- Estado vazio para busca -->
+        <div class="empty-state" id="busca-vazia" style="display:none">
+            <i class="fas fa-search"></i>
+            <p>Nenhum usuário encontrado para esta busca</p>
+            <button class="btn btn-outline" id="btn-limpar-busca-vazia">
+                <i class="fas fa-undo"></i> Limpar busca
+            </button>
+        </div>
+
         <!-- Paginação -->
         {% if usuarios.pages > 1 %}
-        <div class="pagination">
+        <div class="pagination" id="paginacao-usuarios">
             {% if usuarios.has_prev %}
             <a href="{{ url_for('main.admin_usuarios', page=usuarios.prev_num, busca=busca) }}" class="pagination-item"><i class="fas fa-chevron-left"></i></a>
             {% endif %}
@@ -420,8 +442,80 @@
 {% block extra_css %}
 <style>
 /* ═══════════════════════════════════════════════════════════════
-   ADMIN USUÁRIOS - TABELA RESPONSIVA SEM SCROLL HORIZONTAL
+   ADMIN USUÁRIOS - BUSCA EM TEMPO REAL SEM BOTÃO
    ═══════════════════════════════════════════════════════════════ */
+
+/* ─── BUSCA EM TEMPO REAL ─── */
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.search-wrapper .search-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text-muted, #adb5bd);
+    font-size: 1rem;
+    pointer-events: none;
+}
+
+.search-wrapper input {
+    width: 100%;
+    padding: 12px 44px 12px 42px;
+    border: 2px solid var(--border-color, #e9ecef);
+    border-radius: var(--border-radius-md, 10px);
+    background: var(--bg-card, #ffffff);
+    color: var(--text-primary, #1a1a2e);
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s ease;
+}
+
+.search-wrapper input:focus {
+    outline: none;
+    border-color: var(--primary, #f46c6c);
+    box-shadow: 0 0 0 4px rgba(244, 108, 108, 0.1);
+}
+
+.search-wrapper input::placeholder {
+    color: var(--text-muted, #adb5bd);
+}
+
+.search-clear {
+    position: absolute;
+    right: 12px;
+    background: var(--bg-body, #f5f6fa);
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary, #6c757d);
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+}
+
+.search-clear:hover {
+    background: var(--danger, #dc3545);
+    color: white;
+}
+
+.search-results-count {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #6c757d);
+    font-weight: 500;
+    min-height: 20px;
+}
+
+.search-results-count.no-results {
+    color: var(--danger, #dc3545);
+}
 
 /* ─── VIEW DESKTOP: TABELA COM CABEÇALHO STICKY ─── */
 .table-desktop-view {
@@ -784,6 +878,88 @@
         margin-top: 4px;
     }
 }
+
+/* ─── Paginação ─── */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.pagination-item {
+    min-width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    border-radius: var(--border-radius-sm, 6px);
+    background: var(--bg-body);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.pagination-item:hover {
+    background: var(--primary, #0084ff);
+    color: white;
+    border-color: var(--primary, #0084ff);
+}
+
+.pagination-item.active {
+    background: var(--primary, #0084ff);
+    color: white;
+    border-color: var(--primary, #0084ff);
+}
+
+.pagination-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ─── Empty state ─── */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    color: var(--text-muted);
+}
+
+.empty-state p {
+    font-size: 1rem;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 480px) {
+    .empty-state {
+        padding: 30px 16px;
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+    }
+
+    .empty-state p {
+        font-size: 0.9rem;
+    }
+
+    .empty-state .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
 </style>
 {% endblock %}
 
@@ -863,6 +1039,163 @@ function openDeleteModal(id, nome) {
     document.getElementById('senha_confirmacao').value = '';
     openModal('modalExcluirUsuario');
 }
+
+// ═══════════════════════════════════════════════════════════════
+// BUSCA EM TEMPO REAL - SEM FOCO AUTOMÁTICO AO CARREGAR
+// ═══════════════════════════════════════════════════════════════
+(function() {
+    const inputBusca = document.getElementById('busca-tempo-real');
+    const btnLimpar = document.getElementById('limpar-busca');
+    const contagem = document.getElementById('resultados-contagem');
+    const vazioBusca = document.getElementById('busca-vazia');
+    const btnLimparVazio = document.getElementById('btn-limpar-busca-vazia');
+    const paginacao = document.getElementById('paginacao-usuarios');
+
+    const rows = document.querySelectorAll('.usuario-row');
+    const cards = document.querySelectorAll('.usuario-card');
+    const separadoresRow = document.querySelectorAll('.separador-row');
+    const separadoresCard = document.querySelectorAll('.separador-card');
+
+    function filtrarUsuarios(termo) {
+        const termoLower = termo.trim().toLowerCase();
+        let visiveis = 0;
+
+        // Esconde separadores inicialmente
+        separadoresRow.forEach(s => s.style.display = 'none');
+        separadoresCard.forEach(s => s.style.display = 'none');
+
+        if (!termoLower) {
+            // Sem termo: mostra tudo
+            rows.forEach(row => row.style.display = '');
+            cards.forEach(card => card.style.display = '');
+
+            // Mostra separadores se houver inativos visíveis
+            let mostrouSepRow = false;
+            let mostrouSepCard = false;
+
+            rows.forEach(function(row) {
+                if (row.classList.contains('row-inactive') && !mostrouSepRow) {
+                    const sep = row.previousElementSibling;
+                    if (sep && sep.classList.contains('separador-row')) {
+                        sep.style.display = '';
+                        mostrouSepRow = true;
+                    }
+                }
+            });
+
+            cards.forEach(function(card) {
+                if (card.classList.contains('card-inactive') && !mostrouSepCard) {
+                    const sep = card.previousElementSibling;
+                    if (sep && sep.classList.contains('separador-card')) {
+                        sep.style.display = '';
+                        mostrouSepCard = true;
+                    }
+                }
+            });
+
+            if (contagem) contagem.textContent = '';
+            if (vazioBusca) vazioBusca.style.display = 'none';
+            if (btnLimpar) btnLimpar.style.display = 'none';
+            if (paginacao) paginacao.style.display = '';
+            return;
+        }
+
+        if (btnLimpar) btnLimpar.style.display = 'flex';
+        if (paginacao) paginacao.style.display = 'none';
+
+        // Filtra linhas da tabela
+        rows.forEach(function(row) {
+            const nome = row.getAttribute('data-nome') || '';
+            const email = row.getAttribute('data-email') || '';
+            const telefone = row.getAttribute('data-telefone') || '';
+            const perfil = row.getAttribute('data-perfil') || '';
+            const setor = row.getAttribute('data-setor') || '';
+            const status = row.getAttribute('data-status') || '';
+            const id = row.getAttribute('data-id') || '';
+
+            const match = nome.includes(termoLower) ||
+                          email.includes(termoLower) ||
+                          telefone.includes(termoLower) ||
+                          perfil.includes(termoLower) ||
+                          setor.includes(termoLower) ||
+                          status.includes(termoLower) ||
+                          id.includes(termoLower);
+
+            if (match) {
+                row.style.display = '';
+                visiveis++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Filtra cards mobile
+        cards.forEach(function(card) {
+            const nome = card.getAttribute('data-nome') || '';
+            const email = card.getAttribute('data-email') || '';
+            const telefone = card.getAttribute('data-telefone') || '';
+            const perfil = card.getAttribute('data-perfil') || '';
+            const setor = card.getAttribute('data-setor') || '';
+            const status = card.getAttribute('data-status') || '';
+            const id = card.getAttribute('data-id') || '';
+
+            const match = nome.includes(termoLower) ||
+                          email.includes(termoLower) ||
+                          telefone.includes(termoLower) ||
+                          perfil.includes(termoLower) ||
+                          setor.includes(termoLower) ||
+                          status.includes(termoLower) ||
+                          id.includes(termoLower);
+
+            card.style.display = match ? '' : 'none';
+        });
+
+        // Atualiza contagem
+        if (contagem) {
+            if (visiveis === 0) {
+                contagem.textContent = 'Nenhum resultado encontrado';
+                contagem.classList.add('no-results');
+            } else {
+                contagem.textContent = visiveis + ' resultado' + (visiveis !== 1 ? 's' : '') + ' encontrado' + (visiveis !== 1 ? 's' : '');
+                contagem.classList.remove('no-results');
+            }
+        }
+
+        if (vazioBusca) {
+            vazioBusca.style.display = (visiveis === 0) ? 'block' : 'none';
+        }
+    }
+
+    if (inputBusca) {
+        inputBusca.addEventListener('input', function() {
+            filtrarUsuarios(this.value);
+        });
+
+        // NÃO dá foco automático ao carregar a página
+        // inputBusca.focus();  <-- REMOVIDO!
+    }
+
+    if (btnLimpar) {
+        btnLimpar.addEventListener('click', function() {
+            if (inputBusca) {
+                inputBusca.value = '';
+                filtrarUsuarios('');
+            }
+        });
+    }
+
+    if (btnLimparVazio) {
+        btnLimparVazio.addEventListener('click', function() {
+            if (inputBusca) {
+                inputBusca.value = '';
+                filtrarUsuarios('');
+            }
+        });
+    }
+
+    // Inicializa sem filtro
+    filtrarUsuarios('');
+})();
 
 document.addEventListener('DOMContentLoaded', function() {
     toggleSetorField('novo');
