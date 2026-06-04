@@ -59,6 +59,80 @@
         opacity: 0.8 !important;
     }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   DETALHAMENTO POR STATUS E PRIORIDADE - MOBILE
+   Mantém layout similar ao desktop com tabela horizontal scrollable
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    /* Container das tabelas de detalhamento */
+    .card-detalhamento .table-detalhamento {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        border-radius: 8px !important;
+    }
+
+    .card-detalhamento .detalhamento-table {
+        min-width: 100% !important;
+        width: auto !important;
+        font-size: 13px !important;
+    }
+
+    .card-detalhamento .detalhamento-table thead th {
+        padding: 10px 8px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+    }
+
+    .card-detalhamento .detalhamento-table tbody td {
+        padding: 10px 8px !important;
+        vertical-align: middle !important;
+    }
+
+    /* Coluna Status/Prioridade - badge menor no mobile */
+    .card-detalhamento .detalhamento-table tbody td:first-child {
+        min-width: 110px !important;
+    }
+
+    .card-detalhamento .detalhamento-table .badge-status,
+    .card-detalhamento .detalhamento-table .badge-prioridade {
+        font-size: 11px !important;
+        padding: 4px 8px !important;
+        white-space: nowrap !important;
+    }
+
+    /* Coluna Qtd */
+    .card-detalhamento .detalhamento-table tbody td:nth-child(2) {
+        text-align: center !important;
+        min-width: 50px !important;
+    }
+
+    /* Coluna % */
+    .card-detalhamento .detalhamento-table tbody td:nth-child(3) {
+        text-align: center !important;
+        min-width: 55px !important;
+        font-size: 12px !important;
+    }
+
+    /* Coluna Barra - mantém proporção */
+    .card-detalhamento .detalhamento-table tbody td:nth-child(4) {
+        min-width: 120px !important;
+        width: 40% !important;
+    }
+
+    /* Progress bar ajustada */
+    .card-detalhamento .progress-bar {
+        height: 8px !important;
+        border-radius: 4px !important;
+    }
+
+    /* Títulos dos cards de detalhamento */
+    .card-detalhamento .card-header h3 {
+        font-size: 15px !important;
+    }
+}
 </style>
 
 <!-- Cards de resumo -->
@@ -177,13 +251,13 @@
 {% endif %}
 
 <!-- Tabela detalhada por status -->
-<div class="card">
+<div class="card card-detalhamento">
     <div class="card-header">
         <h3><i class="fas fa-table"></i> Detalhamento por Status</h3>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
-            <table class="data-table">
+        <div class="table-responsive table-detalhamento">
+            <table class="data-table detalhamento-table">
                 <thead>
                     <tr>
                         <th>Status</th>
@@ -216,13 +290,13 @@
 </div>
 
 <!-- Tabela detalhada por prioridade -->
-<div class="card">
+<div class="card card-detalhamento">
     <div class="card-header">
         <h3><i class="fas fa-table"></i> Detalhamento por Prioridade</h3>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
-            <table class="data-table">
+        <div class="table-responsive table-detalhamento">
+            <table class="data-table detalhamento-table">
                 <thead>
                     <tr>
                         <th>Prioridade</th>

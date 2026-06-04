@@ -780,6 +780,10 @@ def ver_anexo(anexo_id):
 # ROTAS PROTEGIDAS - RELATÓRIOS
 # ═══════════════════════════════════════════════════════════════════════════════
 
+@main.route('/offline')
+def offline():
+    return render_template('offline.html')
+
 @main.route('/relatorios')
 @login_required
 def relatorios():

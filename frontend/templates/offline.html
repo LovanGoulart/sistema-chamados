@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Offline{% endblock %}
+{% block page_title %}Sem Conexão{% endblock %}
+
+{% block content %}
+<style>
+.offline-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.offline-icon {
+    font-size: 5rem;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    opacity: 0.6;
+}
+
+.offline-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.offline-message {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    max-width: 400px;
+    line-height: 1.6;
+}
+
+.offline-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 300px;
+}
+
+.offline-actions .btn {
+    width: 100%;
+    justify-content: center;
+}
+
+.offline-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 10px 16px;
+    background: var(--bg-body);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.offline-status i {
+    color: var(--warning);
+}
+
+.offline-status.online i {
+    color: var(--success);
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.offline-status .pulse {
+    animation: pulse-dot 1.5s infinite;
+}
+
+/* Animação de entrada */
+.offline-container {
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+    .offline-icon {
+        font-size: 3.5rem;
+    }
+    .offline-title {
+        font-size: 1.4rem;
+    }
+    .offline-message {
+        font-size: 0.9rem;
+    }
+}
+</style>
+
+<div class="offline-container">
+    <div class="offline-icon">
+        <i class="fas fa-wifi-slash"></i>
+    </div>
+    <h1 class="offline-title">Você está offline</h1>
+    <p class="offline-message">
+        Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.
+    </p>
+
+    <div class="offline-actions">
+        <button class="btn btn-primary" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i> Tentar novamente
+        </button>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline">
+            <i class="fas fa-home"></i> Ir para o Dashboard
+        </a>
+    </div>
+
+    <div class="offline-status" id="connectionStatus">
+        <i class="fas fa-circle pulse"></i>
+        <span>Verificando conexão...</span>
+    </div>
+</div>
+
+<script>
+(function() {
+    const statusEl = document.getElementById('connectionStatus');
+
+    function updateStatus() {
+        if (navigator.onLine) {
+            statusEl.classList.add('online');
+            statusEl.innerHTML = '<i class="fas fa-check-circle"></i><span>Conexão restaurada! Recarregando...</span>';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            statusEl.classList.remove('online');
+            statusEl.innerHTML = '<i class="fas fa-circle pulse"></i><span>Aguardando conexão...</span>';
+        }
+    }
+
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+
+    // Verificar status inicial
+    setTimeout(updateStatus, 1000);
+})();
+</script>
+{% endblock %}
