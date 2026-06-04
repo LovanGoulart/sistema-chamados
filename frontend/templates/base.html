@@ -80,6 +80,22 @@
             display: none;
         }
 
+        /* === ÍCONES DO TOPBAR: mesma cor, só ativo fica vermelho (desktop) === */
+        .topbar-actions .btn-icon,
+        .topbar-actions .btn-novo-chamado {
+            color: var(--text-secondary, #888);
+            background: transparent;
+        }
+        .topbar-actions .btn-icon.active,
+        .topbar-actions .btn-novo-chamado.active {
+            color: var(--primary, #f46c6c);
+            background: rgba(244, 108, 108, 0.1);
+        }
+        .topbar-actions .btn-icon i,
+        .topbar-actions .btn-novo-chamado i {
+            font-size: 1.25rem;
+        }
+
         /* Mobile: apenas mobile-menu-btn visível, sidebar-toggle escondido */
         @media (max-width: 768px) {
             .sidebar-toggle {
@@ -119,6 +135,22 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
+            }
+
+            /* === ÍCONES DO TOPBAR: mesma cor, só ativo fica vermelho === */
+            .topbar-actions .btn-icon,
+            .topbar-actions .btn-novo-chamado {
+                color: var(--text-secondary, #888) !important;
+                background: transparent !important;
+            }
+            .topbar-actions .btn-icon.active,
+            .topbar-actions .btn-novo-chamado.active {
+                color: var(--primary, #f46c6c) !important;
+                background: rgba(244, 108, 108, 0.1) !important;
+            }
+            .topbar-actions .btn-icon i,
+            .topbar-actions .btn-novo-chamado i {
+                font-size: 1.3rem;
             }
         }
 
@@ -298,6 +330,7 @@
             }
         }
     </style>
+<base target="_blank">
 </head>
 <body>
     {% if current_user.is_authenticated and current_user.perfil.value != 'usuario' %}
@@ -441,15 +474,15 @@
             <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
             <div class="topbar-actions">
                 <!-- Botão Home (todos os usuários) -->
-                <a href="{{ url_for('main.dashboard') }}" class="btn-icon btn-home" title="Home - Meus Chamados">
+                <a href="{{ url_for('main.dashboard') }}" class="btn-icon btn-home {% if request.endpoint == 'main.dashboard' %}active{% endif %}" title="Home - Meus Chamados">
                     <i class="fas fa-home"></i>
                 </a>
                 <!-- Botão Novo Chamado (+) -->
-                <a href="{{ url_for('main.novo_chamado') }}" class="btn-novo-chamado" title="Novo Chamado">
+                <a href="{{ url_for('main.novo_chamado') }}" class="btn-novo-chamado {% if request.endpoint == 'main.novo_chamado' %}active{% endif %}" title="Novo Chamado">
                     <i class="fas fa-plus"></i>
-                    <span class="btn-text">Novo chamado</span>
+                    <span class="btn-text"></span>
                 </a>
-                <button class="btn-icon notification-btn" id="notificationBtn" title="Notificações">
+                <button class="btn-icon notification-btn {% if request.endpoint == 'main.notificacoes' %}active{% endif %}" id="notificationBtn" title="Notificações">
                     <i class="fas fa-bell"></i>
                     <span class="badge" id="topNotifCount" style="display:none">0</span>
                 </button>
@@ -588,6 +621,14 @@
                     bottom: calc(110px + env(safe-area-inset-bottom, 0px));
                 }
             }
+
+               /* Mobile geral: padding inferior para não cortar */
+        @media (max-width: 768px) {
+            .content-wrapper {
+                padding: calc(35px + env(safe-area-inset-bottom, 0px)) 12px;
+            }
+        }
+            
         }
     </style>
 
