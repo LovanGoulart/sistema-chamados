@@ -527,12 +527,118 @@
         </div>
     </div>
 
-    <!-- Botão Scroll to Top -->
-    <button class="scroll-to-top" id="scrollToTop" onclick="scrollToTop()" title="Voltar ao topo">
+       <!-- Botão Scroll to Top -->
+    <button class="scroll-to-top" id="scrollToTop" title="Voltar ao topo">
         <i class="fas fa-chevron-up"></i>
     </button>
 
+    <style>
+        /* ========== BOTÃO VOLTAR AO TOPO ========== */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--primary, #f46c6c);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(244, 108, 108, 0.4);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 1;
+        }
+
+        .scroll-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .scroll-to-top:hover {
+            background: var(--primary-dark, #e05555);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(244, 108, 108, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .scroll-to-top {
+                bottom: 160px;
+                right: 16px;
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        /* Modo app instalado: respeitar safe area */
+        @media (display-mode: standalone) {
+            .scroll-to-top {
+                bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+            }
+            @media (max-width: 768px) {
+                .scroll-to-top {
+                    bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+                }
+            }
+        }
+    </style>
+
+    <script>
+        // ========== SCROLL TO TOP ==========
+        (function() {
+            const scrollBtn = document.getElementById('scrollToTop');
+            if (!scrollBtn) return;
+
+            // Detectar modo app instalado
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
+                || window.navigator.standalone === true;
+
+            // No app, o scroll está no .main-content, não no window
+            const scrollContainer = isStandalone 
+                ? document.querySelector('.main-content') 
+                : window;
+
+            function getScrollY() {
+                if (isStandalone && scrollContainer) {
+                    return scrollContainer.scrollTop;
+                }
+                return window.scrollY || document.documentElement.scrollTop;
+            }
+
+            function toggleScrollBtn() {
+                if (getScrollY() > 300) {
+                    scrollBtn.classList.add('visible');
+                } else {
+                    scrollBtn.classList.remove('visible');
+                }
+            }
+
+            scrollBtn.addEventListener('click', function() {
+                if (isStandalone && scrollContainer) {
+                    scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+
+            // Listener no container correto de scroll
+            if (scrollContainer) {
+                scrollContainer.addEventListener('scroll', toggleScrollBtn);
+            }
+            toggleScrollBtn();
+        })();
+    </script>
+
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    
     {% if current_user.is_authenticated and current_user.perfil.value == 'usuario' %}
     <script>
     // Menu mobile para usuário comum (sem sidebar)
