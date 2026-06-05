@@ -5,75 +5,160 @@
 
 {% block content %}
 
-<!-- ═══════════════════════════════════════════════════════════════
-     CSS RESPONSIVO - RELATÓRIOS
-     ═══════════════════════════════════════════════════════════════ -->
 <style>
-/* ─────────────────────────────────────────────
-   CARDS DE ESTATÍSTICAS
-   ───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   CARDS DE ESTATÍSTICAS - DESKTOP E MOBILE
+   Forçado com !important para sobrescrever estilos.css externo
+   ═══════════════════════════════════════════════════════════════ */
 
+/* ─── Base (Desktop) ─── */
+.stats-grid.stats-grid-4 {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 16px !important;
+    margin-bottom: 24px !important;
+}
+
+.stats-grid.stats-grid-4 .stat-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 18px 16px !important;
+    border-radius: 12px !important;
+    background: var(--bg-card, #ffffff) !important;
+    border: 1px solid var(--border-color, #e9ecef) !important;
+    transition: all 0.2s ease !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-align: left !important;
+}
+
+.stats-grid.stats-grid-4 .stat-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.stats-grid.stats-grid-4 .stat-card .stat-icon {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.2rem !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+}
+
+.stats-grid.stats-grid-4 .stat-card .stat-info {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.stats-grid.stats-grid-4 .stat-card .stat-value {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    margin-bottom: 2px !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    display: block !important;
+}
+
+.stats-grid.stats-grid-4 .stat-card .stat-label {
+    font-size: 0.72rem !important;
+    color: var(--text-secondary, #718096) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.3 !important;
+    opacity: 0.8 !important;
+    display: block !important;
+}
+
+/* Cores dos stats - PADRÃO UNIFICADO */
+.stats-grid.stats-grid-4 .stat-primary .stat-icon { background: rgba(244, 108, 108, 0.15) !important; color: #f46c6c !important; }
+.stats-grid.stats-grid-4 .stat-info .stat-icon { background: rgba(23, 162, 184, 0.15) !important; color: #17a2b8 !important; }
+.stats-grid.stats-grid-4 .stat-success .stat-icon { background: rgba(40, 167, 69, 0.15) !important; color: #28a745 !important; }
+.stats-grid.stats-grid-4 .stat-purple .stat-icon { background: rgba(111, 66, 193, 0.15) !important; color: #6f42c1 !important; }
+
+.stats-grid.stats-grid-4 .stat-primary .stat-value { color: #f46c6c !important; }
+.stats-grid.stats-grid-4 .stat-info .stat-value { color: #17a2b8 !important; }
+.stats-grid.stats-grid-4 .stat-success .stat-value { color: #28a745 !important; }
+.stats-grid.stats-grid-4 .stat-purple .stat-value { color: #6f42c1 !important; }
+
+/* ─── Mobile ─── */
 @media (max-width: 768px) {
-    .stats-grid {
-        display: grid !important;
+    .stats-grid.stats-grid-4 {
         grid-template-columns: 1fr 1fr !important;
         gap: 10px !important;
         padding: 0 4px !important;
     }
 
-    .stats-grid .stat-card {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
+    .stats-grid.stats-grid-4 .stat-card {
+        padding: 12px 10px !important;
         gap: 10px !important;
-        padding: 12px 10px !important;      /* reduzido lateral */
-        text-align: left !important;
-        min-width: 0 !important;
-        overflow: hidden !important;         /* evita estouro */
     }
 
-    .stats-grid .stat-card .stat-icon {
+    .stats-grid.stats-grid-4 .stat-card .stat-icon {
         width: 40px !important;
         height: 40px !important;
-        min-width: 40px !important;         /* fixo, não encolhe */
+        min-width: 40px !important;
         min-height: 40px !important;
         border-radius: 10px !important;
         font-size: 18px !important;
-        margin: 0 !important;
     }
 
-    .stats-grid .stat-card .stat-info {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        min-width: 0 !important;
-        overflow: hidden !important;          /* evita estouro do texto */
-    }
-
-    .stats-grid .stat-card .stat-value {
+    .stats-grid.stats-grid-4 .stat-card .stat-value {
         font-size: 22px !important;
-        font-weight: 700 !important;
         line-height: 1.1 !important;
-        margin-bottom: 2px !important;
-        white-space: nowrap !important;       /* número sempre em 1 linha */
+        white-space: nowrap !important;
     }
 
-    .stats-grid .stat-card .stat-label {
-        font-size: 10px !important;           /* um pouco menor */
-        text-transform: uppercase !important;
+    .stats-grid.stats-grid-4 .stat-card .stat-label {
+        font-size: 10px !important;
         letter-spacing: 0.2px !important;
-        opacity: 0.8 !important;
-        white-space: nowrap !important;       /* label em 1 linha */
+        white-space: nowrap !important;
         overflow: hidden !important;
-        text-overflow: ellipsis !important;   /* "..." se não couber */
+        text-overflow: ellipsis !important;
         max-width: 100% !important;
+    }
+}
+
+/* Celulares pequenos */
+@media (max-width: 480px) {
+    .stats-grid.stats-grid-4 .stat-card {
+        padding: 12px 10px !important;
+        gap: 8px !important;
+    }
+    .stats-grid.stats-grid-4 .stat-card .stat-icon {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        font-size: 16px !important;
+    }
+    .stats-grid.stats-grid-4 .stat-card .stat-value {
+        font-size: 1.2rem !important;
+    }
+    .stats-grid.stats-grid-4 .stat-card .stat-label {
+        font-size: 0.65rem !important;
     }
 }
 
 /* ─────────────────────────────────────────────
    DETALHAMENTO POR STATUS E PRIORIDADE - MOBILE
-   3 colunas: Status/Prioridade | Qtd | %
-   Coluna Distribuição REMOVIDA no mobile
    ───────────────────────────────────────────── */
 
 @media (max-width: 768px) {
@@ -100,7 +185,6 @@
         overflow: hidden !important;
     }
 
-    /* Container com scroll horizontal */
     .card-detalhamento .table-detalhamento {
         overflow-x: auto !important;
         overflow-y: hidden !important;
@@ -110,7 +194,6 @@
         position: relative !important;
     }
 
-    /* Tabela - 3 colunas no mobile */
     .card-detalhamento .detalhamento-table {
         width: 100% !important;
         min-width: 320px !important;
@@ -119,7 +202,6 @@
         table-layout: auto !important;
     }
 
-    /* Sobrescreve regras genéricas do admin_setores */
     .card-detalhamento .detalhamento-table thead {
         display: table-header-group !important;
     }
@@ -151,39 +233,34 @@
         min-height: auto !important;
     }
 
-    /* Remove labels genéricos do admin_setores */
     .card-detalhamento .detalhamento-table td::before {
         display: none !important;
         content: none !important;
     }
 
-    /* Cabeçalho - 3 colunas */
-    /* Reduz padding do cabeçalho da primeira coluna também */
-.card-detalhamento .detalhamento-table thead th:first-child {
-    padding-left: 10px !important;
-    padding-right: 8px !important;
-}
+    .card-detalhamento .detalhamento-table thead th:first-child {
+        padding-left: 10px !important;
+        padding-right: 8px !important;
+    }
 
     .card-detalhamento .detalhamento-table thead th:nth-child(2),
     .card-detalhamento .detalhamento-table thead th:nth-child(3) {
         text-align: center !important;
     }
 
-    /* Células do body */
     .card-detalhamento .detalhamento-table tbody td {
         padding: 12px 16px !important;
         vertical-align: middle !important;
         border-bottom: 1px solid var(--border-color, #f0f0f0) !important;
     }
 
-    /* Coluna Status/Prioridade */
     .card-detalhamento .detalhamento-table tbody td:first-child {
-    min-width: auto !important;      /* remove o mínimo de 130px */
-    padding-left: 10px !important;   /* reduz o padding lateral */
-    padding-right: 8px !important;
-    white-space: nowrap !important;
-}
-    /* Badges */
+        min-width: auto !important;
+        padding-left: 10px !important;
+        padding-right: 8px !important;
+        white-space: nowrap !important;
+    }
+
     .card-detalhamento .detalhamento-table .badge-status,
     .card-detalhamento .detalhamento-table .badge-prioridade {
         display: inline-block !important;
@@ -196,7 +273,6 @@
         line-height: 1.4 !important;
     }
 
-    /* Qtd */
     .card-detalhamento .detalhamento-table tbody td:nth-child(2) {
         text-align: center !important;
         min-width: 50px !important;
@@ -205,7 +281,6 @@
         color: var(--text-color, #2d3748) !important;
     }
 
-    /* % */
     .card-detalhamento .detalhamento-table tbody td:nth-child(3) {
         text-align: center !important;
         min-width: 60px !important;
@@ -214,13 +289,11 @@
         color: var(--text-muted, #718096) !important;
     }
 
-    /* ═══ REMOVE COLUNA DISTRIBUIÇÃO NO MOBILE ═══ */
     .card-detalhamento .detalhamento-table thead th:nth-child(4),
     .card-detalhamento .detalhamento-table tbody td:nth-child(4) {
         display: none !important;
     }
 
-    /* Scrollbar */
     .card-detalhamento .table-detalhamento::-webkit-scrollbar {
         height: 6px;
     }
@@ -239,9 +312,6 @@
 </style>
 
 
-<!-- ═══════════════════════════════════════════════════════════════
-     CARDS DE RESUMO
-     ═══════════════════════════════════════════════════════════════ -->
 <div class="stats-grid stats-grid-4">
     <div class="stat-card stat-primary">
         <div class="stat-icon"><i class="fas fa-headset"></i></div>
@@ -283,9 +353,6 @@
 </div>
 
 
-<!-- ═══════════════════════════════════════════════════════════════
-     GRÁFICOS PRINCIPAIS
-     ═══════════════════════════════════════════════════════════════ -->
 <div class="dashboard-grid">
     <div class="card card-chart-large">
         <div class="card-header">
@@ -325,9 +392,6 @@
 </div>
 
 
-<!-- ═══════════════════════════════════════════════════════════════
-     GRÁFICOS POR SETOR (APENAS ADMIN)
-     ═══════════════════════════════════════════════════════════════ -->
 {% if current_user.is_admin() and graficos_por_setor %}
 <div class="page-header" style="margin-top: 24px;">
     <div class="page-header-left">
@@ -356,9 +420,6 @@
 {% endif %}
 
 
-<!-- ═══════════════════════════════════════════════════════════════
-     DETALHAMENTO POR STATUS
-     ═══════════════════════════════════════════════════════════════ -->
 <div class="card card-detalhamento">
     <div class="card-header">
         <h3><i class="fas fa-table"></i> Detalhamento por Status</h3>
@@ -398,9 +459,6 @@
 </div>
 
 
-<!-- ═══════════════════════════════════════════════════════════════
-     DETALHAMENTO POR PRIORIDADE
-     ═══════════════════════════════════════════════════════════════ -->
 <div class="card card-detalhamento">
     <div class="card-header">
         <h3><i class="fas fa-table"></i> Detalhamento por Prioridade</h3>
@@ -445,10 +503,6 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-// ═══════════════════════════════════════════════════════════════
-// CONFIGURAÇÃO DOS GRÁFICOS
-// ═══════════════════════════════════════════════════════════════
-
 const CORES_STATUS = {
     'aberto':        '#17a2b8',
     'em_andamento':  '#ffc107',
@@ -485,7 +539,6 @@ const ORDEM_PRIORIDADE = ['baixa', 'media', 'alta', 'urgente'];
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ── Gráfico por mês ──
     const mesData = JSON.parse(document.getElementById('chartMeses').dataset.values);
     new Chart(document.getElementById('chartMeses'), {
         type: 'line',
@@ -514,7 +567,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 
-    // ── Gráfico por setor ──
     const setorData = JSON.parse(document.getElementById('chartSetores').dataset.values);
     new Chart(document.getElementById('chartSetores'), {
         type: 'bar',
@@ -539,7 +591,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 
-    // ── Gráfico de Status ──
     const statusData = JSON.parse(document.getElementById('chartStatusRel').dataset.values);
     const statusKeys = Object.keys(statusData);
     new Chart(document.getElementById('chartStatusRel'), {
@@ -561,7 +612,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 
-    // ── Gráfico de Prioridade ──
     const prioridadeData = JSON.parse(document.getElementById('chartPrioridadeRel').dataset.values);
     const prioridadeKeys = Object.keys(prioridadeData);
     new Chart(document.getElementById('chartPrioridadeRel'), {
@@ -583,7 +633,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 
-    // ── Gráficos por setor (admin) ──
     {% if current_user.is_admin() and graficos_por_setor %}
     {% for setor_nome, dados in graficos_por_setor.items() %}
     {% if dados.total > 0 %}
