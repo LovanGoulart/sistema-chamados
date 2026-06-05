@@ -5,10 +5,6 @@
 
 {% block content %}
 <div class="page-header">
-    <!--<div class="page-header-left">
-        <h2><i class="fas fa-users"></i> Gerenciar Usuários</h2>
-        <p class="page-subtitle">Cadastre, edite e gerencie usuários do sistema</p>
-    </div>-->
     <div class="page-header-right">
         <button class="btn btn-primary" onclick="openModal('modalNovoUsuario')">
             <i class="fas fa-user-plus"></i>Novo usuário
@@ -16,7 +12,7 @@
     </div>
 </div>
 
-<!-- Busca em tempo real (único campo, sem botão) -->
+<!-- Busca em tempo real -->
 <div class="card card-filters">
     <div class="card-body">
         <div class="search-wrapper">
@@ -43,7 +39,7 @@
                         <th style="width:40px">ID</th>
                         <th style="width:22%">Nome</th>
                         <th style="width:22%">E-mail</th>
-                        <th style="width:100px">Tel</th>
+                        <th style="width:120px">Telefone</th>
                         <th style="width:80px">Perfil</th>
                         <th style="width:14%">Setor</th>
                         <th style="width:80px">Status</th>
@@ -55,7 +51,6 @@
                     {% set mostrou_separador = false %}
                     {% for usuario in usuarios.items %}
 
-                    {# SEPARADOR VISUAL: quando o primeiro inativo aparece #}
                     {% if not usuario.ativo and not mostrou_separador %}
                         {% set mostrou_separador = true %}
                         <tr class="row-separator separador-row">
@@ -85,7 +80,7 @@
                             </div>
                         </td>
                         <td><span class="email-truncate">{{ usuario.email }}</span></td>
-                        <td>{{ usuario.telefone or '-' }}</td>
+                        <td><span class="telefone-formatado">{{ usuario.telefone or '-' }}</span></td>
                         <td><span class="badge-perfil badge-perfil-{{ usuario.perfil.value }}">{{ usuario.perfil.value|title }}</span></td>
                         <td><span class="setor-truncate">{{ usuario.setor.nome if usuario.setor else '-' }}</span></td>
                         <td>
@@ -137,7 +132,6 @@
             {% set mostrou_separador_mobile = false %}
             {% for usuario in usuarios.items %}
 
-            {# SEPARADOR MOBILE #}
             {% if not usuario.ativo and not mostrou_separador_mobile %}
                 {% set mostrou_separador_mobile = true %}
                 <div class="mobile-separator separador-card">
@@ -174,9 +168,9 @@
                 </div>
                 <div class="usuario-card-body">
                     <div class="usuario-card-meta">
-                        <div class="meta-item">
+                        <div class="meta-item meta-telefone">
                             <i class="fas fa-phone"></i>
-                            <span>{{ usuario.telefone or '-' }}</span>
+                            <span class="telefone-formatado">{{ usuario.telefone or '-' }}</span>
                         </div>
                         <div class="meta-item">
                             <i class="fas fa-building"></i>
@@ -259,7 +253,9 @@
     </div>
 </div>
 
-<!-- MODAIS (mantidos iguais) -->
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MODAL: NOVO USUÁRIO — CAMPO TELEFONE COM MÁSCARA E VALIDAÇÃO
+     ═══════════════════════════════════════════════════════════════════════ -->
 <div class="modal" id="modalNovoUsuario">
     <div class="modal-overlay" onclick="closeModal('modalNovoUsuario')"></div>
     <div class="modal-content">
@@ -277,10 +273,30 @@
                     <label for="novo_email">E-mail *</label>
                     <input type="email" id="novo_email" name="email" required>
                 </div>
-                <div class="form-group">
+
+                <!-- ═══ CAMPO TELEFONE MELHORADO — NOVO USUÁRIO ═══ -->
+                <div class="form-group form-group-telefone">
                     <label for="novo_telefone">Telefone</label>
-                    <input type="tel" id="novo_telefone" name="telefone">
+                    <div class="telefone-input-wrapper">
+                        <span class="telefone-prefixo"><i class="fas fa-phone-alt"></i> +55</span>
+                        <input
+                            type="tel"
+                            id="novo_telefone"
+                            name="telefone"
+                            class="telefone-input"
+                            placeholder="(00) 00000-0000"
+                            maxlength="15"
+                            autocomplete="tel"
+                            inputmode="tel"
+                            oninput="aplicarMascaraTelefone(this)"
+                            onblur="validarTelefone(this, 'novo-telefone-erro')">
+                    </div>
+                    <small class="form-help">Digite apenas números. Ex: (11) 98765-4321</small>
+                    <div class="telefone-erro" id="novo-telefone-erro" style="display:none">
+                        <i class="fas fa-exclamation-circle"></i> <span></span>
+                    </div>
                 </div>
+
                 <div class="form-group">
                     <label for="novo_perfil">Perfil *</label>
                     <select id="novo_perfil" name="perfil" required onchange="toggleSetorField('novo')">
@@ -313,6 +329,9 @@
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MODAL: EDITAR USUÁRIO — CAMPO TELEFONE COM MÁSCARA E VALIDAÇÃO
+     ═══════════════════════════════════════════════════════════════════════ -->
 <div class="modal" id="modalEditarUsuario">
     <div class="modal-overlay" onclick="closeModal('modalEditarUsuario')"></div>
     <div class="modal-content">
@@ -330,10 +349,30 @@
                     <label for="edit_email">E-mail</label>
                     <input type="email" id="edit_email" name="email" required>
                 </div>
-                <div class="form-group">
+
+                <!-- ═══ CAMPO TELEFONE MELHORADO — EDITAR USUÁRIO ═══ -->
+                <div class="form-group form-group-telefone">
                     <label for="edit_telefone">Telefone</label>
-                    <input type="tel" id="edit_telefone" name="telefone">
+                    <div class="telefone-input-wrapper">
+                        <span class="telefone-prefixo"><i class="fas fa-phone-alt"></i> +55</span>
+                        <input
+                            type="tel"
+                            id="edit_telefone"
+                            name="telefone"
+                            class="telefone-input"
+                            placeholder="(00) 00000-0000"
+                            maxlength="15"
+                            autocomplete="tel"
+                            inputmode="tel"
+                            oninput="aplicarMascaraTelefone(this)"
+                            onblur="validarTelefone(this, 'edit-telefone-erro')">
+                    </div>
+                    <small class="form-help">Digite apenas números. Ex: (11) 98765-4321</small>
+                    <div class="telefone-erro" id="edit-telefone-erro" style="display:none">
+                        <i class="fas fa-exclamation-circle"></i> <span></span>
+                    </div>
                 </div>
+
                 <div class="form-group">
                     <label for="edit_perfil">Perfil</label>
                     <select id="edit_perfil" name="perfil" required onchange="toggleSetorField('edit')">
@@ -442,7 +481,7 @@
 {% block extra_css %}
 <style>
 /* ═══════════════════════════════════════════════════════════════
-   ADMIN USUÁRIOS - BUSCA EM TEMPO REAL SEM BOTÃO
+   ADMIN USUÁRIOS — ESTILOS COMPLETOS
    ═══════════════════════════════════════════════════════════════ */
 
 /* ─── BUSCA EM TEMPO REAL ─── */
@@ -517,7 +556,7 @@
     color: var(--danger, #dc3545);
 }
 
-/* ─── VIEW DESKTOP: TABELA COM CABEÇALHO STICKY ─── */
+/* ─── VIEW DESKTOP: TABELA ─── */
 .table-desktop-view {
     display: block;
     overflow-x: visible;
@@ -574,7 +613,6 @@
     white-space: nowrap;
 }
 
-/* Quebra de linha controlada para campos longos */
 .table-desktop-view .data-table td:nth-child(2),
 .table-desktop-view .data-table td:nth-child(3),
 .table-desktop-view .data-table td:nth-child(6) {
@@ -584,7 +622,6 @@
     line-height: 1.3;
 }
 
-/* Truncar nomes e emails muito longos */
 .user-name-truncate {
     display: block;
     overflow: hidden;
@@ -602,6 +639,12 @@
     font-size: 0.8rem;
 }
 
+.telefone-formatado {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.3px;
+}
+
 .setor-truncate {
     display: block;
     overflow: hidden;
@@ -616,7 +659,6 @@
     white-space: nowrap;
 }
 
-/* Badges menores para caber */
 .badge-perfil {
     padding: 3px 8px;
     font-size: 0.7rem;
@@ -633,14 +675,12 @@
     font-size: 0.65rem;
 }
 
-/* Avatar menor */
 .user-avatar-small {
     width: 28px;
     height: 28px;
     font-size: 0.75rem;
 }
 
-/* Ações compactas */
 .table-actions {
     display: flex;
     gap: 4px;
@@ -652,12 +692,10 @@
     font-size: 0.75rem;
 }
 
-/* Hover */
 .table-desktop-view .data-table-hover tbody tr:hover {
     background: rgba(244, 108, 108, 0.03);
 }
 
-/* Separador */
 .row-separator td {
     padding: 8px !important;
     background: #f8f9fa !important;
@@ -825,6 +863,11 @@
     text-overflow: ellipsis;
 }
 
+.meta-telefone span {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    letter-spacing: 0.3px;
+}
+
 .usuario-card-footer {
     display: flex;
     gap: 6px;
@@ -837,6 +880,126 @@
     justify-content: center;
     padding: 6px 10px;
     font-size: 0.78rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ═══ CAMPO TELEFONE MELHORADO — ESTILOS ═══
+   ═══════════════════════════════════════════════════════════════ */
+
+.form-group-telefone {
+    position: relative;
+}
+
+.telefone-input-wrapper {
+    display: flex;
+    align-items: center;
+    border: 2px solid var(--border-color, #e9ecef);
+    border-radius: var(--border-radius-md, 10px);
+    background: var(--bg-card, #ffffff);
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+.telefone-input-wrapper:focus-within {
+    border-color: var(--primary, #f46c6c);
+    box-shadow: 0 0 0 4px rgba(244, 108, 108, 0.1);
+}
+
+.telefone-prefixo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+    background: var(--bg-body, #f8f9fa);
+    border-right: 1px solid var(--border-color, #e9ecef);
+    color: var(--text-secondary, #6c757d);
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.telefone-prefixo i {
+    color: var(--primary, #f46c6c);
+    font-size: 0.8rem;
+}
+
+.telefone-input {
+    flex: 1;
+    border: none !important;
+    background: transparent !important;
+    padding: 10px 12px !important;
+    font-size: 0.95rem !important;
+    font-family: 'SF Mono', 'Fira Code', monospace !important;
+    letter-spacing: 0.5px !important;
+    color: var(--text-primary, #1a1a2e) !important;
+    outline: none !important;
+    box-shadow: none !important;
+    min-width: 0;
+}
+
+.telefone-input::placeholder {
+    color: var(--text-muted, #adb5bd) !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.telefone-erro {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    color: #721c24;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.telefone-erro i {
+    color: #dc3545;
+}
+
+.telefone-erro.show {
+    display: flex !important;
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+/* Estado de erro no wrapper */
+.telefone-input-wrapper.has-error {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.15) !important;
+}
+
+/* Estado de sucesso no wrapper */
+.telefone-input-wrapper.has-success {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.15) !important;
+}
+
+/* Ícone de validação ao lado */
+.telefone-input-wrapper .telefone-valid-icon {
+    padding: 0 12px;
+    font-size: 0.85rem;
+    display: none;
+}
+
+.telefone-input-wrapper.has-success .telefone-valid-icon.valid {
+    display: block;
+    color: #28a745;
+}
+
+.telefone-input-wrapper.has-error .telefone-valid-icon.invalid {
+    display: block;
+    color: #dc3545;
 }
 
 /* ─── RESPONSIVIDADE ─── */
@@ -855,6 +1018,21 @@
 
     .page-header-right .btn {
         padding: 8px 12px;
+    }
+
+    /* Telefone no mobile */
+    .telefone-prefixo {
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+
+    .telefone-prefixo span {
+        display: none;
+    }
+
+    .telefone-input {
+        padding: 10px !important;
+        font-size: 0.9rem !important;
     }
 }
 
@@ -876,6 +1054,18 @@
         width: 100%;
         justify-content: flex-start;
         margin-top: 4px;
+    }
+
+    .telefone-prefixo {
+        padding: 8px;
+    }
+
+    .telefone-prefixo span {
+        display: none;
+    }
+
+    .telefone-input {
+        padding: 8px !important;
     }
 }
 
@@ -965,6 +1155,187 @@
 
 {% block extra_js %}
 <script>
+// ═══════════════════════════════════════════════════════════════════════
+// ═══ FUNÇÕES DE MÁSCARA E VALIDAÇÃO DE TELEFONE ═══
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Aplica máscara de telefone brasileiro no formato (00) 00000-0000
+ * Aceita apenas números e formata automaticamente
+ */
+function aplicarMascaraTelefone(input) {
+    // Remove tudo que não é dígito
+    let valor = input.value.replace(/\D/g, '');
+
+    // Limita a 11 dígitos (DDD + 9 dígitos)
+    if (valor.length > 11) {
+        valor = valor.substring(0, 11);
+    }
+
+    // Aplica a máscara
+    if (valor.length > 7) {
+        // Com 9 dígitos: (00) 00000-0000
+        valor = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+    } else if (valor.length > 2) {
+        // Com menos de 9 dígitos: (00) 0000-0000
+        valor = valor.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+    } else if (valor.length > 0) {
+        // Apenas DDD: (00
+        valor = valor.replace(/^(\d{0,2})$/, '($1');
+    }
+
+    // Remove parêntese sozinho no final se o usuário apagar
+    if (valor === '(') {
+        valor = '';
+    }
+
+    input.value = valor;
+
+    // Limpa erro ao digitar
+    const wrapper = input.closest('.telefone-input-wrapper');
+    const erroDiv = wrapper.parentElement.querySelector('.telefone-erro');
+    if (wrapper) {
+        wrapper.classList.remove('has-error', 'has-success');
+    }
+    if (erroDiv) {
+        erroDiv.style.display = 'none';
+    }
+}
+
+/**
+ * Valida o telefone brasileiro
+ * Regras: deve ter 10 ou 11 dígitos, DDD válido (11-99), não pode começar com 0
+ */
+function validarTelefone(input, erroId) {
+    const valor = input.value.trim();
+    const wrapper = input.closest('.telefone-input-wrapper');
+    const erroDiv = document.getElementById(erroId);
+    const erroSpan = erroDiv ? erroDiv.querySelector('span') : null;
+
+    // Campo vazio é válido (telefone é opcional)
+    if (!valor) {
+        if (wrapper) wrapper.classList.remove('has-error', 'has-success');
+        if (erroDiv) erroDiv.style.display = 'none';
+        return true;
+    }
+
+    // Remove máscara para validar
+    const numeros = valor.replace(/\D/g, '');
+
+    // Verifica se tem apenas números
+    if (!/^\d+$/.test(numeros)) {
+        mostrarErroTelefone(wrapper, erroDiv, erroSpan, 'Use apenas números no telefone.');
+        return false;
+    }
+
+    // Verifica quantidade de dígitos
+    if (numeros.length < 10) {
+        mostrarErroTelefone(wrapper, erroDiv, erroSpan, 'Telefone incompleto. Digite o DDD + número.');
+        return false;
+    }
+
+    if (numeros.length > 11) {
+        mostrarErroTelefone(wrapper, erroDiv, erroSpan, 'Telefone muito longo. Máximo 11 dígitos.');
+        return false;
+    }
+
+    // Valida DDD (primeiros 2 dígitos)
+    const ddd = parseInt(numeros.substring(0, 2));
+    if (ddd < 11 || ddd > 99) {
+        mostrarErroTelefone(wrapper, erroDiv, erroSpan, 'DDD inválido. Use um DDD entre 11 e 99.');
+        return false;
+    }
+
+    // Valida primeiro dígito do número (não pode ser 0 ou 1)
+    const primeiroDigito = parseInt(numeros.substring(2, 3));
+    if (primeiroDigito === 0 || primeiroDigito === 1) {
+        mostrarErroTelefone(wrapper, erroDiv, erroSpan, 'Número inválido. Não pode começar com 0 ou 1.');
+        return false;
+    }
+
+    // Validação para celular (11 dígitos)
+    if (numeros.length === 11) {
+        const nonoDigito = numeros.substring(2, 3);
+        if (nonoDigito !== '9') {
+            mostrarErroTelefone(wrapper, erroDiv, erroSpan, 'Celular deve começar com 9 após o DDD.');
+            return false;
+        }
+    }
+
+    // Tudo OK!
+    if (wrapper) {
+        wrapper.classList.remove('has-error');
+        wrapper.classList.add('has-success');
+    }
+    if (erroDiv) erroDiv.style.display = 'none';
+
+    return true;
+}
+
+function mostrarErroTelefone(wrapper, erroDiv, erroSpan, mensagem) {
+    if (wrapper) {
+        wrapper.classList.remove('has-success');
+        wrapper.classList.add('has-error');
+    }
+    if (erroDiv && erroSpan) {
+        erroSpan.textContent = mensagem;
+        erroDiv.style.display = 'flex';
+    }
+}
+
+/**
+ * Remove a máscara antes de enviar o formulário
+ * Envia apenas os números para o backend
+ */
+function limparMascaraTelefone(form) {
+    const inputsTelefone = form.querySelectorAll('.telefone-input');
+    inputsTelefone.forEach(function(input) {
+        input.value = input.value.replace(/\D/g, '');
+    });
+    return true;
+}
+
+// Aplica limpeza de máscara nos formulários
+(function() {
+    const formNovo = document.getElementById('formNovoUsuario');
+    const formEditar = document.getElementById('formEditarUsuario');
+
+    if (formNovo) {
+        formNovo.addEventListener('submit', function(e) {
+            const telefoneInput = document.getElementById('novo_telefone');
+            if (telefoneInput && telefoneInput.value.trim()) {
+                const valido = validarTelefone(telefoneInput, 'novo-telefone-erro');
+                if (!valido) {
+                    e.preventDefault();
+                    telefoneInput.focus();
+                    return;
+                }
+            }
+            limparMascaraTelefone(formNovo);
+        });
+    }
+
+    if (formEditar) {
+        formEditar.addEventListener('submit', function(e) {
+            const telefoneInput = document.getElementById('edit_telefone');
+            if (telefoneInput && telefoneInput.value.trim()) {
+                const valido = validarTelefone(telefoneInput, 'edit-telefone-erro');
+                if (!valido) {
+                    e.preventDefault();
+                    telefoneInput.focus();
+                    return;
+                }
+            }
+            limparMascaraTelefone(formEditar);
+        });
+    }
+})();
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// FUNÇÕES EXISTENTES (modais, busca, etc.)
+// ═══════════════════════════════════════════════════════════════════════
+
 function openModal(id) {
     document.getElementById(id).classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -995,7 +1366,14 @@ function openEditModal(id, nome, email, telefone, perfil, setorId, ativo) {
     document.getElementById('formEditarUsuario').action = '/admin/usuarios/' + id + '/editar';
     document.getElementById('edit_nome').value = nome;
     document.getElementById('edit_email').value = email;
-    document.getElementById('edit_telefone').value = telefone;
+
+    // Aplica máscara no telefone ao abrir o modal
+    const telefoneInput = document.getElementById('edit_telefone');
+    if (telefoneInput) {
+        telefoneInput.value = telefone || '';
+        aplicarMascaraTelefone(telefoneInput);
+    }
+
     document.getElementById('edit_perfil').value = perfil;
     document.getElementById('edit_setor').value = setorId || '';
     document.getElementById('edit_ativo').checked = ativo;
@@ -1041,7 +1419,7 @@ function openDeleteModal(id, nome) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BUSCA EM TEMPO REAL - SEM FOCO AUTOMÁTICO AO CARREGAR
+// BUSCA EM TEMPO REAL
 // ═══════════════════════════════════════════════════════════════
 (function() {
     const inputBusca = document.getElementById('busca-tempo-real');
@@ -1060,16 +1438,13 @@ function openDeleteModal(id, nome) {
         const termoLower = termo.trim().toLowerCase();
         let visiveis = 0;
 
-        // Esconde separadores inicialmente
         separadoresRow.forEach(s => s.style.display = 'none');
         separadoresCard.forEach(s => s.style.display = 'none');
 
         if (!termoLower) {
-            // Sem termo: mostra tudo
             rows.forEach(row => row.style.display = '');
             cards.forEach(card => card.style.display = '');
 
-            // Mostra separadores se houver inativos visíveis
             let mostrouSepRow = false;
             let mostrouSepCard = false;
 
@@ -1103,7 +1478,6 @@ function openDeleteModal(id, nome) {
         if (btnLimpar) btnLimpar.style.display = 'flex';
         if (paginacao) paginacao.style.display = 'none';
 
-        // Filtra linhas da tabela
         rows.forEach(function(row) {
             const nome = row.getAttribute('data-nome') || '';
             const email = row.getAttribute('data-email') || '';
@@ -1129,7 +1503,6 @@ function openDeleteModal(id, nome) {
             }
         });
 
-        // Filtra cards mobile
         cards.forEach(function(card) {
             const nome = card.getAttribute('data-nome') || '';
             const email = card.getAttribute('data-email') || '';
@@ -1150,7 +1523,6 @@ function openDeleteModal(id, nome) {
             card.style.display = match ? '' : 'none';
         });
 
-        // Atualiza contagem
         if (contagem) {
             if (visiveis === 0) {
                 contagem.textContent = 'Nenhum resultado encontrado';
@@ -1170,9 +1542,6 @@ function openDeleteModal(id, nome) {
         inputBusca.addEventListener('input', function() {
             filtrarUsuarios(this.value);
         });
-
-        // NÃO dá foco automático ao carregar a página
-        // inputBusca.focus();  <-- REMOVIDO!
     }
 
     if (btnLimpar) {
@@ -1193,7 +1562,6 @@ function openDeleteModal(id, nome) {
         });
     }
 
-    // Inicializa sem filtro
     filtrarUsuarios('');
 })();
 

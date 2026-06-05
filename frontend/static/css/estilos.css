@@ -2687,50 +2687,93 @@ a:hover {
 }
 
 
-/* Card de Solução Técnica */
-.card-solucao {
+/* ═══════════════════════════════════════════════════════════════
+   CARD SOLUÇÃO TÉCNICA / OBSERVAÇÃO — MULTI-STATUS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── RESOLVIDO (verde) ── */
+.card-solucao.status-resolvido {
     border-left: 4px solid #28a745;
     background: linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%);
 }
-
-.card-solucao .card-header {
-    background: rgba(40, 167, 69, 0.1);
-    border-bottom: 1px solid rgba(40, 167, 69, 0.2);
+.card-solucao.status-resolvido .card-header {
+    background: rgba(40, 167, 69, 0.08);
+    border-bottom: 1px solid rgba(40, 167, 69, 0.15);
 }
-
-.card-solucao .card-header h3 {
+.card-solucao.status-resolvido .card-header h3 {
     color: #155724;
 }
-
-.solucao-conteudo {
+.card-solucao.status-resolvido .card-header h3 i {
+    color: #28a745;
+}
+.card-solucao.status-resolvido .solucao-conteudo {
     background: #fff;
     border: 1px solid #c3e6cb;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 12px;
 }
-
-.solucao-conteudo p {
-    margin: 0;
-    line-height: 1.7;
+.card-solucao.status-resolvido .solucao-conteudo p {
     color: #155724;
-    font-size: 15px;
-    white-space: pre-wrap;
 }
-
-.solucao-meta {
-    display: flex;
-    gap: 20px;
+.card-solucao.status-resolvido .solucao-meta {
     color: #28a745;
-    font-size: 13px;
 }
 
-.solucao-meta small {
-    display: flex;
-    align-items: center;
-    gap: 5px;
+/* ── PENDENTE (amarelo/laranja) ── */
+.card-solucao.status-pendente {
+    border-left: 4px solid #ffc107;
+    background: linear-gradient(135deg, #fffbf0 0%, #fff3cd 100%);
+}
+.card-solucao.status-pendente .card-header {
+    background: rgba(255, 193, 7, 0.08);
+    border-bottom: 1px solid rgba(255, 193, 7, 0.15);
+}
+.card-solucao.status-pendente .card-header h3 {
+    color: #856404;
+}
+.card-solucao.status-pendente .card-header h3 i {
+    color: #ffc107;
+}
+.card-solucao.status-pendente .solucao-conteudo {
+    background: #fff;
+    border: 1px solid #ffeeba;
+}
+.card-solucao.status-pendente .solucao-conteudo p {
+    color: #856404;
+}
+.card-solucao.status-pendente .solucao-meta {
+    color: #ffc107;
 }
 
+/* ── FECHADO (cinza) ── */
+.card-solucao.status-fechado {
+    border-left: 4px solid #6c757d;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+.card-solucao.status-fechado .card-header {
+    background: rgba(108, 117, 125, 0.08);
+    border-bottom: 1px solid rgba(108, 117, 125, 0.15);
+}
+.card-solucao.status-fechado .card-header h3 {
+    color: #495057;
+}
+.card-solucao.status-fechado .card-header h3 i {
+    color: #6c757d;
+}
+.card-solucao.status-fechado .solucao-conteudo {
+    background: #fff;
+    border: 1px solid #dee2e6;
+}
+.card-solucao.status-fechado .solucao-conteudo p {
+    color: #495057;
+}
+.card-solucao.status-fechado .solucao-meta {
+    color: #6c757d;
+}
+
+/* Fallback: sem classe de status = resolvido */
+.card-solucao:not(.status-resolvido):not(.status-pendente):not(.status-fechado) {
+    border-left: 4px solid #28a745;
+    background: linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%);
+}
 /* Campo de solução no formulário */
 #campo-solucao {
     animation: fadeIn 0.3s ease;

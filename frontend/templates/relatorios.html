@@ -17,47 +17,58 @@
     .stats-grid {
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
-        gap: 12px !important;
+        gap: 10px !important;
+        padding: 0 4px !important;
     }
+
     .stats-grid .stat-card {
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
-        gap: 12px !important;
-        padding: 16px !important;
+        gap: 10px !important;
+        padding: 12px 10px !important;      /* reduzido lateral */
         text-align: left !important;
+        min-width: 0 !important;
+        overflow: hidden !important;         /* evita estouro */
     }
+
     .stats-grid .stat-card .stat-icon {
-        width: 48px !important;
-        height: 48px !important;
-        min-width: 48px !important;
-        min-height: 48px !important;
-        border-radius: 12px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 20px !important;
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;         /* fixo, não encolhe */
+        min-height: 40px !important;
+        border-radius: 10px !important;
+        font-size: 18px !important;
         margin: 0 !important;
     }
+
     .stats-grid .stat-card .stat-info {
         display: flex !important;
         flex-direction: column !important;
         align-items: flex-start !important;
+        min-width: 0 !important;
+        overflow: hidden !important;          /* evita estouro do texto */
     }
+
     .stats-grid .stat-card .stat-value {
-        font-size: 24px !important;
+        font-size: 22px !important;
         font-weight: 700 !important;
-        line-height: 1 !important;
-        margin-bottom: 4px !important;
+        line-height: 1.1 !important;
+        margin-bottom: 2px !important;
+        white-space: nowrap !important;       /* número sempre em 1 linha */
     }
+
     .stats-grid .stat-card .stat-label {
-        font-size: 12px !important;
+        font-size: 10px !important;           /* um pouco menor */
         text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
+        letter-spacing: 0.2px !important;
         opacity: 0.8 !important;
+        white-space: nowrap !important;       /* label em 1 linha */
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;   /* "..." se não couber */
+        max-width: 100% !important;
     }
 }
-
 
 /* ─────────────────────────────────────────────
    DETALHAMENTO POR STATUS E PRIORIDADE - MOBILE
@@ -236,7 +247,7 @@
         <div class="stat-icon"><i class="fas fa-headset"></i></div>
         <div class="stat-info">
             <span class="stat-value">{{ estatisticas.total }}</span>
-            <span class="stat-label">Total de Chamados</span>
+            <span class="stat-label">Chamados</span>
         </div>
     </div>
     <div class="stat-card stat-info">
