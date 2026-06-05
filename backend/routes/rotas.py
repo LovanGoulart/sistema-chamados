@@ -582,7 +582,7 @@ def atualizar_status_chamado(chamado_id):
 
         ChamadoService.atualizar_status(chamado_id, novo_status, current_user.id, observacao)
 
-        # Se houver observação, adicionar como mensagem
+               # Se houver observação, adicionar como mensagem no chat
         if observacao.strip():
             mensagem_obs = Mensagem(
                 chamado_id=chamado_id,
@@ -590,7 +590,17 @@ def atualizar_status_chamado(chamado_id):
                 conteudo=f"[OBSERVAÇÃO - Status alterado para {get_status_label(novo_status)}]: {observacao}"
             )
             db.session.add(mensagem_obs)
-            db.session.commit()
+
+        # Se houver solução técnica, adicionar como mensagem no chat também
+        if solucao_tecnica and len(solucao_tecnica) >= 5:
+            mensagem_solucao = Mensagem(
+                chamado_id=chamado_id,
+                usuario_id=current_user.id,
+                conteudo=f"[SOLUÇÃO TÉCNICA - {get_status_label(novo_status)}]: {solucao_tecnica}"
+            )
+            db.session.add(mensagem_solucao)
+
+        db.session.commit()
 
         flash('Status atualizado com sucesso!', 'success')
     except Exception as e:

@@ -4,51 +4,182 @@
 {% block page_title %}Logs do Sistema{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div class="page-header-left">
-        <h2><i class="fas fa-history"></i> Logs do Sistema</h2>
-        <p class="page-subtitle">Registro de todas as operações realizadas</p>
+<!-- Filtros rápidos -->
+<div class="card card-filters">
+    <div class="card-body">
+        <div class="search-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="busca-logs" placeholder="Buscar por usuário, ação, entidade ou detalhes..." autocomplete="off">
+            <button class="search-clear" id="limpar-busca" title="Limpar busca" style="display:none">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="search-results-count" id="resultados-contagem"></div>
     </div>
 </div>
 
 <div class="card">
     <div class="card-body">
         {% if logs.items %}
-        <div class="table-responsive">
-            <table class="data-table">
+
+        <!-- ═══ VIEW DESKTOP: TABELA ═══ -->
+        <div class="table-responsive desktop-only" id="tabela-logs">
+            <table class="data-table data-table-hover">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Data/Hora</th>
-                        <th>Usuário</th>
-                        <th>Ação</th>
-                        <th>Entidade</th>
-                        <th>ID Entidade</th>
+                        <th style="width:50px">ID</th>
+                        <th style="width:140px">Data/Hora</th>
+                        <th style="width:18%">Usuário</th>
+                        <th style="width:100px">Ação</th>
+                        <th style="width:12%">Entidade</th>
+                        <th style="width:70px">ID</th>
                         <th>Detalhes</th>
-                        <th>IP</th>
+                        <th style="width:110px">IP</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="corpo-tabela-logs">
                     {% for log in logs.items %}
-                    <tr>
+                    <tr class="log-row"
+                        data-usuario="{{ (log.usuario.nome if log.usuario else 'sistema')|lower }}"
+                        data-acao="{{ log.acao|lower }}"
+                        data-entidade="{{ log.entidade|lower }}"
+                        data-detalhes="{{ (log.detalhes or '')|lower }}">
                         <td>{{ log.id }}</td>
-                        <td>{{ formatar_data(log.created_at) }}</td>
-                        <td>{{ log.usuario.nome if log.usuario else 'Sistema' }}</td>
+                        <td><span class="data-hora-compact">{{ formatar_data(log.created_at) }}</span></td>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar-small">
+                                    {% if log.usuario %}
+                                        {% if log.usuario.perfil.value == 'setor' and log.usuario.setor %}
+                                            {{ log.usuario.setor.nome[0]|upper }}
+                                        {% else %}
+                                            {{ log.usuario.nome[0]|upper }}
+                                        {% endif %}
+                                    {% else %}
+                                        S
+                                    {% endif %}
+                                </div>
+                                <span class="user-name-truncate">
+                                    {% if log.usuario %}
+                                        {% if log.usuario.perfil.value == 'setor' and log.usuario.setor %}
+                                            {{ log.usuario.setor.nome }}
+                                        {% else %}
+                                            {{ log.usuario.nome }}
+                                        {% endif %}
+                                    {% else %}
+                                        Sistema
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </td>
                         <td>
                             <span class="badge-log badge-log-{{ log.acao }}">{{ log.acao|title }}</span>
                         </td>
                         <td>{{ log.entidade|title }}</td>
                         <td>{{ log.entidade_id or '-' }}</td>
-                        <td>{{ log.detalhes or '-' }}</td>
-                        <td><code>{{ log.ip_address or '-' }}</code></td>
+                        <td><span class="detalhes-truncate">{{ log.detalhes or '-' }}</span></td>
+                        <td><code class="ip-code">{{ log.ip_address or '-' }}</code></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
+        <!-- ═══ VIEW MOBILE: CARDS DE LOG ═══ -->
+        <div class="mobile-only" id="cards-logs">
+            {% for log in logs.items %}
+            <div class="log-card"
+                 data-usuario="{{ (log.usuario.nome if log.usuario else 'sistema')|lower }}"
+                 data-acao="{{ log.acao|lower }}"
+                 data-entidade="{{ log.entidade|lower }}"
+                 data-detalhes="{{ (log.detalhes or '')|lower }}">
+                <div class="log-card-header">
+                    <div class="log-card-acao">
+                        <span class="badge-log badge-log-{{ log.acao }}">{{ log.acao|title }}</span>
+                        <span class="log-card-entidade">{{ log.entidade|title }}</span>
+                    </div>
+                    <div class="log-card-id">#{{ log.id }}</div>
+                </div>
+
+                <div class="log-card-body">
+                    <div class="log-card-usuario">
+                        <div class="user-avatar-small">
+                            {% if log.usuario %}
+                                {% if log.usuario.perfil.value == 'setor' and log.usuario.setor %}
+                                    {{ log.usuario.setor.nome[0]|upper }}
+                                {% else %}
+                                    {{ log.usuario.nome[0]|upper }}
+                                {% endif %}
+                            {% else %}
+                                S
+                            {% endif %}
+                        </div>
+                        <div class="log-card-usuario-info">
+                            <span class="log-card-usuario-nome">
+                                {% if log.usuario %}
+                                    {% if log.usuario.perfil.value == 'setor' and log.usuario.setor %}
+                                        {{ log.usuario.setor.nome }}
+                                    {% else %}
+                                        {{ log.usuario.nome }}
+                                    {% endif %}
+                                {% else %}
+                                    Sistema
+                                {% endif %}
+                            </span>
+                            <span class="log-card-usuario-meta">
+                                {% if log.usuario %}
+                                    {% if log.usuario.perfil.value == 'setor' and log.usuario.setor %}
+                                        Setor: {{ log.usuario.setor.nome }}
+                                    {% else %}
+                                        {{ log.usuario.perfil.value|title if log.usuario.perfil else 'Sistema' }}
+                                    {% endif %}
+                                {% else %}
+                                    Sistema
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if log.detalhes %}
+                    <div class="log-card-detalhes">
+                        <i class="fas fa-info-circle"></i>
+                        <span>{{ log.detalhes }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="log-card-footer">
+                    <div class="log-card-meta-item">
+                        <i class="far fa-clock"></i>
+                        <span>{{ formatar_data(log.created_at) }}</span>
+                    </div>
+                    <div class="log-card-meta-item">
+                        <i class="fas fa-network-wired"></i>
+                        <code>{{ log.ip_address or '-' }}</code>
+                    </div>
+                    {% if log.entidade_id %}
+                    <div class="log-card-meta-item">
+                        <i class="fas fa-fingerprint"></i>
+                        <span>ID: {{ log.entidade_id }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Estado vazio para busca -->
+        <div class="empty-state" id="busca-vazia" style="display:none">
+            <i class="fas fa-search"></i>
+            <p>Nenhum log encontrado para esta busca</p>
+            <button class="btn btn-outline" id="btn-limpar-busca-vazia">
+                <i class="fas fa-undo"></i> Limpar busca
+            </button>
+        </div>
+
+        <!-- Paginação -->
         {% if logs.pages > 1 %}
-        <div class="pagination">
+        <div class="pagination" id="paginacao-logs">
             {% if logs.has_prev %}
             <a href="{{ url_for('main.admin_logs', page=logs.prev_num) }}" class="pagination-item"><i class="fas fa-chevron-left"></i></a>
             {% endif %}
@@ -68,6 +199,7 @@
             {% endif %}
         </div>
         {% endif %}
+
         {% else %}
         <div class="empty-state">
             <i class="fas fa-clipboard-list"></i>
@@ -76,4 +208,563 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   LOGS DO SISTEMA — RESPONSIVIDADE
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Controle Desktop vs Mobile ─── */
+.desktop-only { display: block; }
+.mobile-only { display: none; }
+
+@media (max-width: 768px) {
+    .desktop-only { display: none !important; }
+    .mobile-only { display: block !important; }
+}
+
+/* ─── Filtros ─── */
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.search-wrapper .search-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text-muted, #adb5bd);
+    font-size: 1rem;
+    pointer-events: none;
+}
+
+.search-wrapper input {
+    width: 100%;
+    padding: 12px 44px 12px 42px;
+    border: 2px solid var(--border-color, #e9ecef);
+    border-radius: var(--border-radius-md, 10px);
+    background: var(--bg-card, #ffffff);
+    color: var(--text-primary, #1a1a2e);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.search-wrapper input:focus {
+    outline: none;
+    border-color: var(--primary, #f46c6c);
+    box-shadow: 0 0 0 4px rgba(244, 108, 108, 0.1);
+}
+
+.search-clear {
+    position: absolute;
+    right: 12px;
+    background: var(--bg-body, #f5f6fa);
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary, #6c757d);
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+}
+
+.search-clear:hover {
+    background: var(--danger, #dc3545);
+    color: white;
+}
+
+.search-results-count {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #6c757d);
+    font-weight: 500;
+    min-height: 20px;
+}
+
+.search-results-count.no-results {
+    color: var(--danger, #dc3545);
+}
+
+/* ─── TABELA DESKTOP ─── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.data-table th {
+    padding: 10px 8px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-color);
+    background: var(--bg-card);
+    white-space: nowrap;
+    text-align: left;
+}
+
+.data-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    background: var(--bg-card);
+}
+
+.data-table-hover tbody tr:hover {
+    background: rgba(244, 108, 108, 0.03);
+}
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-avatar-small {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.user-name-truncate {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.data-hora-compact {
+    font-size: 0.8rem;
+    white-space: nowrap;
+    font-family: 'SF Mono', monospace;
+}
+
+.detalhes-truncate {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+
+.ip-code {
+    font-size: 0.75rem;
+    font-family: 'SF Mono', monospace;
+    background: var(--bg-body, #f8f9fa);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* ─── BADGES DE AÇÃO ─── */
+.badge-log {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-log-criar   { background: #d4edda; color: #155724; }
+.badge-log-editar  { background: #fff3cd; color: #856404; }
+.badge-log-excluir { background: #f8d7da; color: #721c24; }
+.badge-log-login   { background: #d1ecf1; color: #0c5460; }
+.badge-log-logout  { background: #e2e3e5; color: #383d41; }
+.badge-log-outro   { background: #f8f9fa; color: #6c757d; }
+
+/* ─── CARDS MOBILE ─── */
+.log-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.log-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Faixa lateral colorida por ação */
+.log-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 12px 0 0 12px;
+}
+
+.log-card[data-acao="criar"]::before   { background: #28a745; }
+.log-card[data-acao="editar"]::before  { background: #ffc107; }
+.log-card[data-acao="excluir"]::before { background: #dc3545; }
+.log-card[data-acao="login"]::before   { background: #17a2b8; }
+.log-card[data-acao="logout"]::before  { background: #6c757d; }
+.log-card::before                       { background: #adb5bd; }
+
+.log-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.log-card-acao {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.log-card-entidade {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.log-card-id {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: 'SF Mono', monospace;
+    font-weight: 600;
+}
+
+.log-card-body {
+    margin-bottom: 10px;
+}
+
+.log-card-usuario {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.log-card-usuario-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.log-card-usuario-nome {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.log-card-usuario-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.log-card-detalhes {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg-body, #f8f9fa);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.log-card-detalhes i {
+    color: var(--primary);
+    font-size: 0.8rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.log-card-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+.log-card-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.log-card-meta-item i {
+    font-size: 0.75rem;
+    width: 14px;
+    text-align: center;
+}
+
+.log-card-meta-item code {
+    font-family: 'SF Mono', monospace;
+    font-size: 0.75rem;
+    background: var(--bg-body);
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+/* ─── Paginação ─── */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.pagination-item {
+    min-width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    border-radius: var(--border-radius-sm, 6px);
+    background: var(--bg-body);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.pagination-item:hover {
+    background: var(--primary, #0084ff);
+    color: white;
+    border-color: var(--primary, #0084ff);
+}
+
+.pagination-item.active {
+    background: var(--primary, #0084ff);
+    color: white;
+    border-color: var(--primary, #0084ff);
+}
+
+.pagination-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ─── Empty state ─── */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    color: var(--text-muted);
+}
+
+.empty-state p {
+    font-size: 1rem;
+    margin-bottom: 16px;
+}
+
+/* ─── Ajustes mobile ─── */
+@media (max-width: 480px) {
+    .log-card {
+        padding: 12px;
+        border-radius: 10px;
+    }
+
+    .log-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .log-card-footer {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .log-card-meta-item {
+        font-size: 0.75rem;
+    }
+
+    .empty-state {
+        padding: 30px 16px;
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+    }
+
+    .empty-state p {
+        font-size: 0.9rem;
+    }
+
+    .empty-state .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ─── Tema escuro ─── */
+[data-theme="dark"] .log-card-detalhes,
+.dark-mode .log-card-detalhes {
+    background: rgba(255,255,255,0.05);
+}
+
+[data-theme="dark"] .ip-code,
+.dark-mode .ip-code {
+    background: rgba(255,255,255,0.08);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ═══════════════════════════════════════════════════════════════
+// BUSCA EM TEMPO REAL — LOGS (Desktop + Mobile)
+// ═══════════════════════════════════════════════════════════════
+(function() {
+    var inputBusca = document.getElementById('busca-logs');
+    var btnLimpar = document.getElementById('limpar-busca');
+    var contagem = document.getElementById('resultados-contagem');
+    var vazioBusca = document.getElementById('busca-vazia');
+    var btnLimparVazio = document.getElementById('btn-limpar-busca-vazia');
+    var paginacao = document.getElementById('paginacao-logs');
+
+    var rows = document.querySelectorAll('.log-row');
+    var cards = document.querySelectorAll('.log-card');
+    var tabela = document.getElementById('tabela-logs');
+    var listaMobile = document.getElementById('cards-logs');
+
+    if (!inputBusca) return;
+
+    function filtrarLogs(termo) {
+        var termoLower = termo.trim().toLowerCase();
+        var visiveis = 0;
+        var total = 0;
+
+        if (btnLimpar) {
+            btnLimpar.style.display = termoLower ? 'flex' : 'none';
+        }
+
+        // ═══ FILTRAR DESKTOP ═══
+        if (rows.length > 0) {
+            total = rows.length;
+            rows.forEach(function(row) {
+                var usuario = row.getAttribute('data-usuario') || '';
+                var acao = row.getAttribute('data-acao') || '';
+                var entidade = row.getAttribute('data-entidade') || '';
+                var detalhes = row.getAttribute('data-detalhes') || '';
+
+                var mostrar = !termoLower ||
+                              usuario.includes(termoLower) ||
+                              acao.includes(termoLower) ||
+                              entidade.includes(termoLower) ||
+                              detalhes.includes(termoLower);
+
+                row.style.display = mostrar ? '' : 'none';
+                if (mostrar) visiveis++;
+            });
+        }
+
+        // ═══ FILTRAR MOBILE ═══
+        if (cards.length > 0) {
+            if (total === 0) total = cards.length;
+            cards.forEach(function(card) {
+                var usuario = card.getAttribute('data-usuario') || '';
+                var acao = card.getAttribute('data-acao') || '';
+                var entidade = card.getAttribute('data-entidade') || '';
+                var detalhes = card.getAttribute('data-detalhes') || '';
+
+                var mostrar = !termoLower ||
+                              usuario.includes(termoLower) ||
+                              acao.includes(termoLower) ||
+                              entidade.includes(termoLower) ||
+                              detalhes.includes(termoLower);
+
+                card.style.display = mostrar ? '' : 'none';
+                if (mostrar) visiveis++;
+            });
+        }
+
+        // Mostra/esconde estado vazio
+        var temResultados = visiveis > 0;
+        if (tabela) tabela.style.display = (temResultados || termoLower === '') ? '' : 'none';
+        if (listaMobile) listaMobile.style.display = (temResultados || termoLower === '') ? '' : 'none';
+        if (vazioBusca) vazioBusca.style.display = (!temResultados && termoLower !== '') ? 'block' : 'none';
+        if (paginacao) paginacao.style.display = (termoLower !== '') ? 'none' : '';
+
+        // Atualiza contador
+        if (contagem) {
+            if (termoLower !== '') {
+                if (visiveis === 0) {
+                    contagem.textContent = 'Nenhum resultado encontrado';
+                    contagem.classList.add('no-results');
+                } else {
+                    contagem.textContent = visiveis + ' de ' + total + ' log(s) encontrado(s)';
+                    contagem.classList.remove('no-results');
+                }
+                contagem.style.display = 'block';
+            } else {
+                contagem.style.display = 'none';
+            }
+        }
+    }
+
+    inputBusca.addEventListener('input', function() {
+        filtrarLogs(this.value);
+    });
+
+    if (btnLimpar) {
+        btnLimpar.addEventListener('click', function() {
+            inputBusca.value = '';
+            filtrarLogs('');
+        });
+    }
+
+    if (btnLimparVazio) {
+        btnLimparVazio.addEventListener('click', function() {
+            inputBusca.value = '';
+            filtrarLogs('');
+        });
+    }
+
+    // Inicializa sem filtro
+    filtrarLogs('');
+})();
+</script>
 {% endblock %}

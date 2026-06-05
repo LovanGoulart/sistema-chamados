@@ -179,7 +179,7 @@
             background: var(--bg-card, #ffffff);
             z-index: 1100;
             flex-direction: column;
-            box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+            box-shadow: 4px 0 24px rgb(243, 241, 241);
             animation: slideInLeft 0.25s ease;
         }
         .mobile-user-menu.active {
@@ -330,11 +330,10 @@
             }
         }
     </style>
-<base target="_blank">
 </head>
 <body>
-    {% if current_user.is_authenticated and current_user.perfil.value != 'usuario' %}
-    <!-- Sidebar (visível apenas para admin e setor) -->
+    {% if current_user.is_authenticated %}
+    <!-- Sidebar (visível para TODOS os usuários autenticados no desktop) -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="logo">
@@ -379,7 +378,7 @@
                     </a>
                 </li>
                 {% else %}
-                <!-- USUÁRIO COMUM: acesso restrito -->
+                <!-- USUÁRIO COMUM: acesso restrito na sidebar -->
                 <li class="{% if request.endpoint == 'main.meus_chamados' %}active{% endif %}">
                     <a href="{{ url_for('main.meus_chamados') }}">
                         <i class="fas fa-user-circle"></i>
@@ -453,7 +452,7 @@
     {% endif %}
 
     <!-- Conteúdo principal -->
-    <main class="main-content {% if not current_user.is_authenticated or current_user.perfil.value == 'usuario' %}full-width{% endif %}">
+    <main class="main-content {% if not current_user.is_authenticated %}full-width{% endif %}">
         {% if current_user.is_authenticated %}
         <!-- Topbar -->
         <header class="topbar">
@@ -468,6 +467,10 @@
             {% else %}
             <!-- Usuário comum: menu mobile simples -->
             <button class="mobile-menu-btn" id="mobileMenuBtnUser" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <!-- Toggle da sidebar no desktop para usuário comum -->
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
                 <i class="fas fa-bars"></i>
             </button>
             {% endif %}
@@ -628,7 +631,7 @@
                 padding: calc(35px + env(safe-area-inset-bottom, 0px)) 12px;
             }
         }
-            
+
         }
     </style>
 
@@ -679,7 +682,7 @@
     </script>
 
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
-    
+
     {% if current_user.is_authenticated and current_user.perfil.value == 'usuario' %}
     <script>
     // Menu mobile para usuário comum (sem sidebar)

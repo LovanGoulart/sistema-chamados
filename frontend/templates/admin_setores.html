@@ -5,10 +5,6 @@
 
 {% block content %}
 <div class="page-header">
-    <!--<div class="page-header-left">
-        <h2><i class="fas fa-building"></i> Gerenciar Setores</h2>
-        <p class="page-subtitle">Cadastre e gerencie os setores da instituição</p>
-    </div>-->
     <div class="page-header-right">
         <button class="btn btn-primary" onclick="openModal('modalNovoSetor')">
             <i class="fas fa-plus"></i> Novo Setor
@@ -16,12 +12,12 @@
     </div>
 </div>
 
-<!-- Busca em tempo real (único campo) -->
+<!-- Busca em tempo real -->
 <div class="card card-filters">
     <div class="card-body">
         <div class="search-wrapper">
             <i class="fas fa-search search-icon"></i>
-            <input type="text" id="busca-tempo-real" placeholder="Buscar setor por nome ou descrição" autocomplete="off">
+            <input type="text" id="busca-tempo-real" placeholder="Buscar setor por nome, descrição ou status" autocomplete="off">
             <button class="search-clear" id="limpar-busca" title="Limpar busca" style="display:none">
                 <i class="fas fa-times"></i>
             </button>
@@ -33,7 +29,9 @@
 <div class="card">
     <div class="card-body">
         {% if setores %}
-        <div class="table-responsive">
+        
+        <!-- VERSÃO DESKTOP: Tabela tradicional -->
+        <div class="table-responsive desktop-only">
             <table class="data-table data-table-hover" id="tabelaSetores">
                 <thead>
                     <tr>
@@ -69,10 +67,52 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- VERSÃO MOBILE: Cards -->
+        <div class="mobile-only" id="listaSetoresMobile">
+            {% for setor in setores %}
+            <div class="setor-card" data-nome="{{ setor.nome|lower }}" data-descricao="{{ (setor.descricao or '')|lower }}">
+                <div class="setor-card-header">
+                    <div class="setor-card-title">
+                        <strong>#{{ setor.id }}</strong>
+                        <span class="setor-card-name">{{ setor.nome }}</span>
+                    </div>
+                    <div class="setor-card-status">
+                        {% if setor.ativo %}
+                        <span class="badge-status" style="background: #28a745">Ativo</span>
+                        {% else %}
+                        <span class="badge-status" style="background: #dc3545">Inativo</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="setor-card-body">
+                    {% if setor.descricao %}
+                    <p class="setor-card-desc">{{ setor.descricao }}</p>
+                    {% else %}
+                    <p class="setor-card-desc setor-card-desc-empty">Sem descrição</p>
+                    {% endif %}
+                    
+                    <div class="setor-card-meta">
+                        <span><i class="far fa-calendar-alt"></i> {{ formatar_data(setor.created_at) }}</span>
+                    </div>
+                </div>
+                
+                <div class="setor-card-footer">
+                    <button class="btn btn-sm btn-outline btn-block" onclick="openEditSetorModal({{ setor.id }}, '{{ setor.nome }}', '{{ setor.descricao or '' }}', {{ 'true' if setor.ativo else 'false' }})">
+                        <i class="fas fa-edit"></i> Editar Setor
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Estado vazio para busca -->
         <div class="empty-state" id="busca-vazia" style="display:none">
             <i class="fas fa-search"></i>
             <p>Nenhum setor encontrado para esta busca</p>
         </div>
+        
         {% else %}
         <div class="empty-state">
             <i class="fas fa-building"></i>
@@ -141,6 +181,231 @@
 </div>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVIDADE: Desktop vs Mobile
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Desktop: mostra tabela, esconde cards */
+.desktop-only {
+    display: block;
+}
+.mobile-only {
+    display: none;
+}
+
+/* Breakpoint para mobile (768px é o padrão mais usado) */
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
+    .mobile-only {
+        display: block !important;
+    }
+    
+    /* Ajustes gerais da página no mobile */
+    .page-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .page-header-right .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .card-filters .card-body {
+        padding: 12px;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ESTILOS DOS CARDS DE SETOR (Mobile)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.setor-card {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.setor-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Cabeçalho do card: ID + Nome + Status */
+.setor-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.setor-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0; /* permite truncar */
+}
+
+.setor-card-title strong {
+    color: var(--text-muted, #6c757d);
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.setor-card-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-color, #1a202c);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.setor-card-status .badge-status {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+/* Corpo do card: descrição + metadados */
+.setor-card-body {
+    margin-bottom: 12px;
+}
+
+.setor-card-desc {
+    color: var(--text-color, #4a5568);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0 0 10px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.setor-card-desc-empty {
+    color: var(--text-muted, #a0aec0);
+    font-style: italic;
+}
+
+.setor-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--text-muted, #718096);
+}
+
+.setor-card-meta i {
+    margin-right: 4px;
+}
+
+/* Rodapé do card: botão de ação */
+.setor-card-footer {
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.setor-card-footer .btn-block {
+    width: 100%;
+    justify-content: center;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AJUSTES PARA TELAS MUITO PEQUENAS (até 480px)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+    .setor-card {
+        padding: 12px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .setor-card-header {
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .setor-card-status {
+        align-self: flex-start;
+    }
+    
+    .setor-card-name {
+        font-size: 1rem;
+    }
+    
+    /* Modal mais compacto no mobile */
+    .modal-content {
+        margin: 10px;
+        max-height: calc(100vh - 20px);
+    }
+    
+    .modal-body {
+        padding: 16px;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TEMA ESCURO (se você usa dark mode)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="dark"] .setor-card,
+.dark-mode .setor-card {
+    background: var(--card-bg-dark, #2d3748);
+    border-color: var(--border-color-dark, #4a5568);
+}
+
+[data-theme="dark"] .setor-card-header,
+.dark-mode .setor-card-header {
+    border-color: var(--border-color-dark, #4a5568);
+}
+
+[data-theme="dark"] .setor-card-footer,
+.dark-mode .setor-card-footer {
+    border-color: var(--border-color-dark, #4a5568);
+}
+
+[data-theme="dark"] .setor-card-name,
+.dark-mode .setor-card-name {
+    color: var(--text-color-dark, #e2e8f0);
+}
+
+[data-theme="dark"] .setor-card-desc,
+.dark-mode .setor-card-desc {
+    color: var(--text-color-dark, #cbd5e0);
+}
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
 function openModal(id) {
@@ -188,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 // ═══════════════════════════════════════════════════════════════════════════
-// BUSCA DE SETORES EM TEMPO REAL (com filtros por status)
+// BUSCA DE SETORES EM TEMPO REAL (Desktop + Mobile unificado)
 // ═══════════════════════════════════════════════════════════════════════════
 
 (function() {
@@ -196,63 +461,72 @@ document.addEventListener('DOMContentLoaded', function() {
     var btnLimpar = document.getElementById('limpar-busca');
     var contagem = document.getElementById('resultados-contagem');
     var vazioBusca = document.getElementById('busca-vazia');
+    
+    // Elementos Desktop
     var corpoTabela = document.getElementById('corpoTabelaSetores');
     var tabela = document.getElementById('tabelaSetores');
+    
+    // Elementos Mobile
+    var listaMobile = document.getElementById('listaSetoresMobile');
 
-    if (!inputBusca || !corpoTabela) return;
+    if (!inputBusca) return;
 
     function filtrarSetores(termo) {
         var termoLower = termo.trim().toLowerCase();
-        var linhas = corpoTabela.querySelectorAll('tr');
         var visiveis = 0;
-        var total = linhas.length;
-
-        // Detecta se é busca por status
+        var total = 0;
+        
+        // Detecta busca por status
         var buscaInativos = termoLower === 'inativo' || termoLower === 'inativos';
         var buscaAtivos = termoLower === 'ativo' || termoLower === 'ativos';
-        var buscaPorStatus = buscaInativos || buscaAtivos;
+        var buscaPorStatus = buscaAtivos || buscaInativos;
 
         // Mostra/esconde botão de limpar
         if (btnLimpar) {
             btnLimpar.style.display = termoLower ? 'flex' : 'none';
         }
 
-        linhas.forEach(function(linha) {
-            var nome = linha.getAttribute('data-nome') || '';
-            var descricao = linha.getAttribute('data-descricao') || '';
-            var statusBadge = linha.querySelector('.badge-status');
-            var statusTexto = statusBadge ? statusBadge.textContent.trim().toLowerCase() : '';
-
-            var mostrar = false;
-
-            if (buscaPorStatus) {
-                // Busca por status: mostra apenas ativos ou inativos
-                if (buscaAtivos && statusTexto === 'ativo') {
-                    mostrar = true;
-                } else if (buscaInativos && statusTexto === 'inativo') {
-                    mostrar = true;
-                }
-            } else {
-                // Busca normal por nome/descricao
-                mostrar = nome.includes(termoLower) || descricao.includes(termoLower);
-            }
-
-            if (mostrar) {
-                linha.style.display = '';
-                visiveis++;
-            } else {
-                linha.style.display = 'none';
-            }
-        });
-
-        // Mostra/esconde mensagem de sem resultados
-        if (visiveis === 0 && termoLower !== '') {
-            if (tabela) tabela.style.display = 'none';
-            if (vazioBusca) vazioBusca.style.display = 'block';
-        } else {
-            if (tabela) tabela.style.display = '';
-            if (vazioBusca) vazioBusca.style.display = 'none';
+        // ═══ FILTRAR DESKTOP (tabela) ═══
+        if (corpoTabela) {
+            var linhas = corpoTabela.querySelectorAll('tr');
+            total = linhas.length;
+            
+            linhas.forEach(function(linha) {
+                var nome = linha.getAttribute('data-nome') || '';
+                var descricao = linha.getAttribute('data-descricao') || '';
+                var statusBadge = linha.querySelector('.badge-status');
+                var statusTexto = statusBadge ? statusBadge.textContent.trim().toLowerCase() : '';
+                
+                var mostrar = aplicarFiltro(nome, descricao, statusTexto, termoLower, buscaAtivos, buscaInativos, buscaPorStatus);
+                
+                linha.style.display = mostrar ? '' : 'none';
+                if (mostrar) visiveis++;
+            });
         }
+
+        // ═══ FILTRAR MOBILE (cards) ═══
+        if (listaMobile) {
+            var cards = listaMobile.querySelectorAll('.setor-card');
+            if (total === 0) total = cards.length;
+            
+            cards.forEach(function(card) {
+                var nome = card.getAttribute('data-nome') || '';
+                var descricao = card.getAttribute('data-descricao') || '';
+                var statusBadge = card.querySelector('.badge-status');
+                var statusTexto = statusBadge ? statusBadge.textContent.trim().toLowerCase() : '';
+                
+                var mostrar = aplicarFiltro(nome, descricao, statusTexto, termoLower, buscaAtivos, buscaInativos, buscaPorStatus);
+                
+                card.style.display = mostrar ? '' : 'none';
+                if (mostrar) visiveis++;
+            });
+        }
+
+        // Mostra/esconde estado vazio
+        var temResultados = visiveis > 0;
+        if (tabela) tabela.style.display = (temResultados || termoLower === '') ? '' : 'none';
+        if (listaMobile) listaMobile.style.display = (temResultados || termoLower === '') ? '' : 'none';
+        if (vazioBusca) vazioBusca.style.display = (!temResultados && termoLower !== '') ? 'block' : 'none';
 
         // Atualiza contador
         if (contagem) {
@@ -275,6 +549,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Função auxiliar de filtro (reutilizada para desktop e mobile)
+    function aplicarFiltro(nome, descricao, statusTexto, termoLower, buscaAtivos, buscaInativos, buscaPorStatus) {
+        if (buscaPorStatus) {
+            if (buscaAtivos && statusTexto === 'ativo') return true;
+            if (buscaInativos && statusTexto === 'inativo') return true;
+            return false;
+        }
+        return nome.includes(termoLower) || descricao.includes(termoLower);
+    }
+
     inputBusca.addEventListener('input', function() {
         filtrarSetores(this.value);
     });
@@ -286,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Inicializa sem filtro (não foca no campo)
+    // Inicializa sem filtro
     filtrarSetores('');
 })();
 </script>

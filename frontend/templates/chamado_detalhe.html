@@ -97,27 +97,37 @@
              ═══════════════════════════════════════════════════════════════ -->
         <div class="chamado-main-empresarial">
 
-            <!-- CARD SOLUÇÃO TÉCNICA (se existir) -->
-            {% if chamado.solucao_tecnica %}
-            <div class="card card-solucao">
-                <div class="card-header">
-                    <h3><i class="fas fa-tools"></i> Solução Técnica Registrada</h3>
-                </div>
-                <div class="card-body">
-                    <div class="solucao-conteudo">
-                        <p>{{ chamado.solucao_tecnica }}</p>
-                    </div>
-                    {% if chamado.data_resolucao %}
-                    <div class="solucao-meta">
-                        <small><i class="fas fa-clock"></i> {{ formatar_data(chamado.data_resolucao) }}</small>
-                        {% if chamado.atendente %}
-                        <small><i class="fas fa-user"></i> {{ chamado.atendente.nome }}</small>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+            <!-- CARD SOLUÇÃO TÉCNICA / OBSERVAÇÃO DE STATUS -->
+{% if chamado.solucao_tecnica or chamado.observacao %}
+<div class="card card-solucao status-{{ chamado.status.value }}">
+    <div class="card-header">
+        <h3>
+            {% if chamado.status.value == 'resolvido' %}
+                <i class="fas fa-check-circle"></i> Solução Técnica Registrada
+            {% elif chamado.status.value == 'pendente' %}
+                <i class="fas fa-exclamation-triangle"></i> Chamado em Pendência
+            {% elif chamado.status.value == 'fechado' %}
+                <i class="fas fa-lock"></i> Chamado Encerrado
+            {% else %}
+                <i class="fas fa-tools"></i> Solução Técnica Registrada
             {% endif %}
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="solucao-conteudo">
+            <p>{{ chamado.solucao_tecnica or chamado.observacao }}</p>
+        </div>
+        {% if chamado.data_resolucao or chamado.updated_at %}
+        <div class="solucao-meta">
+            <small><i class="fas fa-clock"></i> {{ formatar_data(chamado.data_resolucao or chamado.updated_at) }}</small>
+            {% if chamado.atendente %}
+            <small><i class="fas fa-user"></i> {{ chamado.atendente.nome }}</small>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
 
             <!-- CARD DESCRIÇÃO E DETALHES -->
             <div class="card card-detalhes">
