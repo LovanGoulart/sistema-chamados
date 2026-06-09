@@ -4,22 +4,14 @@
 {% block page_title %}Meus Chamados{% endblock %}
 
 {% block content %}
-<!--<div class="page-header">
-    <div class="page-header-left">
-        <h2><i class="fas fa-user-circle"></i> Meus Chamados</h2>
-        <p class="page-subtitle">Aqui aparecem apenas os chamados que você criou</p>
-    </div>
-</div>-->
-
 <!-- Banner informativo -->
 <div class="card card-info-banner">
     <div class="card-body">
         <div class="info-banner-content">
             <i class="fas fa-info-circle"></i>
-            
+            <div>
                 <strong>Chamados Realizados por Você</strong>
-                <!--<p>Para ver chamados recebidos pelo seu setor, acesse a página <a href="{{ url_for('main.chamados') }}">Chamados</a>.</p>-->
-            
+            </div>
         </div>
     </div>
 </div>
@@ -60,7 +52,8 @@
                 </thead>
                 <tbody>
                     {% for chamado in chamados_ordenados %}
-                    <tr class="chamado-row {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% endif %}"
+                    {% set status_data = verificar_data_destaque(chamado.data_preferencial) %}
+                    <tr class="chamado-row {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-hoje{% endif %}"
                         data-id="{{ chamado.id }}"
                         data-titulo="{{ chamado.titulo|lower }}"
                         data-descricao="{{ chamado.descricao|lower }}"
@@ -92,9 +85,13 @@
                         <td>
                             <div class="chamado-titulo">{{ chamado.titulo }}</div>
                             <div class="chamado-descricao-short">{{ chamado.descricao[:80] }}...</div>
-                            {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}
-                            <div class="data-destaque-inline">
+                            {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}
+                            <div class="data-destaque-inline data-vencida">
                                 <i class="fas fa-exclamation-triangle"></i> Data vencida: {{ formatar_data(chamado.data_preferencial) }}
+                            </div>
+                            {% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}
+                            <div class="data-destaque-inline data-hoje">
+                                <i class="fas fa-clock"></i> Deverá ser feito hoje: {{ formatar_data(chamado.data_preferencial) }}
                             </div>
                             {% elif chamado.data_preferencial %}
                             <div class="data-destaque-inline data-futura">
@@ -123,7 +120,8 @@
         <!-- VIEW: CARDS (mobile) -->
         <div class="mobile-cards-view" id="cards-chamados">
             {% for chamado in chamados_ordenados %}
-            <div class="chamado-card {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% endif %}"
+            {% set status_data = verificar_data_destaque(chamado.data_preferencial) %}
+            <div class="chamado-card {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-hoje{% endif %}"
                  data-id="{{ chamado.id }}"
                  data-titulo="{{ chamado.titulo|lower }}"
                  data-descricao="{{ chamado.descricao|lower }}"
@@ -145,9 +143,13 @@
                 <div class="chamado-card-body">
                     <div class="chamado-card-titulo">{{ chamado.titulo }}</div>
                     <div class="chamado-card-desc">{{ chamado.descricao[:100] }}{% if chamado.descricao|length > 100 %}...{% endif %}</div>
-                    {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}
-                    <div class="data-destaque-inline">
+                    {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}
+                    <div class="data-destaque-inline data-vencida">
                         <i class="fas fa-exclamation-triangle"></i> Data vencida: {{ formatar_data(chamado.data_preferencial) }}
+                    </div>
+                    {% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}
+                    <div class="data-destaque-inline data-hoje">
+                        <i class="fas fa-clock"></i> Deverá ser feito hoje: {{ formatar_data(chamado.data_preferencial) }}
                     </div>
                     {% elif chamado.data_preferencial %}
                     <div class="data-destaque-inline data-futura">
@@ -212,16 +214,13 @@
     const vazioBusca = document.getElementById('busca-vazia');
     const btnLimparVazio = document.getElementById('btn-limpar-busca-vazia');
 
-    // Selecionar todas as linhas da tabela e cards
     const rows = document.querySelectorAll('.chamado-row');
     const cards = document.querySelectorAll('.chamado-card');
 
     function filtrarChamados(termo) {
         const termoLower = termo.trim().toLowerCase();
         let visiveis = 0;
-        let total = rows.length;
 
-        // Se não houver termo, mostra tudo
         if (!termoLower) {
             rows.forEach(row => row.style.display = '');
             cards.forEach(card => card.style.display = '');
@@ -231,7 +230,6 @@
             return;
         }
 
-        // Mostrar botão limpar
         if (btnLimpar) btnLimpar.style.display = 'flex';
 
         rows.forEach(function(row) {
@@ -259,7 +257,6 @@
             }
         });
 
-        // Sincronizar cards mobile
         cards.forEach(function(card) {
             const titulo = card.getAttribute('data-titulo') || '';
             const descricao = card.getAttribute('data-descricao') || '';
@@ -280,7 +277,6 @@
             card.style.display = match ? '' : 'none';
         });
 
-        // Atualizar contagem
         if (contagem) {
             if (visiveis === 0) {
                 contagem.textContent = 'Nenhum resultado encontrado';
@@ -291,42 +287,35 @@
             }
         }
 
-        // Mostrar estado vazio se nada encontrado
         if (vazioBusca) {
             vazioBusca.style.display = (visiveis === 0) ? 'block' : 'none';
         }
     }
 
-    // Evento de digitação (live search)
     if (inputBusca) {
         inputBusca.addEventListener('input', function() {
             filtrarChamados(this.value);
         });
-
-        // Focar no campo ao carregar a página
     }
 
-    // Botão limpar (X)
     if (btnLimpar) {
         btnLimpar.addEventListener('click', function() {
             if (inputBusca) {
                 inputBusca.value = '';
-                        filtrarChamados('');
+                filtrarChamados('');
             }
         });
     }
 
-    // Botão limpar do estado vazio
     if (btnLimparVazio) {
         btnLimparVazio.addEventListener('click', function() {
             if (inputBusca) {
                 inputBusca.value = '';
-                        filtrarChamados('');
+                filtrarChamados('');
             }
         });
     }
 
-    // Inicializar limpo (sem filtro)
     filtrarChamados('');
 })();
 </script>
@@ -455,6 +444,35 @@
 
 .info-banner-content a:hover {
     text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DESTAQUE DE DATA - VENCIDA / HOJE / FUTURA
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Data vencida - vermelho */
+.data-vencida {
+    color: #dc3545 !important;
+    font-weight: 600;
+}
+
+.row-data-vencida {
+    background: rgba(220, 53, 69, 0.08) !important;
+}
+
+/* Data hoje - laranja */
+.data-hoje {
+    color: #ff8c00 !important;
+    font-weight: 600;
+}
+
+.row-data-hoje {
+    background: rgba(255, 140, 0, 0.08) !important;
+}
+
+/* Data futura - azul */
+.data-futura {
+    color: #0084ff;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -682,11 +700,6 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: #dc3545;
-}
-
-.data-destaque-inline.data-futura {
-    color: #0084ff;
 }
 
 /* Linhas destacadas */
@@ -695,9 +708,6 @@
 }
 .row-alta {
     background: rgba(255, 193, 7, 0.05) !important;
-}
-.row-data-vencida {
-    background: rgba(220, 53, 69, 0.08) !important;
 }
 .data-table tr:hover {
     background: var(--bg-hover, rgba(0,0,0,0.03)) !important;

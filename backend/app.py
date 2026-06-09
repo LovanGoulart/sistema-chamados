@@ -125,9 +125,9 @@ def criar_app(config_name='default'):
         from backend.utils.utilitarios import (
             formatar_data, formatar_data_curta,
             get_prioridade_cor, get_status_cor,
-            get_prioridade_label, get_status_label
+            get_prioridade_label, get_status_label,
+            verificar_data_destaque  # ← IMPORTADO DE UTILITARIOS (nova versão)
         )
-        from backend.routes.rotas import verificar_data_destaque
         return dict(
             formatar_data=formatar_data,
             formatar_data_curta=formatar_data_curta,
@@ -135,7 +135,7 @@ def criar_app(config_name='default'):
             get_status_cor=get_status_cor,
             get_prioridade_label=get_prioridade_label,
             get_status_label=get_status_label,
-            verificar_data_destaque=verificar_data_destaque,
+            verificar_data_destaque=verificar_data_destaque,  # ← nova função que retorna 'vencida'/'hoje'/'futura'
             formatar_tempo=formatar_tempo
         )
 

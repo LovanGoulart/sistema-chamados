@@ -3,7 +3,7 @@ Funções utilitárias do Sistema de Chamados - Colégio Mauá
 """
 import os
 import re
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 from flask import request, current_app
 
 
@@ -149,3 +149,37 @@ def truncate_text(texto, max_length=100):
     if len(texto) <= max_length:
         return texto
     return texto[:max_length].rsplit(" ", 1)[0] + "..."
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VERIFICAÇÃO DE DATA PREFERENCIAL (vencida / hoje / futura)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def verificar_data_destaque(data_preferencial):
+    """
+    Retorna o status da data preferencial:
+    - 'vencida' -> já passou
+    - 'hoje'    -> é hoje
+    - 'proxima' -> está a 1 dia de distância
+    - 'futura'  -> ainda não chegou (mais de 1 dia)
+    - None      -> sem data
+    """
+    if not data_preferencial:
+        return None
+
+    hoje = date.today()
+
+    # Se data_preferencial for datetime, converte para date
+    if isinstance(data_preferencial, datetime):
+        data = data_preferencial.date()
+    else:
+        data = data_preferencial
+
+    if data < hoje:
+        return 'vencida'
+    elif data == hoje:
+        return 'hoje'
+    elif (data - hoje).days == 1:
+        return 'proxima'
+    else:
+        return 'futura'
