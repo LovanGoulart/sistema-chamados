@@ -6,13 +6,29 @@
 {% block content %}
 <div class="chamado-detalhe">
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         ALERTA DE DATA VENCIDA
+        <!-- ═══════════════════════════════════════════════════════════════
+         ALERTA DE DATA PREVISTA
          ═══════════════════════════════════════════════════════════════ -->
-    {% if verificar_data_destaque(chamado.data_preferencial) and chamado.status.value not in ['resolvido', 'fechado'] %}
-    <div class="alert alert-destaque">
+    {% set status_data = verificar_data_destaque(chamado.data_preferencial) %}
+    {% if status_data in ['vencida', 'hoje', 'proxima'] and chamado.status.value not in ['resolvido', 'fechado'] %}
+    <div class="alert alert-destaque alert-data-{{ status_data }}">
         <i class="fas fa-exclamation-circle"></i>
-        <strong>Atenção:</strong> A data preferencial para este chamado ({% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}) já foi atingida ou está próxima!
+        <strong>
+            {% if status_data == 'vencida' %}
+                Atenção:
+            {% elif status_data == 'hoje' %}
+                Hoje:
+            {% elif status_data == 'proxima' %}
+                Próximo:
+            {% endif %}
+        </strong>
+        {% if status_data == 'vencida' %}
+            A data preferencial para este chamado ({% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}) <strong>já foi atingida</strong>!
+        {% elif status_data == 'hoje' %}
+            A data preferencial para este chamado é <strong>hoje</strong> ({% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %})!
+        {% elif status_data == 'proxima' %}
+            A data preferencial para este chamado ({% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}) está <strong>próxima</strong>!
+        {% endif %}
     </div>
     {% endif %}
 
@@ -30,7 +46,7 @@
                     {{ get_status_label(chamado.status.value) }}
                 </span>
                 {% if chamado.data_preferencial %}
-                <span class="badge-data {% if verificar_data_destaque(chamado.data_preferencial) %}badge-data-vencida{% endif %}">
+                <span class="badge-data {% set status_data_badge = verificar_data_destaque(chamado.data_preferencial) %}{% if status_data_badge in ['vencida', 'hoje', 'proxima'] %}badge-data-{{ status_data_badge }}{% endif %}">
                     <i class="fas fa-calendar-alt"></i> {{ formatar_data(chamado.data_preferencial) }}
                 </span>
                 {% endif %}
@@ -154,7 +170,7 @@
                         </div>
                         {% endif %}
                         {% if chamado.data_preferencial %}
-                        <div class="detalhe-item {% if verificar_data_destaque(chamado.data_preferencial) %}detalhe-urgente{% endif %}">
+                        <div class="detalhe-item {% set status_data_det = verificar_data_destaque(chamado.data_preferencial) %}{% if status_data_det in ['vencida', 'hoje', 'proxima'] %}detalhe-{{ status_data_det }}{% endif %}">
                             <span class="det-label"><i class="fas fa-calendar-alt"></i> Data Preferencial</span>
                             <span class="det-value">{{ formatar_data(chamado.data_preferencial) }}</span>
                         </div>
@@ -401,6 +417,72 @@
 
 {% block extra_css %}
 <style>
+/* ═══════════════════════════════════════════════════════════════
+   ALERTAS DE DATA COM CORES DIFERENTES
+   ═══════════════════════════════════════════════════════════════ */
+
+.alert-data-vencida {
+    background: rgba(220, 53, 69, 0.08);
+    border-left: 4px solid #dc3545;
+    color: #721c24;
+}
+
+.alert-data-vencida i {
+    color: #dc3545;
+}
+
+.alert-data-hoje {
+    background: rgba(255, 193, 7, 0.12);
+    border-left: 4px solid #ffc107;
+    color: #856404;
+}
+
+.alert-data-hoje i {
+    color: #ffc107;
+}
+
+.alert-data-proxima {
+    background: rgba(23, 162, 184, 0.08);
+    border-left: 4px solid #17a2b8;
+    color: #0c5460;
+}
+
+.alert-data-proxima i {
+    color: #17a2b8;
+}
+
+/* Badges de data com cores */
+.badge-data-vencida {
+    background: #dc3545 !important;
+    color: white !important;
+}
+
+.badge-data-hoje {
+    background: #ffc107 !important;
+    color: #333 !important;
+}
+
+.badge-data-proxima {
+    background: #17a2b8 !important;
+    color: white !important;
+}
+
+/* Detalhes com destaque de data */
+.detalhe-vencida {
+    border-left: 3px solid #dc3545 !important;
+    background: rgba(220, 53, 69, 0.04) !important;
+}
+
+.detalhe-hoje {
+    border-left: 3px solid #ffc107 !important;
+    background: rgba(255, 193, 7, 0.06) !important;
+}
+
+.detalhe-proxima {
+    border-left: 3px solid #17a2b8 !important;
+    background: rgba(23, 162, 184, 0.04) !important;
+}
+
 /* ═══════════════════════════════════════════════════════════════
    HEADER EMPRESARIAL
    ═══════════════════════════════════════════════════════════════ */

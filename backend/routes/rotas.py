@@ -2,7 +2,7 @@
 Rotas e endpoints da API do Sistema de Chamados - Colégio Mauá
 """
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from flask import (
     Blueprint, render_template, request, redirect, url_for, 
     flash, jsonify, session, current_app, send_from_directory
@@ -55,14 +55,17 @@ def get_status_ordem(status):
 
 
 def get_chamados_ordenados(query_or_list):
-    """Retorna chamados ordenados por status, prioridade e data.
+    """Retorna chamados ordenados por data prevista, status, prioridade e data.
 
-    Ordenação principal:   Status (aberto -> pendente -> em_andamento -> resolvido -> fechado)
-    Ordenação secundária:  Prioridade (urgente -> alta -> media -> baixa)
-    Ordenação terciária:   Data de criação (mais recente primeiro)
+    Ordenação principal:   Data prevista = HOJE (fica no TOPO)
+    Ordenação secundária:  Status (aberto -> pendente -> em_andamento -> resolvido -> fechado)
+    Ordenação terciária:   Prioridade (urgente -> alta -> media -> baixa)
+    Ordenação quaternária: Data de criação (mais recente primeiro)
 
     Aceita tanto uma Query quanto uma lista já paginada.
     """
+    hoje = date.today()
+
     # Se for uma query (não paginada), pegar todos
     if hasattr(query_or_list, 'all'):
         chamados = query_or_list.all()
@@ -73,28 +76,32 @@ def get_chamados_ordenados(query_or_list):
     else:
         chamados = list(query_or_list)
 
-    # Ordenar por status (aberto primeiro), depois prioridade (urgente primeiro), depois data (mais recente)
-    chamados.sort(key=lambda c: (
-        get_status_ordem(c.status.value),
-        get_prioridade_ordem(c.prioridade.value),
-        -c.created_at.timestamp() if c.created_at else 0
-    ), reverse=False)
+    def chave_ordenacao(c):
+        # VERIFICA SE DATA PREVISTA É HOJE (prioridade máxima)
+        data_prevista_hoje = False
+        if hasattr(c, 'data_preferencial') and c.data_preferencial:
+            try:
+                if hasattr(c.data_preferencial, 'date'):
+                    data_prevista_hoje = c.data_preferencial.date() == hoje
+                else:
+                    data_prevista_hoje = c.data_preferencial == hoje
+            except:
+                pass
+
+        # Tupla de ordenação:
+        # 1. data_prevista_hoje (True=0 vem antes de False=1) → TOPO
+        # 2. status_ordem (aberto=0 primeiro)
+        # 3. prioridade_ordem (urgente=0 primeiro)
+        # 4. data_criacao invertida (mais recente primeiro = timestamp negativo)
+        return (
+            0 if data_prevista_hoje else 1,
+            get_status_ordem(c.status.value),
+            get_prioridade_ordem(c.prioridade.value),
+            -c.created_at.timestamp() if c.created_at else 0
+        )
+
+    chamados.sort(key=chave_ordenacao, reverse=False)
     return chamados
-
-
-def verificar_data_destaque(data_preferencial):
-    """Verifica se a data preferencial é hoje ou próxima."""
-    if not data_preferencial:
-        return False
-    hoje = agora_brasil_naive().date()
-    if isinstance(data_preferencial, str):
-        try:
-            data_preferencial = datetime.fromisoformat(data_preferencial.replace('Z', '+00:00')).date()
-        except:
-            return False
-    else:
-        data_preferencial = data_preferencial.date() if hasattr(data_preferencial, 'date') else data_preferencial
-    return data_preferencial <= hoje
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -174,20 +181,13 @@ def meus_chamados():
     # Usar o serviço que filtra APENAS por usuario_id (sem filtros de status/prioridade)
     resultado = ChamadoService.listar_meus_chamados(current_user, {}, 1, 99999)
 
-    # Ordenar por status, prioridade e data
+    # Ordenar por data prevista, status, prioridade e data
     chamados_ordenados = get_chamados_ordenados(resultado)
 
     return render_template('meus_chamados.html',
                          chamados=resultado,
                          chamados_ordenados=chamados_ordenados,
-                         filtros={},
-                         formatar_data=formatar_data,
-                         formatar_data_curta=formatar_data_curta,
-                         get_status_label=get_status_label,
-                         get_prioridade_label=get_prioridade_label,
-                         get_status_cor=get_status_cor,
-                         get_prioridade_cor=get_prioridade_cor,
-                         verificar_data_destaque=verificar_data_destaque)
+                         filtros={})
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -313,7 +313,7 @@ def dashboard():
     """Painel principal do sistema."""
     # Bloquear acesso para usuário comum
     if current_user.perfil.value == PerfilUsuario.USUARIO.value:
-        
+
         return redirect(url_for('main.meus_chamados'))
 
     estatisticas = ChamadoService.get_estatisticas(current_user)
@@ -336,19 +336,12 @@ def dashboard():
         ])
     )
 
-    # Ordenar: status (aberto -> pendente -> em_andamento), depois prioridade (urgente -> alta -> media -> baixa)
+    # Ordenar: data prevista hoje no topo, depois status, prioridade e data
     chamados_ativos = get_chamados_ordenados(query)
 
     return render_template('dashboard.html',
                          estatisticas=estatisticas,
-                         chamados_ativos=chamados_ativos,
-                         formatar_data=formatar_data,
-                         formatar_data_curta=formatar_data_curta,
-                         get_status_label=get_status_label,
-                         get_prioridade_label=get_prioridade_label,
-                         get_status_cor=get_status_cor,
-                         get_prioridade_cor=get_prioridade_cor,
-                         verificar_data_destaque=verificar_data_destaque)
+                         chamados_ativos=chamados_ativos)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -378,21 +371,14 @@ def chamados():
     resultado = ChamadoService.listar_chamados(current_user, filtros, pagina, 99999)
     setores = Setor.query.filter_by(ativo=True).order_by(Setor.nome).all()
 
-    # Ordenar por status, prioridade e data
+    # Ordenar por data prevista, status, prioridade e data
     chamados_ordenados = get_chamados_ordenados(resultado)
 
     return render_template('chamados.html',
                          chamados=resultado,
                          chamados_ordenados=chamados_ordenados,
                          setores=setores,
-                         filtros=filtros,
-                         formatar_data=formatar_data,
-                         formatar_data_curta=formatar_data_curta,
-                         get_status_label=get_status_label,
-                         get_prioridade_label=get_prioridade_label,
-                         get_status_cor=get_status_cor,
-                         get_prioridade_cor=get_prioridade_cor,
-                         verificar_data_destaque=verificar_data_destaque)
+                         filtros=filtros)
 
 
 @main.route('/chamados/novo', methods=['GET', 'POST'])
@@ -520,14 +506,7 @@ def chamado_detalhe(chamado_id):
                          chamado=chamado,
                          mensagens=mensagens,
                          anexos=anexos,
-                         usuarios_setor=usuarios_setor,
-                         formatar_data=formatar_data,
-                         formatar_data_curta=formatar_data_curta,
-                         get_status_label=get_status_label,
-                         get_prioridade_label=get_prioridade_label,
-                         get_status_cor=get_status_cor,
-                         get_prioridade_cor=get_prioridade_cor,
-                         verificar_data_destaque=verificar_data_destaque)
+                         usuarios_setor=usuarios_setor)
 
 
 
@@ -850,13 +829,7 @@ def relatorios():
                          chamados_por_mes=chamados_por_mes,
                          chamados_por_setor=chamados_por_setor,
                          graficos_por_setor=graficos_por_setor,
-                         setores=setores,
-                         formatar_data=formatar_data,
-                         formatar_data_curta=formatar_data_curta,
-                         get_status_label=get_status_label,
-                         get_prioridade_label=get_prioridade_label,
-                         get_status_cor=get_status_cor,
-                         get_prioridade_cor=get_prioridade_cor)
+                         setores=setores)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -898,9 +871,7 @@ def admin_usuarios():
     return render_template('admin_usuarios.html', 
                          usuarios=usuarios, 
                          setores=setores, 
-                         busca=busca,
-                         formatar_data=formatar_data,
-                         formatar_data_curta=formatar_data_curta)
+                         busca=busca)
 
 
 @main.route('/admin/usuarios/novo', methods=['POST'])
@@ -1121,10 +1092,7 @@ def admin_setores():
     # Dentro de cada grupo, mais recentes primeiro
     setores = Setor.query.order_by(Setor.ativo.desc(), Setor.created_at.desc()).all()
 
-    return render_template('admin_setores.html', 
-                         setores=setores,
-                         formatar_data=formatar_data,
-                         formatar_data_curta=formatar_data_curta)
+    return render_template('admin_setores.html', setores=setores)
 
 @main.route('/admin/setores/novo', methods=['POST'])
 @login_required
@@ -1191,10 +1159,7 @@ def admin_logs():
         page=pagina, per_page=20, error_out=False
     )
 
-    return render_template('admin_logs.html', 
-                         logs=logs, 
-                         formatar_data=formatar_data,
-                         formatar_data_curta=formatar_data_curta)
+    return render_template('admin_logs.html', logs=logs)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1247,10 +1212,7 @@ def notificacoes():
         Notificacao.created_at.desc()
     ).all()
 
-    return render_template('notificacoes.html', 
-                         notificacoes=notificacoes_list, 
-                         formatar_data=formatar_data,
-                         formatar_data_curta=formatar_data_curta)
+    return render_template('notificacoes.html', notificacoes=notificacoes_list)
 
 
 @main.route('/notificacoes/<int:notificacao_id>/ler', methods=['POST'])
