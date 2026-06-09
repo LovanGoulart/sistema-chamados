@@ -31,7 +31,7 @@
 
                 <div class="form-group">
                     <label for="telefone">Telefone</label>
-                    <input type="tel" id="telefone" name="telefone" value="{{ current_user.telefone or '' }}" placeholder="(00) 00000-0000">
+                    <input type="tel" id="telefone" name="telefone" value="{{ current_user.telefone or '' }}" placeholder="(00) 00000-0000" maxlength="15">
                 </div>
 
                 <div class="form-group">
@@ -98,4 +98,41 @@
         </div>
     </div>
 </div>
+
+<script>
+(function() {
+    const telefoneInput = document.getElementById('telefone');
+    if (!telefoneInput) return;
+
+    function formatarTelefone(valor) {
+        valor = valor.replace(/\D/g, '');
+        if (valor.length > 11) valor = valor.slice(0, 11);
+
+        if (valor.length > 10) {
+            // Celular com 9 dígitos: (XX) XXXXX-XXXX
+            return '(' + valor.slice(0, 2) + ') ' + valor.slice(2, 7) + '-' + valor.slice(7, 11);
+        } else if (valor.length > 6) {
+            // Fixo: (XX) XXXX-XXXX
+            return '(' + valor.slice(0, 2) + ') ' + valor.slice(2, 6) + '-' + valor.slice(6, 10);
+        } else if (valor.length > 2) {
+            return '(' + valor.slice(0, 2) + ') ' + valor.slice(2);
+        } else if (valor.length > 0) {
+            return '(' + valor;
+        }
+        return '';
+    }
+
+    telefoneInput.addEventListener('input', function(e) {
+        const cursorPos = telefoneInput.selectionStart;
+        const valorAntes = telefoneInput.value;
+        const valorFormatado = formatarTelefone(telefoneInput.value);
+        telefoneInput.value = valorFormatado;
+    });
+
+    // Formata o valor inicial se existir
+    if (telefoneInput.value) {
+        telefoneInput.value = formatarTelefone(telefoneInput.value);
+    }
+})();
+</script>
 {% endblock %}
