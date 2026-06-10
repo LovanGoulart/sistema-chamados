@@ -53,6 +53,15 @@
             </div>
             <h1 class="chamado-titulo-principal">{{ chamado.titulo }}</h1>
 
+            <!-- Descrição e Local - MOBILE ONLY -->
+            <div class="header-descricao-mobile">
+                <p class="header-descricao-texto">{{ chamado.descricao }}</p>
+                <div class="header-local-mobile">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ chamado.local }}</span>
+                </div>
+            </div>
+
             <!-- Meta info em linha compacta -->
             <div class="header-meta-inline">
                 <span><i class="fas fa-user"></i> <strong>Solicitante:</strong> {{ chamado.usuario.nome }}</span>
@@ -1564,6 +1573,50 @@
     /* Ajustar grid para ocupar largura total no mobile */
     .chamado-grid-empresarial {
         grid-template-columns: 1fr !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DESCRIÇÃO E LOCAL NO HEADER - MOBILE ONLY
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Por padrão (PC) - esconder os campos mobile */
+.header-descricao-mobile {
+    display: none;
+}
+
+/* Somente no mobile - mostrar descrição e local no header */
+@media (max-width: 768px) {
+    .header-descricao-mobile {
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .header-descricao-texto {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin: 0 0 8px 0;
+        white-space: pre-wrap;
+    }
+
+    .header-local-mobile {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .header-local-mobile i {
+        color: var(--primary);
+        font-size: 0.9rem;
+    }
+
+    /* Esconder card de detalhes no mobile */
+    .card-detalhes {
+        display: none !important;
     }
 }
 
