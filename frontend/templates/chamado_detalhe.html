@@ -55,22 +55,25 @@
 
             <!-- Descrição e Local - MOBILE ONLY -->
             <div class="header-descricao-mobile">
-                <p class="header-descricao-texto">{{ chamado.descricao }}</p>
-                <div class="header-local-mobile">
+                <h2 class="header-descricao-texto">{{ chamado.descricao }}</h2>
+                <span class="meta-sep">|</span>
+                <!--<div class="header-local-mobile">
                     <i class="fas fa-map-marker-alt"></i>
                     <span>{{ chamado.local }}</span>
-                </div>
+                </div>-->
             </div>
 
             <!-- Meta info em linha compacta -->
             <div class="header-meta-inline">
+                <span><i class="fas fa-map-marker-alt"></i> <strong>Local:</strong> {{ chamado.local }}</span>
+                <!--<span class="meta-sep">|</span>-->
                 <span><i class="fas fa-user"></i> <strong>Solicitante:</strong> {{ chamado.usuario.nome }}</span>
-                <span class="meta-sep">|</span>
-                <span><i class="fas fa-building"></i> <strong>Setor:</strong> {{ chamado.setor_destino.nome }}</span>
-                <span class="meta-sep">|</span>
+                <!--<span class="meta-sep">|</span>-->
+                <!--<span><i class="fas fa-building"></i> <strong>Setor:</strong> {{ chamado.setor_destino.nome }}</span>
+                <span class="meta-sep">|</span>-->
                 <span><i class="fas fa-clock"></i> <strong>Aberto:</strong> {{ formatar_data_curta(chamado.created_at) }}</span>
                 {% if chamado.atendente %}
-                <span class="meta-sep">|</span>
+                <!--<span class="meta-sep">|</span>-->
                 <span><i class="fas fa-user-check"></i> <strong>Responsável:</strong> {{ chamado.atendente.nome }}</span>
                 {% endif %}
             </div>
