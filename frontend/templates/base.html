@@ -330,6 +330,7 @@
             }
         }
     </style>
+<base target="_blank">
 </head>
 <body>
     {% if current_user.is_authenticated %}
@@ -679,6 +680,155 @@
             }
             toggleScrollBtn();
         })();
+    </script>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         AUTO-REFRESH A CADA 60 SEGUNDOS — PRESERVA DADOS DIGITADOS
+         ═══════════════════════════════════════════════════════════════ -->
+    <script>
+    (function() {
+        const STORAGE_KEY = 'autoRefresh_formData_' + location.pathname;
+        const SCROLL_KEY  = 'autoRefresh_scroll_' + location.pathname;
+        const FOCUS_KEY   = 'autoRefresh_focus_' + location.pathname;
+        const INTERVAL    = 60000; // 60 segundos
+
+        // ─── 1. ANTES DE SAIR: salvar todos os dados dos formulários ───
+        function salvarDados() {
+            const dados = {};
+            document.querySelectorAll('input, textarea, select').forEach(function(el) {
+                if (el.name || el.id) {
+                    const chave = el.name || el.id;
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        dados[chave] = el.checked;
+                    } else if (el.type === 'file') {
+                        // Não salva arquivos (por segurança/não é possível)
+                    } else {
+                        dados[chave] = el.value;
+                    }
+                }
+            });
+            try {
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
+                sessionStorage.setItem(SCROLL_KEY, JSON.stringify({
+                    x: window.scrollX,
+                    y: window.scrollY
+                }));
+                const ativo = document.activeElement;
+                if (ativo && (ativo.tagName === 'INPUT' || ativo.tagName === 'TEXTAREA' || ativo.tagName === 'SELECT')) {
+                    sessionStorage.setItem(FOCUS_KEY, ativo.name || ativo.id || '');
+                }
+            } catch(e) {}
+        }
+
+        // ─── 2. AO CARREGAR: restaurar dados salvos ───
+        function restaurarDados() {
+            try {
+                const salvos = sessionStorage.getItem(STORAGE_KEY);
+                if (!salvos) return;
+                const dados = JSON.parse(salvos);
+
+                document.querySelectorAll('input, textarea, select').forEach(function(el) {
+                    const chave = el.name || el.id;
+                    if (chave && dados.hasOwnProperty(chave)) {
+                        if (el.type === 'checkbox' || el.type === 'radio') {
+                            el.checked = dados[chave];
+                        } else if (el.type !== 'file' && el.type !== 'password') {
+                            el.value = dados[chave];
+                            // Dispara evento input para máscaras/validações
+                            el.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    }
+                });
+
+                // Restaurar scroll
+                const scroll = sessionStorage.getItem(SCROLL_KEY);
+                if (scroll) {
+                    const pos = JSON.parse(scroll);
+                    window.scrollTo(pos.x, pos.y);
+                }
+
+                // Restaurar foco
+                const foco = sessionStorage.getItem(FOCUS_KEY);
+                if (foco) {
+                    const el = document.querySelector('[name="' + foco + '"], #' + foco);
+                    if (el) {
+                        setTimeout(function() { el.focus(); }, 100);
+                    }
+                }
+
+                // Limpar dados restaurados
+                sessionStorage.removeItem(STORAGE_KEY);
+                sessionStorage.removeItem(SCROLL_KEY);
+                sessionStorage.removeItem(FOCUS_KEY);
+            } catch(e) {}
+        }
+
+        // ─── 3. VERIFICAR SE O USUÁRIO ESTÁ DIGITANDO ───
+        function usuarioInteragindo() {
+            const ativo = document.activeElement;
+            if (!ativo) return false;
+            if (ativo.tagName === 'INPUT' || ativo.tagName === 'TEXTAREA' || ativo.tagName === 'SELECT') {
+                return true;
+            }
+            // Verifica se algum modal está aberto
+            const modais = document.querySelectorAll('.modal.active, .modal.ativo');
+            if (modais.length > 0) return true;
+            return false;
+        }
+
+        // ─── 4. TIMER DE ATUALIZAÇÃO ───
+        let timer = null;
+
+        function agendarRefresh() {
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(function() {
+                if (usuarioInteragindo()) {
+                    // Se o usuário está digitando, adia 30 segundos
+                    agendarRefreshAdiado();
+                    return;
+                }
+                salvarDados();
+                location.reload();
+            }, INTERVAL);
+        }
+
+        function agendarRefreshAdiado() {
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(function() {
+                if (usuarioInteragindo()) {
+                    // Ainda digitando, adia mais 30s
+                    agendarRefreshAdiado();
+                    return;
+                }
+                salvarDados();
+                location.reload();
+            }, 30000); // 30 segundos de adiamento
+        }
+
+        // ─── 5. EVENTOS: salvar dados periodicamente ───
+        document.addEventListener('input', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                salvarDados();
+            }
+        }, true);
+
+        document.addEventListener('change', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                salvarDados();
+            }
+        }, true);
+
+        // ─── 6. INICIALIZAÇÃO ───
+        document.addEventListener('DOMContentLoaded', function() {
+            restaurarDados();
+            agendarRefresh();
+        });
+
+        // ─── 7. ANTES DE SAIR DA PÁGINA (navegação manual) ───
+        window.addEventListener('beforeunload', function() {
+            salvarDados();
+        });
+    })();
     </script>
 
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
