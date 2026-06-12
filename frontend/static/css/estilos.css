@@ -970,10 +970,10 @@ a:hover {
 
 .form-group label {
     display: block;
-    margin-bottom: 6px;
-    font-weight: 500;
-    font-size: 0.85rem;
-    color: var(--text-primary);
+    margin-bottom: 2px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(black);
 }
 
 .form-group input,

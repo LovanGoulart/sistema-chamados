@@ -4,16 +4,16 @@
 {% block page_title %}Novo Chamado{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<!--<div class="page-header">
     <div class="page-header-left">
         <h2><i class="fas fa-plus-circle"></i> Novo Chamado</h2>
         <p class="page-subtitle">Abra um novo chamado para o setor responsável</p>
     </div>
-</div>
+</div>-->
 
 <div class="card">
     <div class="card-body">
-        <form method="POST" action="{{ url_for('main.novo_chamado') }}" class="form-chamado" novalidate enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('main.novo_chamado') }}" class="form-chamado" novalidate enctype="multipart/form-data" id="formNovoChamado">
             <div class="form-row">
                 <div class="form-group form-group-large">
                     <label for="titulo">Título do chamado *</label>
@@ -101,6 +101,29 @@
 
 {% block extra_js %}
 <script>
+// ========== LIMPAR DADOS DO AUTO-REFRESH APÓS ENVIO BEM-SUCEDIDO ==========
+// Esta função roda IMEDIATAMENTE (antes do DOMContentLoaded do base.html)
+(function() {
+    const STORAGE_KEY = 'autoRefresh_formData_' + location.pathname;
+    const SCROLL_KEY  = 'autoRefresh_scroll_' + location.pathname;
+    const FOCUS_KEY   = 'autoRefresh_focus_' + location.pathname;
+
+    // Verifica se há flash message de sucesso na página (envio bem-sucedido)
+    const flashSuccess = document.querySelector('.flash-success');
+    
+    // Se há mensagem de sucesso, ou se não há dados do Flask (dados não foi passado),
+    // limpar o sessionStorage para não restaurar dados antigos
+    const hasServerData = {{ 'true' if dados else 'false' }};
+    
+    if (flashSuccess || !hasServerData) {
+        try {
+            sessionStorage.removeItem(STORAGE_KEY);
+            sessionStorage.removeItem(SCROLL_KEY);
+            sessionStorage.removeItem(FOCUS_KEY);
+        } catch(e) {}
+    }
+})();
+
 document.addEventListener('DOMContentLoaded', function() {
     const fileUploadArea = document.getElementById('fileUploadArea');
     const fileInput = document.getElementById('anexos');
@@ -169,6 +192,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // ========== LIMPAR DADOS SALVOS AO ENVIAR O FORMULÁRIO ==========
+    const formNovoChamado = document.getElementById('formNovoChamado');
+    if (formNovoChamado) {
+        formNovoChamado.addEventListener('submit', function() {
+            const STORAGE_KEY = 'autoRefresh_formData_' + location.pathname;
+            const SCROLL_KEY  = 'autoRefresh_scroll_' + location.pathname;
+            const FOCUS_KEY   = 'autoRefresh_focus_' + location.pathname;
+
+            try {
+                sessionStorage.removeItem(STORAGE_KEY);
+                sessionStorage.removeItem(SCROLL_KEY);
+                sessionStorage.removeItem(FOCUS_KEY);
+            } catch(e) {}
+        });
     }
 });
 </script>
