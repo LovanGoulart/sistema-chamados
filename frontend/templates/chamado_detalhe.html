@@ -23,11 +23,11 @@
             {% endif %}
         </strong>
         {% if status_data == 'vencida' %}
-            A data preferencial para este chamado ({% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}) <strong>já foi atingida</strong>!
+            A data preferencial para este chamado já foi atingida! Era {% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}!
         {% elif status_data == 'hoje' %}
-            A data preferencial para este chamado é <strong>hoje</strong> ({% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %})!
+            A data preferencial para este chamado é hoje, {% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}!
         {% elif status_data == 'proxima' %}
-            A data preferencial para este chamado ({% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}) está <strong>próxima</strong>!
+            A data preferencial para este chamado é amanhã, {% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}!
         {% endif %}
     </div>
     {% endif %}
@@ -67,6 +67,7 @@
             <div class="header-meta-inline">
                 <span><i class="fas fa-map-marker-alt"></i> <strong>Local:</strong> {{ chamado.local }}</span>
                 <!--<span class="meta-sep">|</span>-->
+                <span><i class="fas fa-building"></i> <strong>Área patrimonial:</strong> {{ chamado.area_patrimonial }}</span>
                 <span><i class="fas fa-user"></i> <strong>Solicitante:</strong> {{ chamado.usuario.nome }}</span>
                 <!--<span class="meta-sep">|</span>-->
                 <!--<span><i class="fas fa-building"></i> <strong>Setor:</strong> {{ chamado.setor_destino.nome }}</span>
@@ -430,8 +431,106 @@
 {% block extra_css %}
 <style>
 /* ═══════════════════════════════════════════════════════════════
-   ALERTAS DE DATA COM CORES DIFERENTES
+   ALERTAS DE DATA PREFERENCIAL - CORREÇÃO MOBILE
    ═══════════════════════════════════════════════════════════════ */
+
+.alert-destaque {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.alert-destaque i {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 2px;
+}
+
+.alert-destaque strong {
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Cores específicas */
+.alert-data-vencida {
+    background: rgba(220, 53, 69, 0.08);
+    border-left: 4px solid #dc3545;
+    color: #721c24;
+}
+
+.alert-data-vencida i {
+    color: #dc3545;
+}
+
+.alert-data-hoje {
+    background: rgba(255, 193, 7, 0.12);
+    border-left: 4px solid #ffc107;
+    color: #856404;
+}
+
+.alert-data-hoje i {
+    color: #ffc107;
+}
+
+.alert-data-proxima {
+    background: rgba(23, 162, 184, 0.08);
+    border-left: 4px solid #17a2b8;
+    color: #0c5460;
+}
+
+.alert-data-proxima i {
+    color: #17a2b8;
+}
+
+/* ═══ CORREÇÃO MOBILE - ALERTA DE DATA ═══ */
+@media (max-width: 768px) {
+    .alert-destaque {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 14px;
+        font-size: 0.88rem;
+        line-height: 1.45;
+    }
+
+    .alert-destaque i {
+        font-size: 1.1rem;
+        margin-top: 3px;
+    }
+
+    .alert-destaque strong {
+        white-space: normal;
+        display: inline;
+    }
+
+    /* Força o texto a ficar em linha contínua, quebrando apenas quando necessário */
+    .alert-destaque {
+        word-break: keep-all;
+        overflow-wrap: break-word;
+        hyphens: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .alert-destaque {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        gap: 8px;
+        border-radius: 8px;
+    }
+
+    .alert-destaque i {
+        font-size: 1rem;
+        margin-top: 2px;
+    }
+}
 
 .alert-data-vencida {
     background: rgba(220, 53, 69, 0.08);

@@ -372,6 +372,12 @@
                         <span class="badge" id="notifCount" style="display:none">0</span>
                     </a>
                 </li>
+                <li class="{% if request.endpoint in ['main.novo_chamado'] %}active{% endif %}">
+                    <a href="{{ url_for('main.novo_chamado') }}">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Novo Chamado</span>
+                    </a>
+                </li>
                 <li class="{% if request.endpoint == 'main.meus_chamados' %}active{% endif %}">
                     <a href="{{ url_for('main.meus_chamados') }}">
                         <i class="fas fa-user-circle"></i>
@@ -643,12 +649,12 @@
             if (!scrollBtn) return;
 
             // Detectar modo app instalado
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches
                 || window.navigator.standalone === true;
 
             // No app, o scroll está no .main-content, não no window
-            const scrollContainer = isStandalone 
-                ? document.querySelector('.main-content') 
+            const scrollContainer = isStandalone
+                ? document.querySelector('.main-content')
                 : window;
 
             function getScrollY() {
