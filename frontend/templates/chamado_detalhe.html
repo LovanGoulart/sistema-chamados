@@ -1755,10 +1755,114 @@ function mostrarCampoSolucao(select) {
     }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   RESETAR FORMULÁRIO AO CARREGAR A PÁGINA (impede cache do navegador)
+   ═══════════════════════════════════════════════════════════════ */
 (function() {
     const statusSelect = document.getElementById('status');
+    const textareaSolucao = document.getElementById('solucao_tecnica');
+    const textareaObservacao = document.getElementById('observacao');
+    const campoSolucao = document.getElementById('campoSolucao');
+    const observacaoDiv = document.getElementById('observacaoStatus');
+
     if (statusSelect) {
-        mostrarCampoSolucao(statusSelect);
+        // Sempre reseta para o valor atual do chamado vindo do servidor
+        const statusAtual = statusSelect.querySelector('option[selected]');
+        if (statusAtual) {
+            statusSelect.value = statusAtual.value;
+        }
+
+        // Limpa todos os campos extras
+        if (textareaSolucao) textareaSolucao.value = '';
+        if (textareaObservacao) textareaObservacao.value = '';
+        if (campoSolucao) campoSolucao.style.display = 'none';
+        if (observacaoDiv) observacaoDiv.style.display = 'none';
+        if (textareaSolucao) textareaSolucao.removeAttribute('required');
+        if (textareaObservacao) textareaObservacao.removeAttribute('required');
+    }
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   ENVIAR STATUS VIA AJAX (SEM RECARREGAR PÁGINA)
+   ═══════════════════════════════════════════════════════════════ */
+(function() {
+    const formStatus = document.getElementById('formStatus');
+    if (formStatus) {
+        formStatus.addEventListener('submit', function(e) {
+            e.preventDefault(); // Impede o envio tradicional
+
+            const formData = new FormData(formStatus);
+            const actionUrl = formStatus.getAttribute('action');
+
+            fetch(actionUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Limpa os campos após sucesso
+                    document.getElementById('solucao_tecnica').value = '';
+                    document.getElementById('observacao').value = '';
+                    document.getElementById('campoSolucao').style.display = 'none';
+                    document.getElementById('observacaoStatus').style.display = 'none';
+
+                    // Recarrega a página para mostrar a atualização
+                    window.location.reload();
+                } else {
+                    alert('Erro ao atualizar status. Tente novamente.');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao atualizar status. Tente novamente.');
+            });
+        });
+    }
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   ENVIAR MENSAGEM VIA AJAX (SEM RECARREGAR PÁGINA)
+   ═══════════════════════════════════════════════════════════════ */
+(function() {
+    const formMensagem = document.getElementById('formMensagem');
+    const inputMensagem = document.getElementById('inputMensagem');
+
+    if (formMensagem && inputMensagem) {
+        formMensagem.addEventListener('submit', function(e) {
+            e.preventDefault(); // Impede o envio tradicional
+
+            const mensagem = inputMensagem.value.trim();
+            if (mensagem.length === 0) return;
+
+            const formData = new FormData(formMensagem);
+            const actionUrl = formMensagem.getAttribute('action');
+
+            fetch(actionUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Limpa o campo após sucesso
+                    inputMensagem.value = '';
+
+                    // Recarrega a página para mostrar a nova mensagem
+                    window.location.reload();
+                } else {
+                    alert('Erro ao enviar mensagem. Tente novamente.');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao enviar mensagem. Tente novamente.');
+            });
+        });
     }
 })();
 
@@ -1773,7 +1877,6 @@ function abrirAnexo(url, tipo) {
         modal.classList.add('ativo');
         document.body.style.overflow = 'hidden';
     } else {
-        // Abrir na mesma aba (não forçar nova aba)
         window.location.href = url;
     }
 }
@@ -1785,7 +1888,6 @@ function fecharModal() {
     document.getElementById('modalImagemSrc').src = '';
 }
 
-// Fechar modal com ESC
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') fecharModal();
 });
@@ -1849,7 +1951,4 @@ function limparPreview() {
     }
 })();
 </script>
-
-
-
 {% endblock %}
