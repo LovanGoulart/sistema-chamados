@@ -70,8 +70,8 @@
                 <span><i class="fas fa-building"></i> <strong>Área patrimonial:</strong> {{ chamado.area_patrimonial }}</span>
                 <span><i class="fas fa-user"></i> <strong>Solicitante:</strong> {{ chamado.usuario.nome }}</span>
                 <!--<span class="meta-sep">|</span>-->
-                <!--<span><i class="fas fa-building"></i> <strong>Setor:</strong> {{ chamado.setor_destino.nome }}</span>
-                <span class="meta-sep">|</span>-->
+                <span><i class="fas fa-building"></i> <strong>Setor:</strong> {{ chamado.setor_destino.nome }}</span>
+                <span class="meta-sep">|</span>
                 <span><i class="fas fa-clock"></i> <strong>Aberto:</strong> {{ formatar_data_curta(chamado.created_at) }}</span>
                 {% if chamado.atendente %}
                 <!--<span class="meta-sep">|</span>-->
