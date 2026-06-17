@@ -55,6 +55,9 @@
                 <thead>
                     <tr>
                         <th style="width:50px">ID</th>
+                        {% if current_user.is_admin() %}
+                        <th style="width:120px">Destino</th>
+                        {% endif %}
                         <th style="width:130px">Status</th>
                         <th style="width:130px">Prioridade</th>
                         <th style="width:120px">Data</th>
@@ -77,6 +80,11 @@
                         data-setor="{{ chamado.setor_destino.nome|lower }}"
                         data-responsavel="{{ (chamado.atendente.nome if chamado.atendente else 'não atribuído')|lower }}">
                         <td><a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}">#{{ chamado.id }}</a></td>
+                        {% if current_user.is_admin() %}
+                        <td>
+                            <span class="setor-destino">{{ chamado.setor_destino.nome if chamado.setor_destino else '-' }}</span>
+                        </td>
+                        {% endif %}
                         <td>
                             <span class="badge-status" style="background: {{ get_status_cor(chamado.status.value) }}">
                                 {{ get_status_label(chamado.status.value) }}
@@ -290,6 +298,20 @@
 
 .search-results-count.no-results {
     color: var(--danger, #dc3545);
+}
+
+/* ─── Coluna Setor Destino (apenas admin) ─── */
+.setor-destino {
+    font-size: 0.8rem;
+    color: var(--text-secondary, #718096);
+    background: var(--bg-body, #f8f9fa);
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 100%;
 }
 
 /* Banner informativo */
