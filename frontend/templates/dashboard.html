@@ -171,19 +171,20 @@
                     </div>
                     <div class="chamado-card-body">
                         <div class="chamado-card-titulo">{{ chamado.titulo }}</div>
-                        {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}
+                        <div class="chamado-card-desc">{{ chamado.descricao[:100] }}{% if chamado.descricao|length > 100 %}...{% endif %}</div>
+                            {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}
                         <div class="data-destaque-inline data-vencida">
                             <i class="fas fa-exclamation-triangle"></i> Data vencida: {{ formatar_data(chamado.data_preferencial) }}
                         </div>
-                        {% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}
+                            {% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}
                         <div class="data-destaque-inline data-hoje">
                             <i class="fas fa-clock"></i> Deverá ser feito hoje: {{ formatar_data(chamado.data_preferencial) }}
                         </div>
-                        {% elif chamado.data_preferencial %}
+                            {% elif chamado.data_preferencial %}
                         <div class="data-destaque-inline data-futura">
                             <i class="fas fa-calendar-alt"></i> {{ formatar_data(chamado.data_preferencial) }}
                         </div>
-                        {% endif %}
+                            {% endif %}
                     </div>
                     <div class="chamado-card-meta">
                         <div class="chamado-card-meta-item">
