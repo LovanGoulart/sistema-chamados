@@ -66,8 +66,11 @@
                     <thead>
                         <tr>
                             <th style="width:50px">ID</th>
-                            <th style="width:130px">Status</th>
-                            <th style="width:130px">Prioridade</th>
+                            {% if current_user.is_admin() %}
+                            <th style="width:120px">Destino</th>
+                            {% endif %}
+                            <th style="width:130px" class="status-col">Status</th>
+                            <th style="width:130px" class="prioridade-col">Prioridade</th>
                             <th style="width:120px">Data</th>
                             <th style="width:25%">Título</th>
                             <th style="width:13%">Local</th>
@@ -80,12 +83,17 @@
                         {% set status_data = verificar_data_destaque(chamado.data_preferencial) %}
                         <tr class="{% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-hoje{% endif %}">
                             <td><a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}">#{{ chamado.id }}</a></td>
+                            {% if current_user.is_admin() %}
                             <td>
+                                <span class="setor-destino">{{ chamado.setor_destino.nome if chamado.setor_destino else '-' }}</span>
+                            </td>
+                            {% endif %}
+                            <td class="status-col">
                                 <span class="badge-status" style="background: {{ get_status_cor(chamado.status.value) }}">
                                     {{ get_status_label(chamado.status.value) }}
                                 </span>
                             </td>
-                            <td>
+                            <td class="prioridade-col">
                                 <span class="badge-prioridade" style="background: {{ get_prioridade_cor(chamado.prioridade.value) }}">
                                     {{ get_prioridade_label(chamado.prioridade.value) }}
                                 </span>
@@ -728,6 +736,20 @@
     }
 }
 
+/* ─── Coluna Setor Destino (apenas admin) ─── */
+.setor-destino {
+    font-size: 0.8rem;
+    color: var(--text-secondary, #718096);
+    background: var(--bg-body, #f8f9fa);
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 100%;
+}
+
 /* ─── Empty state ─── */
 .empty-state {
     text-align: center;
@@ -783,10 +805,10 @@
 }
 
 /* Ajuste width colunas Status e Prioridade */
-.data-table th:nth-child(2),
-.data-table td:nth-child(2),
-.data-table th:nth-child(3),
-.data-table td:nth-child(3) {
+.data-table th.status-col,
+.data-table td.status-col,
+.data-table th.prioridade-col,
+.data-table td.prioridade-col {
     width: 130px;
     min-width: 130px;
 }
