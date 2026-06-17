@@ -58,10 +58,10 @@
                         {% if current_user.is_admin() %}
                         <th style="width:120px">Destino</th>
                         {% endif %}
-                        <th style="width:130px">Status</th>
-                        <th style="width:130px">Prioridade</th>
+                        <th style="width:100px">Status</th>
+                        <th style="width:100px">Prioridade</th>
                         <th style="width:120px">Data</th>
-                        <th style="width:25%">Título</th>
+                        <th style="width:20%">Título</th>
                         <th style="width:15%">Local</th>
                         <th style="width:13%">Responsável</th>
                         <th style="width:70px;text-align:center">Ações</th>
@@ -122,7 +122,7 @@
                             </div>
                             {% endif %}
                         </td>
-                        <td>{{ chamado.local }}</td>
+                        <td style="white-space: normal; word-break: break-word; overflow-wrap: break-word;">{{ chamado.local }}</td>
                         <td>{% if chamado.atendente %}<span class="user-cell"><div class="user-avatar-small">{{ chamado.atendente.nome[0]|upper }}</div><span>{{ chamado.atendente.nome }}</span></span>{% else %}<span class="text-muted"><i class="fas fa-user-clock"></i> Não atribuído</span>{% endif %}</td>
                         <td>
                             <div class="table-actions">
@@ -180,7 +180,7 @@
                 </div>
                 <div class="chamado-card-meta">
                     <div class="chamado-card-meta-item">
-                        <i class="fas fa-map-marker-alt"></i> {{ chamado.local or '-' }}
+                        <i class="fas fa-map-marker-alt"></i> <span style="word-break: break-word; overflow-wrap: break-word;">{{ chamado.local or '-' }}</span>
                     </div>
                     <div class="chamado-card-meta-item">
                         <i class="fas fa-user-check"></i> {{ chamado.atendente.nome if chamado.atendente else "Não atribuído" }}
