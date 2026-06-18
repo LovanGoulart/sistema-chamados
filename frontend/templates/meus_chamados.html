@@ -41,10 +41,10 @@
                 <thead>
                     <tr>
                         <th style="width:50px">ID</th>
-                        <th style="width:130px">Status</th>
-                        <th style="width:130px">Prioridade</th>
+                        <th style="width:100px">Status</th>
+                        <th style="width:100px">Prioridade</th>
                         <th style="width:120px">Data</th>
-                        <th style="width:25%">Título</th>
+                        <th style="width:25%">Descrição</th>
                         <th style="width:15%">Local</th>
                         <th style="width:13%">Destino</th>
                         <th style="width:100px;text-align:center">Ações</th>
@@ -162,14 +162,25 @@
                         <i class="fas fa-map-marker-alt"></i> {{ chamado.local or '-' }}
                     </div>
                     <div class="chamado-card-meta-item">
-                        <i class="fas fa-building"></i> {{ chamado.setor_destino.nome }}
+                        <i class="fas fa-building"></i> {{ chamado.area_patrimonial or 'Não informado' }}
                     </div>
                     <div class="chamado-card-meta-item">
                         <i class="fas fa-calendar"></i> {{ formatar_data(chamado.created_at) }}
                     </div>
+                    <!--<div class="chamado-card-meta-item">
+                            <i class="fas fa-clock"></i> 
+                            {% if chamado.data_preferencial %}
+                                {{ formatar_data(chamado.data_preferencial) }}
+                            {% else %}
+                                Sem previsão
+                            {% endif %}
+                    </div>-->
                 </div>
                 <div class="chamado-card-footer">
-                    <span class="chamado-card-data">{{ formatar_data(chamado.created_at) }}</span>
+                    <div class="chamado-card-meta-item">
+                        <i class="fas fa-building"></i> {{ chamado.setor_destino.nome }}
+                    </div>
+                    <!--<span class="chamado-card-data">{{ formatar_data(chamado.created_at) }}</span>-->
                     <div class="chamado-card-acoes">
                         <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="btn-icon" title="Ver detalhes">
                             <i class="fas fa-eye"></i>
