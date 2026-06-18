@@ -239,20 +239,20 @@
                     <!-- Upload -->
                     {% if chamado.status.value not in ['resolvido', 'fechado'] %}
                     <div class="upload-area-nova">
-                        <form method="POST" action="{{ url_for('main.upload_anexo', chamado_id=chamado.id) }}" enctype="multipart/form-data" id="formUpload">
+                        <form method="POST" action="{{ url_for('main.upload_anexo', chamado_id=chamado.id) }}" enctype="multipart/form-data" id="formUpload" style="max-width:100%;">
                             <div class="upload-botoes">
-                                <label class="btn-upload" for="inputGaleria">
+                                <button type="button" class="btn-upload" onclick="abrirInputFile('galeria')">
                                     <i class="fas fa-images"></i>
                                     <span>Galeria</span>
-                                </label>
-                                <input type="file" name="arquivo" id="inputGaleria" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="display:none;" onchange="previewEEnviar(this)">
+                                </button>
 
-                                <label class="btn-upload btn-camera" for="inputCamera">
+                                <button type="button" class="btn-upload btn-camera" onclick="abrirInputFile('camera')">
                                     <i class="fas fa-camera"></i>
                                     <span>Câmera</span>
-                                </label>
-                                <input type="file" name="arquivo" id="inputCamera" accept="image/*" capture="environment" style="display:none;" onchange="previewEEnviar(this)">
+                                </button>
                             </div>
+                            <!-- Input único, controlado via JS -->
+                            <input type="file" name="arquivo" id="inputAnexo" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="display:none;" onchange="previewEEnviar(this)">
                             <div class="upload-preview" id="uploadPreview"></div>
                         </form>
                     </div>
@@ -945,9 +945,11 @@
 
 .anexos-galeria {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 12px;
     margin-bottom: 16px;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .anexo-card {
@@ -957,6 +959,8 @@
     overflow: hidden;
     cursor: pointer;
     transition: var(--transition);
+    min-width: 0;
+    max-width: 100%;
 }
 
 .anexo-card:hover {
@@ -1029,16 +1033,21 @@
 
 .anexo-info-card {
     padding: 8px 10px;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .anexo-nome-card {
     display: block;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 500;
     color: var(--text-primary);
-    white-space: nowrap;
+    word-break: break-all;
+    overflow-wrap: break-word;
+    line-height: 1.3;
+    max-height: 2.8em;
     overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .anexo-meta-card {
@@ -1061,6 +1070,9 @@
 .upload-area-nova {
     padding-top: 12px;
     border-top: 1px dashed var(--border-color);
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .upload-botoes {
@@ -1118,6 +1130,9 @@
     background: var(--bg-body);
     border-radius: var(--border-radius-sm);
     border: 1px solid var(--border-color);
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .preview-item img {
@@ -1135,9 +1150,9 @@
 .preview-item .preview-nome {
     font-size: 0.8rem;
     font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-all;
+    overflow-wrap: break-word;
+    line-height: 1.3;
 }
 
 .preview-item .preview-acoes {
@@ -1587,6 +1602,18 @@
 
     .anexos-galeria {
         grid-template-columns: repeat(2, 1fr);
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .anexo-card {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .anexo-info-card {
+        max-width: 100%;
+        overflow: hidden;
     }
 
     .upload-botoes {
@@ -1644,6 +1671,18 @@
 @media (max-width: 480px) {
     .anexos-galeria {
         grid-template-columns: repeat(2, 1fr);
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .anexo-card {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .anexo-info-card {
+        max-width: 100%;
+        overflow: hidden;
     }
 
     .mensagem-bubble {
@@ -1895,6 +1934,18 @@ document.addEventListener('keydown', function(e) {
 /* ═══════════════════════════════════════════════════════════════
    PREVIEW E ENVIO DE UPLOAD
    ═══════════════════════════════════════════════════════════════ */
+function abrirInputFile(tipo) {
+    const input = document.getElementById('inputAnexo');
+    if (tipo === 'camera') {
+        input.setAttribute('accept', 'image/*');
+        input.setAttribute('capture', 'environment');
+    } else {
+        input.setAttribute('accept', 'image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt');
+        input.removeAttribute('capture');
+    }
+    input.click();
+}
+
 function previewEEnviar(input) {
     const preview = document.getElementById('uploadPreview');
     const form = document.getElementById('formUpload');
@@ -1937,8 +1988,7 @@ function limparPreview() {
     const preview = document.getElementById('uploadPreview');
     preview.innerHTML = '';
     preview.classList.remove('ativo');
-    document.getElementById('inputGaleria').value = '';
-    document.getElementById('inputCamera').value = '';
+    document.getElementById('inputAnexo').value = '';
 }
 
 /* ═══════════════════════════════════════════════════════════════
