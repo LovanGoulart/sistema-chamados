@@ -270,6 +270,17 @@
                     {% if mensagens %}
                     <div class="mensagens-container" id="mensagensContainer">
                         {% for mensagem in mensagens %}
+                        {% if mensagem.autor and mensagem.autor.nome == 'Assistente de TI' %}
+                        <div class="mensagem-bubble mensagem-bot">
+                            <div class="mensagem-inner">
+                                <div class="mensagem-info">
+                                    <span class="mensagem-autor"><i class="fas fa-robot"></i> {{ mensagem.autor.nome }} <span class="badge-ia">IA</span></span>
+                                    <span class="mensagem-hora">{{ formatar_data(mensagem.created_at) }}</span>
+                                </div>
+                                <p class="mensagem-texto">{{ mensagem.conteudo }}</p>
+                            </div>
+                        </div>
+                        {% else %}
                         <div class="mensagem-bubble {% if mensagem.usuario_id == current_user.id %}mensagem-enviada{% else %}mensagem-recebida{% endif %}">
                             <div class="mensagem-inner">
                                 <div class="mensagem-info">
@@ -279,6 +290,7 @@
                                 <p class="mensagem-texto">{{ mensagem.conteudo }}</p>
                             </div>
                         </div>
+                        {% endif %}
                         {% endfor %}
                     </div>
                     {% else %}
@@ -286,7 +298,7 @@
                         <div class="empty-state small">
                             <i class="fas fa-comment-dots"></i>
                             <p>Nenhuma mensagem ainda</p>
-                            <p class="text-muted">Use o chat abaixo para comunicação com o responsável</p>
+                            <p class="text-muted">O Assistente de TI responde automaticamente. Um atendente humano assumirá se necessário.</p>
                         </div>
                     </div>
                     {% endif %}
@@ -1477,6 +1489,57 @@
 
 .chat-bloqueado i {
     margin-right: 6px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   MENSAGEM DO ASSISTENTE DE TI (BOT/IA)
+   ═══════════════════════════════════════════════════════════════ */
+
+.mensagem-bot {
+    align-self: flex-start;
+    justify-content: flex-start;
+}
+
+.mensagem-bot .mensagem-inner {
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+    color: #1e1b4b;
+    border-radius: 18px 18px 18px 4px;
+    border: 1px solid #d8b4fe;
+    padding: 8px 12px;
+    box-shadow: 0 1px 2px rgba(124, 58, 237, 0.08);
+}
+
+.mensagem-bot .mensagem-autor {
+    color: #7c3aed;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.mensagem-bot .mensagem-autor i {
+    margin-right: 4px;
+}
+
+.badge-ia {
+    background: #7c3aed;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-left: 5px;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+}
+
+.mensagem-bot .mensagem-hora {
+    color: #6b7280;
+    font-size: 11px;
+}
+
+.mensagem-bot .mensagem-texto {
+    color: #1e1b4b;
+    margin: 2px 0 0 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════

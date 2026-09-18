@@ -616,10 +616,10 @@ def atribuir_chamado(chamado_id):
 @main.route('/chamados/<int:chamado_id>/mensagem', methods=['POST'])
 @login_required
 def enviar_mensagem(chamado_id):
-    """Envia uma mensagem em um chamado."""
+    """Envia uma mensagem em um chamado (IA responde em background)."""
     chamado = Chamado.query.get_or_404(chamado_id)
 
-    # NOVA REGRA: Usar função auxiliar de permissão
+    # REGRA: Usar função auxiliar de permissão
     if not pode_enviar_mensagem(chamado):
         flash('Permissão negada.', 'error')
         return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
@@ -632,6 +632,24 @@ def enviar_mensagem(chamado_id):
 
     try:
         MensagemService.enviar_mensagem(chamado_id, current_user.id, conteudo)
+
+        # ──────────────────────────────────────────────────────────
+        # ASSISTENTE DE TI (IA): dispara resposta em THREAD separada,
+        # sem travar o redirect do usuário.
+        # Só responde enquanto o chamado NÃO tiver atendente humano
+        # e a mensagem foi enviada pelo autor do chamado.
+        # ──────────────────────────────────────────────────────────
+        ia_ativa = current_app.config.get('IA_ASSISTENTE_ATIVO', True)
+        chamado_aberto = chamado.status.value not in ['resolvido', 'fechado']
+        remetente_eh_autor = int(current_user.id) == int(chamado.usuario_id)
+
+        if ia_ativa and chamado_aberto and remetente_eh_autor and not chamado.atendente_id:
+            try:
+                from backend.services.ia_service import responder_como_bot_async
+                responder_como_bot_async(chamado_id, conteudo)
+            except Exception as e_ia:
+                current_app.logger.error(f"[IA] Erro ao disparar IA no chamado {chamado_id}: {e_ia}")
+
         flash('Mensagem enviada!', 'success')
     except Exception as e:
         db.session.rollback()
