@@ -1,37 +1,57 @@
-
 import sys
 import os
 import logging
 from logging.handlers import RotatingFileHandler
 from datetime import timedelta
 
+
 # ============================================================
-# GARANTIR QUE A RAIZ DO PROJETO ESTÁ NO PYTHONPATH
+# CAMINHO DA RAIZ DO PROJETO
 # ============================================================
-project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+project_dir = os.path.dirname(
+    os.path.dirname(
+        os.path.abspath(__file__)
+    )
+)
 
 if project_dir not in sys.path:
     sys.path.insert(0, project_dir)
+
 
 """
 Aplicação principal Flask - Sistema de Chamados - Colégio Mauá
 """
 
-from flask import Flask
-from flask_login import LoginManager
 
 # ============================================================
 # CARREGAR VARIÁVEIS DO .env
 # ============================================================
+
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+
+    env_file = os.path.join(
+        project_dir,
+        ".env"
+    )
+
+    load_dotenv(
+        env_file,
+        override=True
+    )
+
 except ImportError:
     pass
+
 
 # ============================================================
 # IMPORTS DO PROJETO
 # ============================================================
+
+from flask import Flask
+from flask_login import LoginManager
+
 from backend.models.modelos import (
     db,
     Usuario,
@@ -51,6 +71,7 @@ from config import config
 # ============================================================
 # FORMATAÇÃO DE TEMPO
 # ============================================================
+
 def formatar_tempo(valor):
     """
     Formata um valor de tempo (float em horas ou timedelta)
@@ -61,10 +82,16 @@ def formatar_tempo(valor):
         return "-"
 
     if isinstance(valor, timedelta):
-        total_segundos = int(valor.total_seconds())
+
+        total_segundos = int(
+            valor.total_seconds()
+        )
 
         horas = total_segundos // 3600
-        minutos = (total_segundos % 3600) // 60
+
+        minutos = (
+            total_segundos % 3600
+        ) // 60
 
         if horas > 0 and minutos > 0:
             return f"{horas}h {minutos:02d}m"
@@ -76,13 +103,17 @@ def formatar_tempo(valor):
             return f"{minutos}m"
 
     try:
+
         horas_total = float(valor)
 
         if horas_total <= 0:
             return "0m"
 
         horas = int(horas_total)
-        minutos = int((horas_total - horas) * 60)
+
+        minutos = int(
+            (horas_total - horas) * 60
+        )
 
         if horas > 0 and minutos > 0:
             return f"{horas}h {minutos:02d}m"
@@ -94,20 +125,25 @@ def formatar_tempo(valor):
             return f"{minutos}m"
 
     except (ValueError, TypeError):
+
         return str(valor)
 
 
 # ============================================================
 # FACTORY DA APLICAÇÃO
 # ============================================================
+
 def criar_app(config_name="default"):
     """Factory de criação da aplicação Flask."""
 
     # ========================================================
     # DIRETÓRIOS PRINCIPAIS
     # ========================================================
+
     base_dir = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
+        os.path.dirname(
+            os.path.abspath(__file__)
+        )
     )
 
     template_dir = os.path.join(
@@ -125,6 +161,7 @@ def criar_app(config_name="default"):
     # ========================================================
     # CRIAR APLICAÇÃO
     # ========================================================
+
     app = Flask(
         __name__,
         template_folder=template_dir,
@@ -134,16 +171,21 @@ def criar_app(config_name="default"):
     # ========================================================
     # CONFIGURAÇÕES
     # ========================================================
-    app.config.from_object(config[config_name])
+
+    app.config.from_object(
+        config[config_name]
+    )
 
     # ========================================================
     # BANCO DE DADOS
     # ========================================================
+
     db.init_app(app)
 
     # ========================================================
     # LOGIN MANAGER
     # ========================================================
+
     login_manager = LoginManager()
 
     login_manager.init_app(app)
@@ -161,19 +203,24 @@ def criar_app(config_name="default"):
         """Carrega o usuário pela ID."""
 
         try:
-            return Usuario.query.get(int(user_id))
+            return Usuario.query.get(
+                int(user_id)
+            )
+
         except (ValueError, TypeError):
             return None
 
     # ========================================================
     # REGISTRAR BLUEPRINTS
     # ========================================================
+
     app.register_blueprint(main)
     app.register_blueprint(api)
 
     # ========================================================
     # DIRETÓRIOS NECESSÁRIOS
     # ========================================================
+
     os.makedirs(
         app.config["UPLOAD_FOLDER"],
         exist_ok=True
@@ -192,6 +239,7 @@ def criar_app(config_name="default"):
     # ========================================================
     # LOGGING
     # ========================================================
+
     if not app.debug:
 
         file_handler = RotatingFileHandler(
@@ -208,34 +256,31 @@ def criar_app(config_name="default"):
             )
         )
 
-        file_handler.setLevel(logging.INFO)
+        file_handler.setLevel(
+            logging.INFO
+        )
 
-        app.logger.addHandler(file_handler)
+        app.logger.addHandler(
+            file_handler
+        )
 
-        app.logger.setLevel(logging.INFO)
+        app.logger.setLevel(
+            logging.INFO
+        )
 
         app.logger.info(
-            "Sistema de Chamados - Colégio Mauá iniciado"
+            "Sistema de Chamados - "
+            "Colégio Mauá iniciado"
         )
 
     # ========================================================
     # NÃO EXECUTAR db.create_all() AUTOMATICAMENTE
     # ========================================================
-    #
-    # O banco chamados.db já existe e contém os dados
-    # do sistema.
-    #
-    # Não devemos recriar ou alterar automaticamente
-    # a estrutura do banco toda vez que o Flask iniciar.
-    #
-    # Caso seja necessário fazer uma alteração estrutural,
-    # ela deve ser feita através de migração específica.
-    #
-    # ========================================================
 
     with app.app_context():
+
         try:
-            # Apenas testa a conexão com o banco.
+
             db.session.execute(
                 db.text("SELECT 1")
             )
@@ -243,7 +288,8 @@ def criar_app(config_name="default"):
             db.session.rollback()
 
             print(
-                "Banco de dados conectado com sucesso."
+                "Banco de dados conectado "
+                "com sucesso."
             )
 
         except Exception as erro:
@@ -251,13 +297,14 @@ def criar_app(config_name="default"):
             db.session.rollback()
 
             print(
-                f"AVISO: não foi possível testar "
+                "AVISO: não foi possível testar "
                 f"a conexão com o banco: {erro}"
             )
 
     # ========================================================
     # CONTEXT PROCESSOR
     # ========================================================
+
     @app.context_processor
     def inject_utilities():
 
@@ -286,12 +333,14 @@ def criar_app(config_name="default"):
     # ========================================================
     # RETORNAR A APLICAÇÃO
     # ========================================================
+
     return app
 
 
 # ============================================================
 # CRIAR APLICAÇÃO
 # ============================================================
+
 app = criar_app(
     os.environ.get(
         "FLASK_ENV",
@@ -303,6 +352,7 @@ app = criar_app(
 # ============================================================
 # EXECUÇÃO DIRETA
 # ============================================================
+
 if __name__ == "__main__":
 
     app.run(

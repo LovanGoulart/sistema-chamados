@@ -1,4 +1,3 @@
-
 """
 Configurações da aplicação Sistema de Chamados - Colégio Mauá
 """
@@ -29,16 +28,19 @@ class Config:
     # BANCO DE DADOS
     # ==========================================================
 
-    DATABASE_DIR = os.path.join(BASE_DIR, "database")
+    DATABASE_DIR = os.path.join(
+        BASE_DIR,
+        "database"
+    )
 
-    # O caminho é convertido para absoluto.
-    # Isso evita problemas quando o projeto é executado
-    # a partir de uma pasta diferente.
-    DATABASE_FILE = os.path.join(DATABASE_DIR, "chamados.db")
+    DATABASE_FILE = os.path.join(
+        DATABASE_DIR,
+        "chamados.db"
+    )
 
     SQLALCHEMY_DATABASE_URI = (
         os.environ.get("DATABASE_URL")
-        or "sqlite:///" + DATABASE_FILE
+        or f"sqlite:///{DATABASE_FILE}"
     )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -47,7 +49,9 @@ class Config:
     # SESSÃO
     # ==========================================================
 
-    PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
+    PERMANENT_SESSION_LIFETIME = timedelta(
+        hours=8
+    )
 
     # ==========================================================
     # UPLOADS
@@ -60,7 +64,7 @@ class Config:
         "uploads"
     )
 
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB
 
     ALLOWED_EXTENSIONS = {
         "png",
@@ -96,24 +100,52 @@ class Config:
     # ASSISTENTE DE TI - IA
     # ==========================================================
 
+    # true  = assistente ativo
+    # false = assistente desativado
     IA_ASSISTENTE_ATIVO = (
-        os.environ.get("IA_ASSISTENTE_ATIVO", "true").lower() == "true"
+        os.environ.get(
+            "IA_ASSISTENTE_ATIVO",
+            "true"
+        ).strip().lower() == "true"
     )
+
+    # ----------------------------------------------------------
+    # API GEMINI
+    # ----------------------------------------------------------
+    #
+    # Endpoint oficial compatível com OpenAI.
+    #
+    # IMPORTANTE:
+    # A URL deve ser somente a URL.
+    # Não utilizar Markdown, colchetes ou parênteses.
+    #
 
     IA_API_URL = os.environ.get(
         "IA_API_URL",
-        "https://api.moonshot.ai/v1/chat/completions"
-    )
+        "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+    ).strip()
 
-    # IMPORTANTE:
+    # ----------------------------------------------------------
+    # CHAVE DA API
+    # ----------------------------------------------------------
+    #
+    # A chave deve ficar no .env ou nas variáveis de ambiente.
     # Nunca coloque a chave diretamente neste arquivo.
-    # Use variável de ambiente ou arquivo .env.
-    IA_API_KEY = os.environ.get("IA_API_KEY", "")
+    #
+
+    IA_API_KEY = os.environ.get(
+        "IA_API_KEY",
+        ""
+    ).strip()
+
+    # ----------------------------------------------------------
+    # MODELO GEMINI
+    # ----------------------------------------------------------
 
     IA_MODEL = os.environ.get(
         "IA_MODEL",
-        "moonshot-v1-8k"
-    )
+        "gemini-3.1-flash-lite"
+    ).strip()
 
 
 class DevelopmentConfig(Config):
@@ -133,4 +165,3 @@ config = {
     "production": ProductionConfig,
     "default": DevelopmentConfig
 }
-
