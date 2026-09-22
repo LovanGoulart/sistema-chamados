@@ -103,3 +103,21 @@ CREATE INDEX IF NOT EXISTS idx_chamados_created ON chamados(created_at);
 CREATE INDEX IF NOT EXISTS idx_mensagens_chamado ON mensagens(chamado_id);
 CREATE INDEX IF NOT EXISTS idx_notificacoes_usuario ON notificacoes(usuario_id, lida);
 CREATE INDEX IF NOT EXISTS idx_logs_created ON logs_operacoes(created_at);
+
+
+-- ══════════════════════════════════════════════════════════
+-- CHAT GERAL COM ASSISTENTE VIRTUAL (sem necessidade de chamado)
+-- Execute este SQL uma única vez no banco (sqlite3 chamados.db)
+-- ou delete o chamados.db e deixe o sistema recriar (perde dados!)
+-- ══════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS chat_assistente_mensagens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL,
+    origem VARCHAR(10) NOT NULL DEFAULT 'usuario',  -- 'usuario' | 'bot'
+    conteudo TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_assistente_usuario ON chat_assistente_mensagens(usuario_id, created_at);
