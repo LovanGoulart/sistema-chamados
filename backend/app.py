@@ -217,6 +217,10 @@ def criar_app(config_name="default"):
     app.register_blueprint(main)
     app.register_blueprint(api)
 
+    from backend.routes.assistente import assistente_bp
+# ...depois dos outros register_blueprint:
+    app.register_blueprint(assistente_bp)
+
     # ========================================================
     # DIRETÓRIOS NECESSÁRIOS
     # ========================================================

@@ -4116,3 +4116,10 @@ a:hover {
         font-size: 0.75rem;
     }
 }
+
+.chatwa-bot .chatwa-bubble {
+    text-align: left;
+    padding: 8px 12px;
+    border-radius: 8px;
+    word-wrap: break-word; /* Evita que palavras muito longas quebrem o layout */
+}
