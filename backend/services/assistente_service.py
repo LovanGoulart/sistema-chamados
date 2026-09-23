@@ -46,6 +46,386 @@ from backend.models.modelos import (
     StatusChamado,
 )
 
+# ============================================================
+# RAMAIS E CONTATOS INTERNOS DA ESCOLA
+# ============================================================
+
+RAMAIS_ESCOLA = [
+    {
+        "setor": "Assessor Pedagógico",
+        "responsavel": "Valdomiro",
+        "ramal": "250"
+    },
+    {
+        "setor": "Assistente Social",
+        "responsavel": "Sandra",
+        "ramal": "213",
+        "telefone": "30568318"
+    },
+    {
+        "setor": "Atendimento Especial AEE",
+        "responsaveis": ["Martiela", "Kelli"],
+        "ramal": "216"
+    },
+    {
+        "setor": "Bar e Restaurante",
+        "local": "Prédio 1",
+        "ramal": "232",
+        "telefone": "30568311"
+    },
+    {
+        "setor": "Bar",
+        "local": "Prédio 5",
+        "ramal": "270"
+    },
+    {
+        "setor": "Biblioteca Ensino Fundamental",
+        "local": "Prédio 3",
+        "responsaveis": ["Graziela", "Bruna"],
+        "ramal": "208"
+    },
+    {
+        "setor": "Biblioteca Principal",
+        "local": "Prédio 1",
+        "responsaveis": ["Caroline", "Katiele"],
+        "ramal": "214",
+        "telefone": "30568306"
+    },
+    {
+        "setor": "Centro de Convivências II",
+        "ramal": "218"
+    },
+    {
+        "setor": "Coordenação de Idiomas e Currículo Bilíngue",
+        "responsavel": "Fernanda Zubaran",
+        "ramal": "254"
+    },
+    {
+        "setor": "Coordenação do Turno Integral",
+        "local": "Prédio 4",
+        "responsaveis": ["Maria Luiza Cardoso", "Carolina"],
+        "ramal": "247"
+    },
+    {
+        "setor": "Coordenação Pedagógica",
+        "segmento": "1º aos 4º anos",
+        "local": "Prédio 3",
+        "responsavel": "Bruna Uhry",
+        "ramal": "239"
+    },
+    {
+        "setor": "Coordenação Pedagógica",
+        "segmento": "1º aos 4º anos",
+        "local": "Prédio 3",
+        "responsavel": "Maribel",
+        "ramal": "246"
+    },
+    {
+        "setor": "Coordenação Pedagógica",
+        "segmento": "5º e 6º anos",
+        "local": "Prédio 3",
+        "responsavel": "Fabiana",
+        "ramal": "263"
+    },
+    {
+        "setor": "Coordenação Pedagógica",
+        "segmento": "7º aos 9º anos",
+        "local": "Prédio 1",
+        "responsavel": "Rafael Fetter",
+        "ramal": "241"
+    },
+    {
+        "setor": "Coordenação Pedagógica",
+        "segmento": "Ensino Médio",
+        "local": "Prédio 5",
+        "responsavel": "Waldy Lau",
+        "ramal": "267"
+    },
+    {
+        "setor": "Coordenação Pedagógica",
+        "segmento": "Ensino Médio",
+        "local": "Prédio 5",
+        "responsavel": "Samuel Raschen",
+        "ramal": "268"
+    },
+    {
+        "setor": "Coordenação Pedagógica",
+        "segmento": "Educação Infantil",
+        "local": "Prédio 2",
+        "responsaveis": ["Maristela", "Thaís"],
+        "ramal": "206"
+    },
+    {
+        "setor": "Coordenação de Serviços de Apoio",
+        "responsavel": "Tisa Marx",
+        "ramal": "242"
+    },
+    {
+        "setor": "Cozinha / Zeladores",
+        "local": "Prédio 1",
+        "ramal": "210"
+    },
+    {
+        "setor": "Cozinha",
+        "segmento": "Ensino Fundamental - 1º aos 6º anos",
+        "local": "Prédio 3",
+        "ramal": "248"
+    },
+    {
+        "setor": "Cozinha",
+        "segmento": "Educação Infantil",
+        "local": "Prédio 2",
+        "ramal": "211"
+    },
+    {
+        "setor": "Cozinha",
+        "segmento": "Ensino Médio",
+        "local": "Prédio 5",
+        "ramal": "264"
+    },
+    {
+        "setor": "Departamento de Informática",
+        "responsaveis": ["Paulo", "Lovan", "Douglas"],
+        "ramal": "223",
+        "telefone": "30568323"
+    },
+    {
+        "setor": "Departamento de Informática",
+        "responsavel": "Cezar",
+        "ramal": "225"
+    },
+    {
+        "setor": "Diretor",
+        "responsavel": "Nestor",
+        "ramal": "219"
+    },
+    {
+        "setor": "Escola de Música",
+        "ramal": "237",
+        "telefone": "30568319"
+    },
+    {
+        "setor": "Ginásio de Esportes",
+        "ramal": "207"
+    },
+    {
+        "setor": "Guarita",
+        "local": "Ginásio",
+        "ramal": "224"
+    },
+    {
+        "setor": "Guarita",
+        "local": "Principal",
+        "ramal": "228"
+    },
+    {
+        "setor": "Guarita",
+        "segmento": "Ensino Fundamental - 1º aos 6º anos",
+        "local": "Prédio 3",
+        "ramal": "205",
+        "telefone": "30568312"
+    },
+    {
+        "setor": "Informática",
+        "segmento": "Ensino Fundamental",
+        "responsavel": "Caroline Kumm",
+        "ramal": "212"
+    },
+    {
+        "setor": "Laboratório de Biologia, Física e Química",
+        "local": "Prédio 1",
+        "responsaveis": ["Sofia", "Odhara"],
+        "ramal": "222"
+    },
+    {
+        "setor": "Laboratório de Química",
+        "local": "Prédio 5",
+        "responsavel": "Sofia",
+        "ramal": "271"
+    },
+    {
+        "setor": "Marcenaria",
+        "responsavel": "Felipe",
+        "ramal": "229"
+    },
+    {
+        "setor": "Psicóloga",
+        "segmento": "7º aos 9º anos - Ensino Fundamental",
+        "local": "Prédio 1",
+        "responsavel": "Gabriela",
+        "ramal": "209",
+        "telefone": "30568314"
+    },
+    {
+        "setor": "Psicologia",
+        "segmento": "Educação Infantil e 1º aos 4º anos",
+        "responsavel": "Fernanda",
+        "ramal": "244"
+    },
+    {
+        "setor": "Psicóloga",
+        "segmento": "5º e 6º anos - Ensino Fundamental",
+        "local": "Prédio 3",
+        "responsavel": "Betina",
+        "ramal": "244"
+    },
+    {
+        "setor": "Psicologia",
+        "segmento": "Ensino Médio",
+        "local": "Prédio 5",
+        "responsavel": "Gabriela",
+        "ramal": "269"
+    },
+    {
+        "setor": "Recepção",
+        "segmento": "1º aos 6º anos",
+        "local": "Prédio 3",
+        "responsavel": "Luiza",
+        "ramal": "236",
+        "telefone": "30568302"
+    },
+    {
+        "setor": "Recepção",
+        "segmento": "1º aos 6º anos",
+        "local": "Prédio 3",
+        "responsavel": "Paula",
+        "ramal": "249"
+    },
+    {
+        "setor": "Recepção",
+        "segmento": "Educação Infantil",
+        "local": "Prédio 2",
+        "responsavel": "Gabriela",
+        "ramal": "230",
+        "telefone": "30568301"
+    },
+    {
+        "setor": "Recepção",
+        "local": "Prédio Principal",
+        "responsavel": "Manoela",
+        "ramal": "202",
+        "telefone": "30568300"
+    },
+    {
+        "setor": "Recepção",
+        "local": "Prédio Principal",
+        "responsavel": "Milena",
+        "ramal": "200"
+    },
+    {
+        "setor": "Recepção Mauá Idiomas",
+        "responsavel": "Virgínia",
+        "ramal": "253"
+    },
+    {
+        "setor": "Recepção",
+        "segmento": "Ensino Médio",
+        "local": "Prédio 5",
+        "responsavel": "Pâmela",
+        "ramal": "266"
+    },
+    {
+        "setor": "Sala de Reuniões",
+        "ramal": "231"
+    },
+    {
+        "setor": "Sala dos Professores",
+        "local": "Turno Integral - Prédio 4",
+        "ramal": "227"
+    },
+    {
+        "setor": "Sala dos Professores",
+        "local": "Geral - Prédio 1",
+        "ramal": "226"
+    },
+    {
+        "setor": "Sala dos Professores",
+        "local": "Ensino Médio - Prédio 5",
+        "ramal": "265"
+    },
+    {
+        "setor": "Secretaria",
+        "responsavel": "Luana",
+        "ramal": "201",
+        "telefone": "30568309"
+    },
+    {
+        "setor": "Secretaria",
+        "responsavel": "Eliane",
+        "ramal": "203"
+    },
+    {
+        "setor": "Teatro",
+        "local": "Cabine de Som e Luz",
+        "responsaveis": ["Michael", "Rodrigo"],
+        "ramal": "221",
+        "telefone": "30568313"
+    },
+    {
+        "setor": "Teatro",
+        "local": "Palco",
+        "ramal": "220"
+    },
+    {
+        "setor": "Teatro",
+        "local": "Secretaria",
+        "ramal": "234"
+    },
+    {
+        "setor": "Tesouraria e RH",
+        "responsavel": "Daniela",
+        "ramal": "204",
+        "telefone": "30568322"
+    },
+    {
+        "setor": "Tesouraria e RH",
+        "responsavel": "Ellen",
+        "ramal": "243"
+    },
+    {
+        "setor": "Tesouraria e RH",
+        "responsavel": "Loiva",
+        "ramal": "217"
+    },
+    {
+        "setor": "Tesouraria e RH",
+        "responsavel": "Tânia",
+        "ramal": "238"
+    },
+    {
+        "setor": "Turno Integral",
+        "segmento": "1º ano",
+        "ramal": "255"
+    },
+    {
+        "setor": "Turno Integral",
+        "segmento": "2º, 3º e 5º ano",
+        "ramal": "245"
+    },
+    {
+        "setor": "Turno Integral",
+        "segmento": "4º ano",
+        "ramal": "256",
+        "telefone": "30568303"
+    },
+    {
+        "setor": "Turno Integral",
+        "segmento": "Educação Infantil",
+        "ramal": "240",
+        "telefone": "30568304"
+    },
+    {
+        "setor": "Vice-Diretor",
+        "responsavel": "Mártin",
+        "ramal": "215"
+    },
+    {
+        "setor": "Xerox",
+        "responsavel": "Lucinara",
+        "ramal": "233",
+        "telefone": "30568307"
+    }
+]
 
 # ============================================================
 # PROMPT EXCLUSIVO DO ASSISTENTE VIRTUAL GERAL
@@ -211,6 +591,84 @@ COMO RESPONDER PERGUNTAS
     respondida pelo assistente.
 
 14. Não peça informações desnecessárias.
+
+============================================================
+RAMAL E CONTATOS INTERNOS
+============================================================
+
+O sistema possui uma base estruturada de ramais e contatos internos
+do Colégio Mauá.
+
+Quando o usuário perguntar sobre:
+
+- ramal;
+- telefone;
+- pessoa;
+- setor;
+- recepção;
+- secretaria;
+- local;
+- prédio;
+- responsável;
+- onde encontrar determinado setor;
+
+utilize o bloco "CONTATOS INTERNOS ENCONTRADOS" fornecido pelo sistema.
+
+REGRAS OBRIGATÓRIAS:
+
+1. Nunca invente um ramal ou telefone.
+
+2. Nunca altere um número fornecido pelo sistema.
+
+3. Se houver um contato correspondente, informe diretamente o ramal.
+
+4. Se houver telefone cadastrado e ele for pertinente à pergunta,
+   informe também.
+
+5. Se houver mais de uma pessoa ou contato correspondente,
+   informe todas as opções relevantes.
+
+6. Quando houver diferença de prédio, segmento ou local,
+   deixe essa diferença clara.
+
+7. Se nenhum contato for fornecido pelo sistema para a pergunta,
+   diga que não possui essa informação.
+
+8. Não utilize conhecimento geral da IA para criar ou completar
+   um ramal.
+
+9. A base de contatos internos fornecida pelo sistema tem prioridade
+   sobre qualquer conhecimento externo.
+
+10. Não recomende abertura de chamado apenas porque o usuário
+    perguntou por um contato.
+
+Exemplos:
+
+Usuário:
+"Qual o ramal do Cezar?"
+
+Resposta:
+"O ramal do Cezar, da Informática, é 225."
+
+Usuário:
+"Qual o telefone da biblioteca principal?"
+
+Resposta:
+"A Biblioteca Principal, no Prédio 1, atende pelo ramal 214 e
+telefone 30568306."
+
+Usuário:
+"Qual o ramal da informática?"
+
+Se houver mais de um contato relevante:
+"Há dois contatos relacionados à Informática:
+- Departamento de Informática: ramal 223
+- Cezar: ramal 225
+
+Para Informática do Ensino Fundamental, o ramal é 212."
+
+Não invente contatos que não estejam no bloco fornecido.
 
 ============================================================
 COMO LIDAR COM PROBLEMAS
@@ -538,9 +996,33 @@ Evite responder sempre:
 
 O chamado deve ser recomendado somente quando realmente necessário.
 
+
+============================================================
+FORMATAÇÃO DE TEXTO
+============================================================
+
+NÃO use formatação Markdown.
+
+Proibido:
+- **texto** ou __texto__ (negrito)
+- *texto* ou _texto_ (itálico)
+- # ## ### (títulos)
+- - ou * (listas com marcadores)
+- `codigo` (código inline)
+
+Escreva texto simples, direto, sem símbolos de formatação.
+
+Para listas, use:
+1. Item um
+2. Item dois
+3. Item três
+
+Ou escreva em linhas separadas sem símbolos especiais.
+
 ============================================================
 REGRA PRINCIPAL
 ============================================================
+
 
 Você é um ASSISTENTE GERAL do Colégio Mauá.
 
@@ -798,11 +1280,32 @@ SETOR
 Escolha somente entre os setores abaixo quando houver evidência:
 
 - Informática
-- Manutenção
 - Marcenaria
-- Limpeza
 - Serviço de Apoio
-- Administração
+- Teatro
+
+Não invente outros setores.
+
+Exemplos:
+
+computador, internet, Wi-Fi, impressora, projetor,
+sistema, senha, rede:
+Informática
+
+mesa, cadeira, armário, móvel, prateleira,
+reparo em madeira:
+Marcenaria
+
+movimentação de materiais, organização de ambientes,
+apoio operacional e demandas gerais de apoio:
+Serviço de Apoio
+
+palco, cabine de som, iluminação do teatro,
+equipamentos e estrutura do teatro:
+Teatro
+
+Se não houver evidência suficiente para identificar o setor,
+deixe o campo "setor" vazio.
 
 Se não houver segurança suficiente, deixe vazio.
 
@@ -1245,7 +1748,13 @@ def _consultar_gemini(
 # ============================================================
 
 def responder_ia_geral(pergunta: str, historico=None) -> str:
-    """Consulta o Assistente Virtual utilizando o histórico."""
+    """
+    Consulta o Assistente Virtual utilizando o histórico.
+
+    Também injeta automaticamente os contatos internos relevantes
+    quando a pergunta envolver ramais, telefones, pessoas, setores
+    ou locais da escola.
+    """
 
     contents = []
 
@@ -1282,12 +1791,43 @@ def responder_ia_geral(pergunta: str, historico=None) -> str:
                 }
             )
 
+    # ========================================================
+    # CONTATOS INTERNOS
+    # ========================================================
+
+    contexto_ramais = _obter_contexto_ramais(
+        pergunta
+    )
+
+    pergunta_com_contexto = f"""
+PERGUNTA ATUAL DO USUÁRIO:
+
+{pergunta}
+
+============================================================
+CONTEXTO DE CONTATOS INTERNOS
+============================================================
+
+{contexto_ramais}
+
+============================================================
+FIM DO CONTEXTO DE CONTATOS
+============================================================
+
+Responda à pergunta do usuário normalmente.
+
+Se a pergunta for sobre ramal, telefone, pessoa, setor ou local,
+utilize os contatos fornecidos acima.
+
+Não invente informações.
+"""
+
     contents.append(
         {
             "role": "user",
             "parts": [
                 {
-                    "text": pergunta
+                    "text": pergunta_com_contexto
                 }
             ]
         }
@@ -1298,7 +1838,6 @@ def responder_ia_geral(pergunta: str, historico=None) -> str:
         contents,
         max_output_tokens=500
     )
-
 
 # ============================================================
 # UTILITÁRIOS DE TEXTO
@@ -1342,6 +1881,239 @@ def _normalizar_texto(texto):
 
     return texto.translate(substituicoes)
 
+# ============================================================
+# BUSCA DE RAMAIS E CONTATOS
+# ============================================================
+
+def _buscar_ramais(pergunta):
+    """
+    Busca contatos internos relacionados à pergunta do usuário.
+
+    A busca é determinística e utiliza somente os dados cadastrados
+    em RAMAIS_ESCOLA.
+
+    Retorna uma lista de contatos relevantes.
+    """
+
+    pergunta_normalizada = _normalizar_texto(
+        pergunta
+    )
+
+    if not pergunta_normalizada:
+        return []
+
+    palavras = [
+        palavra
+        for palavra in re.findall(
+            r"[a-z0-9]+",
+            pergunta_normalizada
+        )
+        if len(palavra) >= 2
+    ]
+
+    palavras_ignoradas = {
+        "qual",
+        "quais",
+        "ramal",
+        "ramais",
+        "telefone",
+        "numero",
+        "da",
+        "do",
+        "de",
+        "dos",
+        "das",
+        "o",
+        "a",
+        "os",
+        "as",
+        "um",
+        "uma",
+        "me",
+        "passa",
+        "pode",
+        "informar",
+        "informar",
+        "contato",
+        "contatos",
+        "onde",
+        "falar",
+        "falo",
+        "com"
+    }
+
+    palavras = [
+        palavra
+        for palavra in palavras
+        if palavra not in palavras_ignoradas
+    ]
+
+    resultados = []
+
+    for contato in RAMAIS_ESCOLA:
+
+        campos_busca = []
+
+        for chave in (
+            "setor",
+            "local",
+            "segmento",
+            "responsavel",
+            "ramal",
+            "telefone"
+        ):
+            valor = contato.get(chave)
+
+            if valor:
+                campos_busca.append(
+                    str(valor)
+                )
+
+        responsaveis = contato.get(
+            "responsaveis",
+            []
+        )
+
+        if responsaveis:
+            campos_busca.extend(
+                str(nome)
+                for nome in responsaveis
+            )
+
+        texto_busca = _normalizar_texto(
+            " ".join(campos_busca)
+        )
+
+        if not texto_busca:
+            continue
+
+        pontuacao = 0
+
+        # Correspondência exata da frase/pergunta
+        if (
+            pergunta_normalizada
+            and pergunta_normalizada in texto_busca
+        ):
+            pontuacao += 10
+
+        # Correspondência por palavras
+        for palavra in palavras:
+
+            if palavra in texto_busca:
+                pontuacao += 2
+
+        if pontuacao > 0:
+
+            resultados.append(
+                (
+                    pontuacao,
+                    contato
+                )
+            )
+
+    # Ordena do mais relevante para o menos relevante
+    resultados.sort(
+        key=lambda item: item[0],
+        reverse=True
+    )
+
+    # Evita mandar dezenas de contatos para a IA
+    return [
+        contato
+        for _, contato in resultados[:5]
+    ]
+
+
+def _formatar_contato(contato):
+    """Formata um contato para ser enviado à IA."""
+
+    linhas = []
+
+    setor = contato.get("setor")
+
+    if setor:
+        linhas.append(
+            f"Setor: {setor}"
+        )
+
+    segmento = contato.get("segmento")
+
+    if segmento:
+        linhas.append(
+            f"Segmento: {segmento}"
+        )
+
+    local = contato.get("local")
+
+    if local:
+        linhas.append(
+            f"Local: {local}"
+        )
+
+    responsavel = contato.get("responsavel")
+
+    if responsavel:
+        linhas.append(
+            f"Responsável: {responsavel}"
+        )
+
+    responsaveis = contato.get("responsaveis")
+
+    if responsaveis:
+        linhas.append(
+            "Responsáveis: "
+            + ", ".join(responsaveis)
+        )
+
+    ramal = contato.get("ramal")
+
+    if ramal:
+        linhas.append(
+            f"Ramal: {ramal}"
+        )
+
+    telefone = contato.get("telefone")
+
+    if telefone:
+        linhas.append(
+            f"Telefone: {telefone}"
+        )
+
+    return "\n".join(linhas)
+
+
+def _obter_contexto_ramais(pergunta):
+    """
+    Retorna somente os contatos relevantes para a pergunta.
+
+    Se não houver correspondência, retorna uma instrução explícita
+    para a IA não inventar informações.
+    """
+
+    contatos = _buscar_ramais(
+        pergunta
+    )
+
+    if not contatos:
+        return (
+            "NENHUM CONTATO INTERNO FOI ENCONTRADO "
+            "PARA ESTA PERGUNTA.\n"
+            "Não invente ramal, telefone, pessoa ou setor."
+        )
+
+    blocos = []
+
+    for contato in contatos:
+        blocos.append(
+            _formatar_contato(
+                contato
+            )
+        )
+
+    return (
+        "CONTATOS INTERNOS ENCONTRADOS:\n\n"
+        + "\n\n---\n\n".join(blocos)
+    )
 
 # ============================================================
 # IDENTIFICAÇÃO DE PEDIDO DE CHAMADO
@@ -1449,17 +2221,174 @@ def _usuario_cancelou(texto):
 # IDENTIFICAÇÃO DE SETOR
 # ============================================================
 
-def _identificar_setor(texto):
-    """Tenta identificar setor como fallback."""
+# ============================================================
+# REFERÊNCIAS E APELIDOS DOS SETORES
+# ============================================================
 
-    texto = _normalizar_texto(texto)
+# Termos que o usuário pode utilizar para se referir a um setor.
+# Os nomes oficiais continuam vindo do banco de dados.
+ALIASES_SETORES = {
+    "tisa": "servico de apoio",
+    "servico de apoio": "servico de apoio",
+    "setor de apoio": "servico de apoio",
+    "apoio": "servico de apoio",
+    "zeladora": "servico de apoio",
+    "zeladoras": "servico de apoio",
+
+    "ti": "informatica",
+    "informatica": "informatica",
+    "suporte de ti": "informatica",
+    "suporte de informatica": "informatica",
+    "setor de informatica": "informatica",
+
+    "marcenaria": "marcenaria",
+    "marceneiro": "marcenaria",
+    "marceneiros": "marcenaria",
+
+    "teatro": "teatro",
+}
+
+
+# Pessoas associadas aos setores.
+#
+# IMPORTANTE:
+# Rodrigo aparece em dois setores. Por isso o código não deve
+# escolher um setor apenas porque encontrou "Rodrigo".
+RESPONSAVEIS_SETORES = {
+    "informatica": [
+        "lovan",
+        "paulo",
+        "douglas",
+    ],
+
+    "marcenaria": [
+        "felipe",
+        "flavio",
+        "rodrigo",
+        "jair",
+        "erineo",
+    ],
+
+    "teatro": [
+        "michael",
+        "rodrigo",
+    ],
+
+    "servico de apoio": [
+        "tisa",
+        "zeladora",
+        "zeladoras",
+    ],
+}
+
+def _identificar_setor(texto):
+    """
+    Tenta identificar o setor responsável analisando o contexto
+    informado pelo usuário.
+
+    A identificação considera:
+    - nomes/apelidos dos setores;
+    - funcionários;
+    - características do problema;
+    - contexto do local;
+    - palavras relacionadas ao serviço.
+
+    Se houver ambiguidade, retorna None em vez de escolher
+    um setor incorretamente.
+    """
+
+    texto_normalizado = _normalizar_texto(texto)
+
+    if not texto_normalizado:
+        return None
+
+    # ========================================================
+    # 1. ALIASES EXPLÍCITOS DE SETOR
+    # ========================================================
+
+    # Primeiro verificamos expressões mais específicas.
+    aliases_ordenados = sorted(
+        ALIASES_SETORES.items(),
+        key=lambda item: len(item[0]),
+        reverse=True
+    )
+
+    for alias, setor_normalizado in aliases_ordenados:
+        if alias in texto_normalizado:
+
+            setor = _obter_setor_por_nome(
+                setor_normalizado
+            )
+
+            if setor:
+                current_app.logger.info(
+                    "[CHAT-IA] Setor identificado por alias | "
+                    "termo=%r | setor=%s | setor_id=%s",
+                    alias,
+                    setor.nome,
+                    setor.id
+                )
+
+                return setor
+
+    # ========================================================
+    # 2. IDENTIFICAÇÃO POR FUNCIONÁRIO
+    # ========================================================
+
+    setores_por_pessoa = []
+
+    for setor_nome, pessoas in RESPONSAVEIS_SETORES.items():
+
+        for pessoa in pessoas:
+
+            pessoa_normalizada = _normalizar_texto(
+                pessoa
+            )
+
+            if pessoa_normalizada in texto_normalizado:
+
+                setor = _obter_setor_por_nome(
+                    setor_nome
+                )
+
+                if setor and setor not in setores_por_pessoa:
+                    setores_por_pessoa.append(setor)
+
+    # Uma única possibilidade é segura.
+    if len(setores_por_pessoa) == 1:
+
+        setor = setores_por_pessoa[0]
+
+        current_app.logger.info(
+            "[CHAT-IA] Setor identificado por funcionário | "
+            "setor=%s | setor_id=%s",
+            setor.nome,
+            setor.id
+        )
+
+        return setor
+
+    # Se encontrou mais de um setor para a mesma pessoa,
+    # não escolhemos aleatoriamente.
+    #
+    # Exemplo:
+    # Rodrigo -> Marcenaria + Teatro
+    #
+    # Nesse caso continuamos analisando o contexto abaixo.
+
+    # ========================================================
+    # 3. REGRAS RELACIONADAS AO PROBLEMA
+    # ========================================================
 
     regras = {
         "Informática": [
             "computador",
+            "computadores",
             "notebook",
+            "notebooks",
             "internet",
             "wifi",
+            "wi fi",
             "wi-fi",
             "impressora",
             "impressao",
@@ -1468,74 +2397,290 @@ def _identificar_setor(texto):
             "email",
             "e-mail",
             "senha",
+            "senhas",
             "rede",
             "monitor",
             "teclado",
-            "mouse"
-        ],
-
-        "Manutenção": [
-            "tomada",
-            "lampada",
-            "luz",
-            "ar condicionado",
-            "ar-condicionado",
-            "torneira",
-            "porta",
-            "eletrica",
-            "vazamento",
-            "parede"
+            "mouse",
+            "computacao",
+            "computador nao liga",
+            "computador não liga",
         ],
 
         "Marcenaria": [
             "mesa",
             "cadeira",
             "armario",
+            "armário",
             "moveis",
+            "móveis",
+            "movel",
+            "móvel",
             "prateleira",
-            "madeira"
-        ],
-
-        "Limpeza": [
-            "limpeza",
-            "sujo",
-            "sujeira",
-            "lixo",
-            "higiene"
+            "madeira",
+            "porta",
+            "mobiliario",
+            "mobiliário",
+            "gaveta",
+            "banco",
+            "estante",
+            "marcenaria",
+            "marceneiro",
         ],
 
         "Serviço de Apoio": [
             "apoio",
+            "tisa",
+            "zeladora",
+            "zeladoras",
             "material",
             "organizar sala",
             "organizacao da sala",
+            "organização da sala",
             "movimentar",
-            "mover material"
+            "mover material",
+            "limpeza",
+            "limpar",
+            "lixo",
+            "higiene",
+            "arrumar sala",
+            "arrumacao da sala",
+            "arrumação da sala",
+        ],
+
+        "Teatro": [
+            "teatro",
+            "palco",
+            "cabine de som",
+            "som e luz",
+            "iluminacao do teatro",
+            "iluminação do teatro",
+            "microfone",
+            "mesa de som",
+            "projecao do teatro",
+            "projeção do teatro",
+            "luz do teatro",
+            "som do teatro",
         ]
     }
 
+    setores_encontrados = []
+
     for setor_nome, palavras in regras.items():
 
-        if any(
-            palavra in texto
-            for palavra in palavras
-        ):
+        for palavra in palavras:
 
-            setor = (
-                Setor.query
-                .filter(
-                    db.func.lower(Setor.nome)
-                    == setor_nome.lower()
-                )
-                .first()
+            palavra_normalizada = _normalizar_texto(
+                palavra
             )
 
-            if setor:
-                return setor
+            if palavra_normalizada in texto_normalizado:
+
+                setor = _obter_setor_por_nome(
+                    setor_nome
+                )
+
+                if setor and setor not in setores_encontrados:
+                    setores_encontrados.append(setor)
+
+                break
+
+    # ========================================================
+    # 4. RESOLVER COM BASE NO CONTEXTO
+    # ========================================================
+
+    # Se só existe um setor possível, podemos usar.
+    if len(setores_encontrados) == 1:
+
+        setor = setores_encontrados[0]
+
+        current_app.logger.info(
+            "[CHAT-IA] Setor identificado pelo contexto | "
+            "setor=%s | setor_id=%s",
+            setor.nome,
+            setor.id
+        )
+
+        return setor
+
+    # Se temos um funcionário ambíguo (ex.: Rodrigo), mas
+    # o restante do texto apontou para apenas um dos setores,
+    # usamos o contexto.
+    if len(setores_por_pessoa) > 1:
+
+        setores_contexto = [
+            setor
+            for setor in setores_encontrados
+            if setor in setores_por_pessoa
+        ]
+
+        if len(setores_contexto) == 1:
+
+            setor = setores_contexto[0]
+
+            current_app.logger.info(
+                "[CHAT-IA] Setor identificado por "
+                "funcionário + contexto | setor=%s | setor_id=%s",
+                setor.nome,
+                setor.id
+            )
+
+            return setor
+
+        current_app.logger.warning(
+            "[CHAT-IA] Setor ambíguo. "
+            "Não foi possível determinar com segurança."
+        )
+
+        return None
+
+    # Nenhum setor identificado.
+    return None
+
+
+def _garantir_setor(dados):
+    """
+    Tenta garantir um setor válido para o chamado.
+
+    Ordem de prioridade:
+
+    1. Setor informado diretamente pela IA.
+    2. Nome/alias encontrado no título, descrição ou local.
+    3. Contexto geral da conversa.
+    4. Se não conseguir identificar, retorna None para que
+       o assistente pergunte ao usuário.
+    """
+
+    if not isinstance(dados, dict):
+        return None
+
+    # ========================================================
+    # 1. SETOR INFORMADO DIRETAMENTE PELA IA
+    # ========================================================
+
+    setor_informado = (
+        dados.get("setor")
+        or dados.get("setor_nome")
+    )
+
+    if setor_informado:
+
+        setor = _obter_setor_por_nome(
+            setor_informado
+        )
+
+        if setor:
+
+            current_app.logger.info(
+                "[CHAT-IA] Setor confirmado pela análise da IA | "
+                "informado=%r | setor=%s | setor_id=%s",
+                setor_informado,
+                setor.nome,
+                setor.id
+            )
+
+            return setor
+
+    # ========================================================
+    # 2. ANALISAR TODO O CONTEXTO DISPONÍVEL
+    # ========================================================
+
+    texto = " ".join(
+        [
+            str(dados.get("titulo") or ""),
+            str(dados.get("descricao") or ""),
+            str(dados.get("local") or ""),
+            str(dados.get("area_patrimonial") or ""),
+        ]
+    )
+
+    setor = _identificar_setor(texto)
+
+    if setor:
+        return setor
 
     return None
 
 
+def _obter_setor_por_nome(nome):
+    """
+    Busca um setor ativo pelo nome, considerando:
+    - maiúsculas/minúsculas;
+    - acentos;
+    - aliases;
+    - nomes cadastrados dinamicamente no banco.
+
+    Não depende de IDs fixos.
+    """
+
+    if not nome:
+        return None
+
+    nome_normalizado = _normalizar_texto(
+        nome
+    )
+
+    if not nome_normalizado:
+        return None
+
+    # ========================================================
+    # 1. CONVERTER ALIAS PARA O NOME OFICIAL NORMALIZADO
+    # ========================================================
+
+    nome_normalizado = ALIASES_SETORES.get(
+        nome_normalizado,
+        nome_normalizado
+    )
+
+    # ========================================================
+    # 2. BUSCAR NOS SETORES ATIVOS DO BANCO
+    # ========================================================
+
+    setores = (
+        Setor.query
+        .filter_by(ativo=True)
+        .all()
+    )
+
+    # ========================================================
+    # 3. PRIMEIRO: CORRESPONDÊNCIA EXATA
+    # ========================================================
+
+    for setor in setores:
+
+        nome_setor = _normalizar_texto(
+            setor.nome
+        )
+
+        if nome_setor == nome_normalizado:
+
+            return setor
+
+    # ========================================================
+    # 4. SEGUNDO: CORRESPONDÊNCIA PARCIAL
+    # ========================================================
+
+    candidatos = []
+
+    for setor in setores:
+
+        nome_setor = _normalizar_texto(
+            setor.nome
+        )
+
+        if (
+            nome_normalizado in nome_setor
+            or nome_setor in nome_normalizado
+        ):
+
+            if setor not in candidatos:
+                candidatos.append(setor)
+
+    # Só aceita se existir uma única possibilidade.
+    if len(candidatos) == 1:
+        return candidatos[0]
+
+    return None
 # ============================================================
 # GERA TÍTULO
 # ============================================================
@@ -2400,30 +3545,24 @@ def _atualizar_chamado_pendente(
     return pendente
 
 
-# ============================================================
-# CRIA CHAMADO
-# ============================================================
-
 def _criar_chamado_pendente(usuario_id):
     """
     Cria efetivamente o chamado.
 
     Retorna:
-
         (chamado, None)
 
     ou:
-
         (None, mensagem_de_erro)
 
-    A pendência somente é removida depois de um COMMIT
-    bem-sucedido.
+    A pendência somente é removida depois de:
+        1. COMMIT bem-sucedido
+        2. confirmação de que o chamado existe no banco
     """
 
     pendente = _obter_chamado_pendente()
 
     if not pendente:
-
         current_app.logger.error(
             "[CHAT-IA] CRIAÇÃO SOLICITADA, MAS NÃO EXISTE "
             "PENDÊNCIA NA SESSÃO. usuario_id=%s",
@@ -2440,7 +3579,6 @@ def _criar_chamado_pendente(usuario_id):
     # ========================================================
 
     try:
-
         usuario_pendente = int(
             pendente.get(
                 "usuario_id",
@@ -2499,6 +3637,21 @@ def _criar_chamado_pendente(usuario_id):
         return (
             None,
             "Ainda existem informações obrigatórias pendentes."
+        )
+
+    # ========================================================
+    # LIMPA SESSÃO
+    # ========================================================
+
+    try:
+        db.session.rollback()
+        current_app.logger.info(
+            "[CHAT-IA] Sessão do banco limpa antes da criação."
+        )
+    except Exception:
+        current_app.logger.warning(
+            "[CHAT-IA] Não foi possível fazer rollback "
+            "da sessão antes da criação."
         )
 
     # ========================================================
@@ -2584,7 +3737,6 @@ def _criar_chamado_pendente(usuario_id):
         area_patrimonial,
         str
     ):
-
         area_patrimonial = (
             area_patrimonial.strip()
             or None
@@ -2595,21 +3747,18 @@ def _criar_chamado_pendente(usuario_id):
     # ========================================================
 
     if not titulo:
-
         return (
             None,
             "O título do chamado não foi informado."
         )
 
     if not descricao:
-
         return (
             None,
             "A descrição do problema não foi informada."
         )
 
     if not local:
-
         return (
             None,
             "O local do problema não foi informado."
@@ -2651,6 +3800,20 @@ def _criar_chamado_pendente(usuario_id):
 
     try:
 
+        current_app.logger.info(
+            "[CHAT-IA] Criando objeto Chamado | "
+            "titulo=%s | usuario_id=%s | setor_id=%s | "
+            "setor_nome=%s | local=%s | patrimonio=%s | "
+            "prioridade=%s",
+            titulo[:100],
+            usuario_atual,
+            setor.id,
+            setor.nome,
+            local,
+            area_patrimonial,
+            prioridade_valor
+        )
+
         chamado = Chamado(
             titulo=titulo[:200],
             descricao=descricao,
@@ -2676,8 +3839,8 @@ def _criar_chamado_pendente(usuario_id):
         )
 
         current_app.logger.info(
-            "[CHAT-IA] Objeto Chamado adicionado à sessão "
-            "do SQLAlchemy."
+            "[CHAT-IA] Objeto Chamado adicionado "
+            "à sessão do SQLAlchemy."
         )
 
         # ----------------------------------------------------
@@ -2687,8 +3850,7 @@ def _criar_chamado_pendente(usuario_id):
         db.session.flush()
 
         current_app.logger.info(
-            "[CHAT-IA] FLUSH realizado. "
-            "ID gerado=%s",
+            "[CHAT-IA] FLUSH OK | ID gerado=%s",
             chamado.id
         )
 
@@ -2707,8 +3869,7 @@ def _criar_chamado_pendente(usuario_id):
         db.session.commit()
 
         current_app.logger.info(
-            "[CHAT-IA] COMMIT realizado com sucesso. "
-            "Chamado #%s está salvo no banco.",
+            "[CHAT-IA] COMMIT OK | Chamado #%s salvo no banco",
             chamado_id
         )
 
@@ -2718,8 +3879,9 @@ def _criar_chamado_pendente(usuario_id):
 
         current_app.logger.exception(
             "[CHAT-IA] ERRO AO CRIAR CHAMADO | "
-            "usuario_id=%s | setor_id=%s | titulo=%s | "
-            "local=%s | prioridade=%s | erro=%s",
+            "tipo_erro=%s | usuario_id=%s | setor_id=%s | "
+            "titulo=%s | local=%s | prioridade=%s | erro=%s",
+            type(e).__name__,
             usuario_id,
             setor_id,
             titulo,
@@ -2730,11 +3892,95 @@ def _criar_chamado_pendente(usuario_id):
 
         return (
             None,
-            "Ocorreu um erro ao salvar o chamado no sistema."
+            f"Erro ao salvar chamado: {type(e).__name__}"
         )
 
     # ========================================================
-    # LIMPA PENDÊNCIA SOMENTE DEPOIS DO COMMIT
+    # CONFIRMAÇÃO REAL NO BANCO
+    # ========================================================
+
+    try:
+
+        chamado_confirmado = db.session.get(
+            Chamado,
+            chamado_id
+        )
+
+        if chamado_confirmado is None:
+
+            current_app.logger.error(
+                "[CHAT-IA] FALHA NA CONFIRMAÇÃO PÓS-COMMIT | "
+                "O chamado #%s não foi encontrado no banco. "
+                "usuario_id=%s",
+                chamado_id,
+                usuario_id
+            )
+
+            # NÃO removemos a pendência.
+            # O registro não pôde ser confirmado.
+
+            return (
+                None,
+                "Não consegui confirmar que o chamado foi "
+                "registrado no sistema. Para garantir que sua "
+                "solicitação não seja perdida, abra o chamado "
+                "manualmente pelo sistema de chamados."
+            )
+
+        # ----------------------------------------------------
+        # CONFERE NOVAMENTE O USUÁRIO
+        # ----------------------------------------------------
+
+        if int(chamado_confirmado.usuario_id) != usuario_atual:
+
+            current_app.logger.error(
+                "[CHAT-IA] FALHA DE VALIDAÇÃO PÓS-COMMIT | "
+                "Chamado #%s pertence ao usuário %s, "
+                "mas era esperado %s.",
+                chamado_id,
+                chamado_confirmado.usuario_id,
+                usuario_atual
+            )
+
+            return (
+                None,
+                "Não consegui confirmar corretamente o registro "
+                "do chamado. Para garantir sua solicitação, "
+                "abra o chamado manualmente pelo sistema."
+            )
+
+        current_app.logger.info(
+            "[CHAT-IA] CONFIRMAÇÃO PÓS-COMMIT OK | "
+            "Chamado #%s encontrado no banco | usuario_id=%s",
+            chamado_id,
+            usuario_id
+        )
+
+    except Exception as e:
+
+        current_app.logger.exception(
+            "[CHAT-IA] ERRO NA VERIFICAÇÃO PÓS-COMMIT | "
+            "chamado_id=%s | usuario_id=%s | erro=%s",
+            chamado_id,
+            usuario_id,
+            e
+        )
+
+        return (
+            None,
+            "O chamado foi processado, mas não consegui "
+            "confirmar o registro no sistema. Verifique o "
+            "sistema de chamados antes de abrir novamente."
+        )
+
+    # ========================================================
+    # ATUALIZA O OBJETO COM O REGISTRO CONFIRMADO
+    # ========================================================
+
+    chamado = chamado_confirmado
+
+    # ========================================================
+    # LIMPA PENDÊNCIA SOMENTE APÓS CONFIRMAÇÃO REAL
     # ========================================================
 
     limpeza_ok = _limpar_chamado_pendente()
@@ -2742,12 +3988,13 @@ def _criar_chamado_pendente(usuario_id):
     if not limpeza_ok:
 
         # IMPORTANTE:
-        # O chamado JÁ foi criado.
+        # O chamado JÁ foi criado e confirmado.
         # Não devemos informar que houve erro na criação.
 
         current_app.logger.warning(
-            "[CHAT-IA] Chamado #%s foi criado com sucesso, "
-            "mas houve erro ao limpar a pendência da sessão.",
+            "[CHAT-IA] Chamado #%s foi criado e confirmado "
+            "com sucesso, mas houve erro ao limpar "
+            "a pendência da sessão.",
             chamado_id
         )
 
@@ -2756,7 +4003,7 @@ def _criar_chamado_pendente(usuario_id):
     # ========================================================
 
     current_app.logger.info(
-        "[CHAT-IA] CHAMADO #%s CRIADO COM SUCESSO "
+        "[CHAT-IA] CHAMADO #%s CRIADO E CONFIRMADO COM SUCESSO "
         "PELO ASSISTENTE VIRTUAL | usuario_id=%s",
         chamado_id,
         usuario_id
@@ -2766,8 +4013,6 @@ def _criar_chamado_pendente(usuario_id):
         chamado,
         None
     )
-
-
 # ============================================================
 # SALVA MENSAGENS DO CHAT
 # ============================================================
@@ -3019,6 +4264,11 @@ def processar_mensagem(
                 # --------------------------------------------
                 # CRIAÇÃO REAL
                 # --------------------------------------------
+
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
 
                 current_app.logger.info(
                     "[CHAT-IA] Chamando _criar_chamado_pendente(). "
