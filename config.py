@@ -49,9 +49,17 @@ class Config:
     # SESSÃO
     # ==========================================================
 
+# ==========================================================
+# SESSÃO FLASK
+# ==========================================================
+
     PERMANENT_SESSION_LIFETIME = timedelta(
         hours=8
     )
+
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = False
 
     # ==========================================================
     # UPLOADS
