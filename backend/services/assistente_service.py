@@ -427,12 +427,56 @@ RAMAIS_ESCOLA = [
     }
 ]
 
+AREA_PATRIMONIAL = {
+    "predio 1": "Prédio 1",
+    "predio 2": "Prédio 2",
+    "predio 3": "Prédio 3",
+    "predio 4": "Prédio 4",
+    "predio 5": "Prédio 5",
+    "educacao infantil": "Educação Infantil",
+    "turno": "Turno",
+    "turno integral": "Turno Integral",
+    "predio principal": "Prédio Principal",
+}
+
 # ============================================================
 # PROMPT EXCLUSIVO DO ASSISTENTE VIRTUAL GERAL
 # ============================================================
 
 SYSTEM_PROMPT_GERAL = """
 Você é o Assistente Virtual do Colégio Mauá.
+
+REGRA DE OURO - CRIAÇÃO DE CHAMADOS:
+Você NUNCA deve dizer que um chamado foi criado, aberto ou registrado.
+Você NUNCA deve inventar um número de chamado.
+Você NUNCA deve dizer "Douglas irá verificar" ou qualquer promessa de ação.
+
+O sistema (código Python) é o único responsável por:
+1. Criar o chamado no banco de dados
+2. Confirmar que foi criado
+3. Informar o número do chamado
+
+Sua função é SOMENTE:
+1. Coletar informações (título, descrição, setor, local, prioridade)
+2. Quando tiver todas as informações, perguntar: "Posso abrir este chamado?"
+3. Se o usuário confirmar, dizer: "Processando sua solicitação..."
+
+Você deve esperar o sistema processar e retornar a confirmação real.
+Não antecipe resultados.
+
+Exemplo de fluxo correto:
+
+Usuário: "Sim, pode abrir"
+Você: "Processando sua solicitação..."
+
+[O sistema processa e retorna a mensagem de sucesso real]
+
+Se o sistema retornar erro, você deve informar o erro.
+Se o sistema retornar sucesso, você deve repetir exatamente o que o sistema disse.
+
+NUNCA diga "Chamado criado com sucesso" por conta própria.
+NUNCA diga "O número do seu chamado é" por conta própria.
+NUNCA diga "Douglas irá verificar em breve" por conta própria.
 
 Você atende alunos, professores, funcionários e demais usuários do
 sistema por meio de um chat geral da escola.
@@ -521,13 +565,14 @@ Informática:
 - projetor
 - equipamentos de informática
 - senhas e acessos
+- AR-CONDICIONADO (responsabilidade do Douglas da Informática)
+- climatização
 - RAMAL 223
 
 Marcenaria:
 - problemas elétricos
 - iluminação
 - tomadas
-- ar-condicionado
 - portas
 - torneiras
 - problemas estruturais
@@ -553,6 +598,28 @@ Serviço de Apoio:
 
 Quando uma solicitação não se encaixar claramente em um setor,
 não tente adivinhar o setor, nesse caso sugira a abertura manual do chamado.
+
+============================================================
+AR-CONDICIONADO - REGRA ESPECIAL
+============================================================
+
+IMPORTANTE: Problemas com ar-condicionado são de responsabilidade
+da INFORMÁTICA (Douglas), NÃO da Marcenaria.
+
+Sempre que um usuário relatar problema com ar-condicionado:
+
+1. Informe que o responsável é o Douglas da Informática.
+2. Peça o CÓDIGO PMOC que está no adesivo abaixo do QR Code
+   colado no aparelho de ar-condicionado.
+3. O código PMOC é necessário para identificar qual aparelho
+   precisa de manutenção.
+
+Exemplo de resposta:
+
+"Problemas com ar-condicionado são tratados pelo Douglas da
+Informática. Para agilizar o atendimento, por favor informe o
+código PMOC que está no adesivo abaixo do QR Code colado no
+aparelho."
 
 ============================================================
 COMO RESPONDER PERGUNTAS
@@ -766,6 +833,28 @@ Por exemplo:
 Se a situação exigir alteração administrativa ou intervenção da
 Informática, então recomende a abertura de chamado.
 
+------------------------------------------------------------
+
+Usuário:
+"O ar-condicionado não está funcionando."
+
+Resposta específica:
+
+"Problemas com ar-condicionado são de responsabilidade do
+Douglas da Informática.
+
+Antes de abrir o chamado, preciso que você me informe o
+código PMOC que está no adesivo abaixo do QR Code colado
+no aparelho.
+
+Enquanto isso, verifique:
+1. Se o controle remoto está com pilhas.
+2. Se aparece alguma luz no painel do aparelho.
+
+Você consegue me passar o código PMOC?"
+
+NUNCA diga que ar-condicionado é problema da Marcenaria.
+
 ============================================================
 QUANDO ABRIR UM CHAMADO
 ============================================================
@@ -961,6 +1050,14 @@ Não diga que realizou uma ação que você não realizou.
 
 Não diga que verificou fisicamente um equipamento.
 
+IMPORTANTE - CRIAÇÃO DE CHAMADOS:
+Você NÃO cria chamados. O sistema cria.
+Quando o usuário confirmar os dados, o sistema processará e
+informará se o chamado foi criado com sucesso.
+NUNCA diga "o chamado foi aberto" ou "criei o chamado" antes
+de receber a confirmação do sistema.
+Se o sistema não confirmar explicitamente, assuma que NÃO foi criado.
+
 Quando o sistema realmente criar um chamado por meio da função
 de abertura de chamados do Assistente Virtual, você poderá informar
 ao usuário que o chamado foi criado e informar o número recebido
@@ -996,7 +1093,6 @@ Evite responder sempre:
 
 O chamado deve ser recomendado somente quando realmente necessário.
 
-
 ============================================================
 FORMATAÇÃO DE TEXTO
 ============================================================
@@ -1022,7 +1118,6 @@ Ou escreva em linhas separadas sem símbolos especiais.
 ============================================================
 REGRA PRINCIPAL
 ============================================================
-
 
 Você é um ASSISTENTE GERAL do Colégio Mauá.
 
@@ -1289,7 +1384,7 @@ Não invente outros setores.
 Exemplos:
 
 computador, internet, Wi-Fi, impressora, projetor,
-sistema, senha, rede:
+sistema, senha, rede, AR-CONDICIONADO, climatização:
 Informática
 
 mesa, cadeira, armário, móvel, prateleira,
@@ -1304,6 +1399,9 @@ palco, cabine de som, iluminação do teatro,
 equipamentos e estrutura do teatro:
 Teatro
 
+IMPORTANTE: Ar-condicionado é sempre Informática (Douglas),
+nunca Marcenaria.
+
 Se não houver evidência suficiente para identificar o setor,
 deixe o campo "setor" vazio.
 
@@ -1315,7 +1413,7 @@ computador, internet, Wi-Fi, impressora, projetor:
 Informática
 
 tomada, lâmpada, vazamento, porta, ar-condicionado:
-Manutenção
+Informática (ar-condicionado) ou Manutenção (elétrica)
 
 mesa, cadeira, armário, móvel:
 Marcenaria
@@ -1356,16 +1454,44 @@ Não invente.
 AREA PATRIMONIAL
 ============================================================
 
-Procure números, códigos ou identificações de patrimônio
+Procure nomes ou identificações de prédio ou localização
 explicitamente informados pelo usuário.
 
 Exemplo:
 
-"Patrimônio 12345"
-
-"Área patrimonial 4567"
+"Área patrimonial Prédio 1"
+"Área patrimonial Prédio 2"
+"Área patrimonial Prédio 3"
+"Área patrimonial Prédio 4"
+"Área patrimonial Prédio 5"
+"Área patrimonial Educação Infantil"
+"Área patrimonial Turno"
+"Área patrimonial Turno Integral"
+"Área patrimonial Prédio Principal"
 
 Se não existir ou não tiver sido informado, deixe vazio.
+
+Escreva a área patrimonial usando exatamente um destes valores oficiais:
+
+- Prédio 1
+- Prédio 2
+- Prédio 3
+- Prédio 4
+- Prédio 5
+- Educação Infantil
+- Turno
+- Turno Integral
+- Prédio Principal
+
+Considere equivalentes sem acento:
+
+- "predio 1", "predio 2", "predio 3", "predio 4" e "predio 5"
+  são o mesmo que "Prédio 1", "Prédio 2", "Prédio 3", "Prédio 4"
+  e "Prédio 5".
+- "educacao infantil" é o mesmo que "Educação Infantil".
+- "turno integral" é o mesmo que "Turno Integral".
+
+Nunca use outra variação de nome.
 
 NUNCA invente.
 
@@ -2188,7 +2314,30 @@ def _usuario_confirmou(texto):
         "pode criar sim"
     }
 
-    return texto in confirmacoes
+    if texto in confirmacoes:
+        return True
+
+    # Variações naturais de confirmação:
+    # "sim, pode abrir", "ok, pode criar o chamado",
+    # "sim, pode abrir pra mim" etc.
+    if re.match(
+        r"^(sim|ok|okay|pode|confirmo)\b",
+        texto
+    ) and re.search(
+        r"\b(pode|abrir|abre|criar|crie|chamado)\b",
+        texto
+    ):
+
+        # Evita interpretar como confirmação frases como
+        # "pode ser a informática" (resposta sobre setor).
+        if not re.search(
+            r"\b(ser|setor|informatica|marcenaria|"
+            r"teatro|apoio|limpeza)\b",
+            texto
+        ):
+            return True
+
+    return False
 
 
 # ============================================================
@@ -2924,6 +3073,56 @@ def _extrair_json_resposta(texto):
 # NORMALIZA DADOS DO CHAMADO
 # ============================================================
 
+# ============================================================
+# NORMALIZA ÁREA PATRIMONIAL
+# ============================================================
+
+def _normalizar_area_patrimonial(valor):
+    """
+    Normaliza a área patrimonial para um dos valores oficiais.
+
+    Regras:
+    - Remove acentos e converte para minúsculas.
+    - Remove prefixos como "área patrimonial".
+    - "predio 5" (sem acento) é equivalente a "Prédio 5".
+    - Só aceita as áreas cadastradas em AREA_PATRIMONIAL.
+    - Se não casar com nenhuma área oficial, retorna vazio
+      (o campo é opcional e nunca deve ser inventado).
+    """
+
+    if not valor:
+        return ""
+
+    texto = _normalizar_texto(valor)
+
+    if not texto:
+        return ""
+
+    # Remove prefixos comuns que a IA pode incluir.
+    texto = texto.replace("area patrimonial", "")
+    texto = texto.replace("patrimonio", "")
+    texto = texto.replace("patrimônio", "")
+
+    texto = texto.strip()
+
+    if not texto:
+        return ""
+
+    # Ordena do nome mais longo para o mais curto para que
+    # "turno integral" seja encontrado antes de "turno".
+    for chave in sorted(
+        AREA_PATRIMONIAL,
+        key=len,
+        reverse=True
+    ):
+
+        if chave in texto:
+
+            return AREA_PATRIMONIAL[chave]
+
+    return ""
+
+
 def _normalizar_dados_chamado(dados):
     """Garante formato consistente."""
 
@@ -2982,6 +3181,14 @@ def _normalizar_dados_chamado(dados):
         prioridades_validas.get(
             prioridade,
             "media"
+        )
+    )
+
+    # Normaliza para um dos valores oficiais da escola.
+    # Ex.: "predio 5" vira "Prédio 5".
+    resultado["area_patrimonial"] = (
+        _normalizar_area_patrimonial(
+            resultado["area_patrimonial"]
         )
     )
 
@@ -3081,61 +3288,6 @@ Lembre-se:
     )
 
     return dados
-
-
-# ============================================================
-# OBTÉM SETOR PELO NOME
-# ============================================================
-
-def _obter_setor_por_nome(nome):
-    """Busca setor pelo nome."""
-
-    if not nome:
-        return None
-
-    nome_normalizado = _normalizar_texto(
-        nome
-    )
-
-    setores = Setor.query.all()
-
-    for setor in setores:
-
-        nome_setor = _normalizar_texto(
-            setor.nome
-        )
-
-        if nome_setor == nome_normalizado:
-            return setor
-
-    return None
-
-
-# ============================================================
-# FALLBACK DE SETOR
-# ============================================================
-
-def _garantir_setor(dados):
-    """Tenta garantir um setor válido."""
-
-    if dados.get("setor"):
-
-        setor = _obter_setor_por_nome(
-            dados["setor"]
-        )
-
-        if setor:
-            return setor
-
-    texto = " ".join(
-        [
-            dados.get("titulo", ""),
-            dados.get("descricao", ""),
-            dados.get("local", "")
-        ]
-    )
-
-    return _identificar_setor(texto)
 
 
 # ============================================================
@@ -3545,6 +3697,44 @@ def _atualizar_chamado_pendente(
     return pendente
 
 
+# ============================================================
+# SETOR DE TRIAGEM
+# ============================================================
+
+def _obter_setor_triagem():
+    """
+    Setor padrão de triagem.
+
+    Usado quando o setor responsável não pôde ser identificado,
+    mas o usuário já confirmou a abertura do chamado.
+
+    O chamado é encaminhado para este setor, que redireciona
+    para o responsável correto.
+
+    O nome do setor pode ser configurado em SETOR_TRIAGEM.
+    """
+
+    nome_preferido = current_app.config.get(
+        "SETOR_TRIAGEM",
+        "Serviço de Apoio"
+    )
+
+    setor = _obter_setor_por_nome(
+        nome_preferido
+    )
+
+    if setor:
+        return setor
+
+    # Último recurso: primeiro setor ativo cadastrado.
+    return (
+        Setor.query
+        .filter_by(ativo=True)
+        .order_by(Setor.id)
+        .first()
+    )
+
+
 def _criar_chamado_pendente(usuario_id):
     """
     Cria efetivamente o chamado.
@@ -3664,8 +3854,30 @@ def _criar_chamado_pendente(usuario_id):
 
     if not setor_id:
 
+        # Último recurso: o usuário já confirmou a abertura,
+        # então encaminha para o setor de triagem em vez de
+        # falhar ou fazer nova pergunta.
+        setor_triagem = _obter_setor_triagem()
+
+        if setor_triagem:
+
+            setor_id = setor_triagem.id
+
+            pendente["setor_id"] = setor_id
+            pendente["setor_nome"] = setor_triagem.nome
+
+            current_app.logger.warning(
+                "[CHAT-IA] Setor ausente na criação. "
+                "Usando setor de triagem | setor=%s | setor_id=%s",
+                setor_triagem.nome,
+                setor_triagem.id
+            )
+
+    if not setor_id:
+
         current_app.logger.error(
-            "[CHAT-IA] Tentativa de criação sem setor. "
+            "[CHAT-IA] Tentativa de criação sem setor e "
+            "sem setor de triagem disponível. "
             "Dados: %s",
             pendente
         )
@@ -4225,41 +4437,126 @@ def processar_mensagem(
                 )
 
                 # --------------------------------------------
-                # NÃO CRIA SE AINDA HOUVER DADOS FALTANTES
+                # RECUPERAÇÃO: RESOLVE SEM NOVAS PERGUNTAS
+                # ANTES DE BLOQUEAR A CRIAÇÃO
                 # --------------------------------------------
 
-                if (
-                    not setor_id
-                    or campos_faltantes
-                ):
+                if not setor_id or campos_faltantes:
 
-                    primeiro_campo = (
-                        campos_faltantes[0]
-                        if campos_faltantes
-                        else "setor"
-                    )
-
-                    current_app.logger.warning(
-                        "[CHAT-IA] Usuário confirmou, mas "
-                        "ainda existem dados faltantes. "
-                        "campo=%s | dados=%s",
-                        primeiro_campo,
+                    # Última tentativa de identificar o setor
+                    # usando os dados JÁ coletados na
+                    # conversa (título, descrição, local,
+                    # área patrimonial).
+                    setor_recuperado = _garantir_setor(
                         chamado_pendente
                     )
 
-                    resposta_texto = (
-                        "Ainda preciso de algumas informações "
-                        "antes de abrir o chamado.\n\n"
-                        + _pergunta_sobre_campo(
-                            primeiro_campo
+                    if setor_recuperado:
+
+                        chamado_pendente["setor_id"] = (
+                            setor_recuperado.id
                         )
+                        chamado_pendente["setor_nome"] = (
+                            setor_recuperado.nome
+                        )
+                        chamado_pendente["setor"] = (
+                            setor_recuperado.nome
+                        )
+
+                        current_app.logger.info(
+                            "[CHAT-IA] Setor recuperado na "
+                            "confirmação | setor=%s | setor_id=%s",
+                            setor_recuperado.nome,
+                            setor_recuperado.id
+                        )
+
+                    # Se o setor continuar ausente, encaminha
+                    # para o setor de triagem em vez de
+                    # perguntar novamente, pois o usuário
+                    # JÁ confirmou a abertura do chamado.
+                    if not chamado_pendente.get("setor_id"):
+
+                        setor_triagem = _obter_setor_triagem()
+
+                        if setor_triagem:
+
+                            chamado_pendente["setor_id"] = (
+                                setor_triagem.id
+                            )
+                            chamado_pendente["setor_nome"] = (
+                                setor_triagem.nome
+                            )
+                            chamado_pendente["setor"] = (
+                                setor_triagem.nome
+                            )
+
+                            current_app.logger.warning(
+                                "[CHAT-IA] Setor não identificado. "
+                                "Chamado será encaminhado para a "
+                                "triagem | setor=%s | setor_id=%s",
+                                setor_triagem.nome,
+                                setor_triagem.id
+                            )
+
+                    # Recalcula os campos faltantes com os
+                    # dados já disponíveis.
+                    setor_final = None
+
+                    if chamado_pendente.get("setor_id"):
+
+                        try:
+                            setor_final = db.session.get(
+                                Setor,
+                                int(
+                                    chamado_pendente[
+                                        "setor_id"
+                                    ]
+                                )
+                            )
+                        except Exception:
+                            setor_final = None
+
+                    campos_faltantes = _obter_campos_faltantes(
+                        chamado_pendente,
+                        setor=setor_final
                     )
 
-                    return _salvar_mensagens_chat(
-                        usuario_id,
-                        conteudo,
-                        resposta_texto
+                    chamado_pendente["campos_faltantes"] = (
+                        campos_faltantes
                     )
+
+                    _salvar_chamado_pendente(
+                        chamado_pendente
+                    )
+
+                    # Só pergunta se ainda faltar algum dado
+                    # que não seja o setor (título, descrição
+                    # ou local realmente nunca informados).
+                    if campos_faltantes:
+
+                        primeiro_campo = campos_faltantes[0]
+
+                        current_app.logger.warning(
+                            "[CHAT-IA] Usuário confirmou, mas "
+                            "ainda existem dados faltantes. "
+                            "campo=%s | dados=%s",
+                            primeiro_campo,
+                            chamado_pendente
+                        )
+
+                        resposta_texto = (
+                            "Ainda preciso de algumas informações "
+                            "antes de abrir o chamado.\n\n"
+                            + _pergunta_sobre_campo(
+                                primeiro_campo
+                            )
+                        )
+
+                        return _salvar_mensagens_chat(
+                            usuario_id,
+                            conteudo,
+                            resposta_texto
+                        )
 
                 # --------------------------------------------
                 # CRIAÇÃO REAL
@@ -4505,6 +4802,25 @@ def processar_mensagem(
                 usuario_id,
                 conteudo,
                 resposta_texto
+            )
+
+        # ====================================================
+        # 2b. CONFIRMAÇÃO SEM PENDÊNCIA — INICIA O FLUXO AGORA
+        # ====================================================
+        if _usuario_confirmou(conteudo):
+
+            historico = listar_historico(usuario_id, limite=20)
+
+            resultado = _preparar_chamado(
+                usuario_id,
+                historico,
+                conteudo
+            )
+
+            resposta_texto = resultado["mensagem"]
+
+            return _salvar_mensagens_chat(
+                usuario_id, conteudo, resposta_texto
             )
 
         # ====================================================

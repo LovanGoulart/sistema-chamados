@@ -150,10 +150,9 @@ class Config:
     # MODELO GEMINI
     # ----------------------------------------------------------
 
-    IA_MODEL = os.environ.get(
-        "IA_MODEL",
-        "gemini-3.1-flash-lite"
-    ).strip()
+IA_MODEL = os.environ.get("IA_MODEL", "gemini-3.5-flash").strip()
+IA_MODEL_FALLBACK = os.environ.get("IA_MODEL_FALLBACK", "gemini-3.5-flash-lite").strip()
+IA_MODEL_FALLBACK_2 = os.environ.get("IA_MODEL_FALLBACK_2", "gemini-3.1-flash-lite").strip()
 
 
 class DevelopmentConfig(Config):
