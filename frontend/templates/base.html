@@ -15,9 +15,9 @@
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
 
     <!-- Favicons e Ícones -->
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/favicon-32x32.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
-    <link rel="mask-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}" color="#f46c6c">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/favicon-35x35.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icons/apple-touch-icon3.png') }}">
+    <link rel="mask-icon" href="{{ url_for('static', filename='icons/icon-194x194.png') }}" color="#f46c6c">
 
     <!-- Preconnect para performance -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -330,7 +330,6 @@
             }
         }
     </style>
-<base target="_blank">
 </head>
 <body>
     {% if current_user.is_authenticated %}
@@ -450,6 +449,9 @@
                 <a href="{{ url_for('main.logout') }}" class="btn-icon" title="Sair">
                     <i class="fas fa-sign-out-alt"></i>
                 </a>
+                <button type="button" class="btn-icon btn-install-app" id="btnInstalarApp" title="Instalar como aplicativo" style="display:none">
+                    <i class="fas fa-download"></i>
+                </button>
             </div>
         </div>
     </aside>
