@@ -1468,6 +1468,7 @@ Exemplo:
 "Área patrimonial Turno"
 "Área patrimonial Turno Integral"
 "Área patrimonial Prédio Principal"
+"Área patrimonial Idiomas"
 
 Se não existir ou não tiver sido informado, deixe vazio.
 
@@ -1482,6 +1483,7 @@ Escreva a área patrimonial usando exatamente um destes valores oficiais:
 - Turno
 - Turno Integral
 - Prédio Principal
+- Idiomas
 
 Considere equivalentes sem acento:
 
