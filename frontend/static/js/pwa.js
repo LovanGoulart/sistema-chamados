@@ -150,6 +150,14 @@
         // PROMPT DE INSTALAÇÃO
         // ═══════════════════════════════════════════════════════════════
         setupInstallPrompt() {
+            // iOS: mostra botão mesmo sem o evento nativo
+            setTimeout(() => {
+                if (this.isIos() && !this.isStandalone() &&
+                    !document.querySelector('.pwa-install-btn')) {
+                    this.showInstallButton();
+                }
+            }, 1500);
+
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 this.deferredPrompt = e;
@@ -176,6 +184,16 @@
             btn.innerHTML = '<i class="fas fa-download"></i> Instalar App';
             btn.onclick = () => this.promptInstall();
             document.body.appendChild(btn);
+
+            // Revela também o botão da sidebar e avisa o base.html
+            const sidebarBtn = document.getElementById('btnInstalarApp');
+            if (sidebarBtn) sidebarBtn.style.display = 'inline-flex';
+            window.dispatchEvent(new CustomEvent('pwa:install-available'));
+        },
+
+        // iOS/Safari não dispara beforeinstallprompt
+        isIos() {
+            return /iphone|ipad|ipod/i.test(navigator.userAgent);
         },
 
         hideInstallButton() {
@@ -184,7 +202,13 @@
         },
 
         async promptInstall() {
-            if (!this.deferredPrompt) return;
+            if (!this.deferredPrompt) {
+                // Sem prompt nativo (iOS/Safari): exibe instruções do base.html
+                if (typeof window.abrirModalInstalar === 'function') {
+                    window.abrirModalInstalar();
+                }
+                return;
+            }
 
             this.deferredPrompt.prompt();
             const { outcome } = await this.deferredPrompt.userChoice;
