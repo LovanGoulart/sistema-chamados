@@ -60,7 +60,7 @@ RAMAIS_ESCOLA = [
         "setor": "Assistente Social",
         "responsavel": "Sandra",
         "ramal": "213",
-        "telefone": "30568318"
+        "telefone": "(51)3056-8318"
     },
     {
         "setor": "Atendimento Especial AEE",
@@ -71,7 +71,7 @@ RAMAIS_ESCOLA = [
         "setor": "Bar e Restaurante",
         "local": "Prédio 1",
         "ramal": "232",
-        "telefone": "30568311"
+        "telefone": "(51)3056-8311"
     },
     {
         "setor": "Bar",
@@ -89,7 +89,7 @@ RAMAIS_ESCOLA = [
         "local": "Prédio 1",
         "responsaveis": ["Caroline", "Katiele"],
         "ramal": "214",
-        "telefone": "30568306"
+        "telefone": "(51)3056-8306"
     },
     {
         "setor": "Centro de Convivências II",
@@ -187,7 +187,7 @@ RAMAIS_ESCOLA = [
         "setor": "Departamento de Informática",
         "responsaveis": ["Paulo", "Lovan", "Douglas"],
         "ramal": "223",
-        "telefone": "30568323"
+        "telefone": "(51)3056-8323"
     },
     {
         "setor": "Departamento de Informática",
@@ -202,7 +202,7 @@ RAMAIS_ESCOLA = [
     {
         "setor": "Escola de Música",
         "ramal": "237",
-        "telefone": "30568319"
+        "telefone": "(51)3056-8319"
     },
     {
         "setor": "Ginásio de Esportes",
@@ -223,7 +223,7 @@ RAMAIS_ESCOLA = [
         "segmento": "Ensino Fundamental - 1º aos 6º anos",
         "local": "Prédio 3",
         "ramal": "205",
-        "telefone": "30568312"
+        "telefone": "(51)3056-8312"
     },
     {
         "setor": "Informática",
@@ -254,7 +254,7 @@ RAMAIS_ESCOLA = [
         "local": "Prédio 1",
         "responsavel": "Gabriela",
         "ramal": "209",
-        "telefone": "30568314"
+        "telefone": "(51)3056-8314"
     },
     {
         "setor": "Psicologia",
@@ -282,7 +282,7 @@ RAMAIS_ESCOLA = [
         "local": "Prédio 3",
         "responsavel": "Luiza",
         "ramal": "236",
-        "telefone": "30568302"
+        "telefone": "(51)3056-8302"
     },
     {
         "setor": "Recepção",
@@ -297,14 +297,14 @@ RAMAIS_ESCOLA = [
         "local": "Prédio 2",
         "responsavel": "Gabriela",
         "ramal": "230",
-        "telefone": "30568301"
+        "telefone": "(51)3056-8301"
     },
     {
         "setor": "Recepção",
         "local": "Prédio Principal",
         "responsavel": "Manoela",
         "ramal": "202",
-        "telefone": "30568300"
+        "telefone": "(51)3056-8300"
     },
     {
         "setor": "Recepção",
@@ -347,7 +347,7 @@ RAMAIS_ESCOLA = [
         "setor": "Secretaria",
         "responsavel": "Luana",
         "ramal": "201",
-        "telefone": "30568309"
+        "telefone": "(51)3056-8309"
     },
     {
         "setor": "Secretaria",
@@ -359,7 +359,7 @@ RAMAIS_ESCOLA = [
         "local": "Cabine de Som e Luz",
         "responsaveis": ["Michael", "Rodrigo"],
         "ramal": "221",
-        "telefone": "30568313"
+        "telefone": "(51)3056-8313"
     },
     {
         "setor": "Teatro",
@@ -375,7 +375,7 @@ RAMAIS_ESCOLA = [
         "setor": "Tesouraria e RH",
         "responsavel": "Daniela",
         "ramal": "204",
-        "telefone": "30568322"
+        "telefone": "(51)3056-8322"
     },
     {
         "setor": "Tesouraria e RH",
@@ -406,13 +406,13 @@ RAMAIS_ESCOLA = [
         "setor": "Turno Integral",
         "segmento": "4º ano",
         "ramal": "256",
-        "telefone": "30568303"
+        "telefone": "(51)3056-8303"
     },
     {
         "setor": "Turno Integral",
         "segmento": "Educação Infantil",
         "ramal": "240",
-        "telefone": "30568304"
+        "telefone": "(51)3056-8304"
     },
     {
         "setor": "Vice-Diretor",
@@ -423,7 +423,7 @@ RAMAIS_ESCOLA = [
         "setor": "Xerox",
         "responsavel": "Lucinara",
         "ramal": "233",
-        "telefone": "30568307"
+        "telefone": "(51)3056-8307"
     }
 ]
 
@@ -723,7 +723,7 @@ Usuário:
 
 Resposta:
 "A Biblioteca Principal, no Prédio 1, atende pelo ramal 214 e
-telefone 30568306."
+telefone (51)3056-8306."
 
 Usuário:
 "Qual o ramal da informática?"
