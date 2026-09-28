@@ -53,9 +53,27 @@
 
     <!-- Tabela de Chamados Ativos -->
     <div class="card">
-        <div class="card-header">
-            <h3><i class="fas fa-list"></i> Chamados ativos</h3>
-            <a href="{{ url_for('main.chamados') }}" class="btn btn-sm btn-outline">Ver todos</a>
+        <div class="card-header card-header-filtros">
+            <!--<h3><i class="fas fa-list"></i> Chamados ativos</h3>-->
+            <div class="filtros-rapidos" id="filtros-rapidos">
+                <button class="filtro-chip active" data-filtro="todos">
+                    <i class="fas fa-border-all"></i> Todos
+                </button>
+                <button class="filtro-chip" data-filtro="hoje">
+                    <i class="fas fa-calendar-day"></i> Hoje
+                </button>
+                <button class="filtro-chip" data-filtro="aberto">
+                    <i class="fas fa-folder-open"></i> Abertos
+                </button>
+                <button class="filtro-chip" data-filtro="em_andamento">
+                    <i class="fas fa-spinner"></i> Em andamento
+                </button>
+                <button class="filtro-chip" data-filtro="pendente">
+                    <i class="fas fa-pause-circle"></i> Pendentes
+                </button>
+
+                <!--<a href="{{ url_for('main.chamados') }}" class="btn btn-sm btn-outline">Ver todos</a>-->
+            </div>
         </div>
         <div class="card-body">
             {% if chamados_ativos %}
@@ -82,7 +100,9 @@
                     <tbody>
                         {% for chamado in chamados_ativos %}
                         {% set status_data = verificar_data_destaque(chamado.data_preferencial) %}
-                        <tr class="{% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-hoje{% endif %}">
+                        <tr data-status="{{ chamado.status.value|lower }}"
+                            data-criado="{{ chamado.created_at.strftime('%Y-%m-%d') }}"
+                            class="{% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-hoje{% endif %}">
                             <td><a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}">#{{ chamado.id }}</a></td>
                             {% if current_user.is_admin() %}
                             <td>
@@ -161,7 +181,9 @@
             <div class="mobile-cards-view">
                 {% for chamado in chamados_ativos %}
                 {% set status_data = verificar_data_destaque(chamado.data_preferencial) %}
-                <div class="chamado-card {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-hoje{% endif %}">
+                <div class="chamado-card {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-hoje{% endif %}"
+                     data-status="{{ chamado.status.value|lower }}"
+                     data-criado="{{ chamado.created_at.strftime('%Y-%m-%d') }}">
                     <div class="chamado-card-header">
                         <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="chamado-card-id">#{{ chamado.id }}</a>
                         <div class="chamado-card-badges">
@@ -222,6 +244,12 @@
                 {% endfor %}
             </div>
 
+            <!-- Estado vazio do filtro -->
+            <div class="empty-state" id="filtro-vazio" style="display:none">
+                <i class="fas fa-filter"></i>
+                <p>Nenhum chamado encontrado para este filtro</p>
+            </div>
+
             {% else %}
             <div class="empty-state">
                 <i class="fas fa-inbox"></i>
@@ -238,6 +266,71 @@
 
 {% block extra_css %}
 <style>
+/* ═══════════════════════════════════════════════════════════════
+   FILTROS RÁPIDOS (CHIPS)
+   ═══════════════════════════════════════════════════════════════ */
+
+.card-header-filtros {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.filtros-rapidos {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filtro-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border-color, #e9ecef);
+    background: var(--bg-body, #f8f9fa);
+    color: var(--text-secondary, #6c757d);
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.filtro-chip i {
+    font-size: 0.75rem;
+}
+
+.filtro-chip:hover {
+    border-color: var(--primary, #0084ff);
+    color: var(--primary, #0084ff);
+    transform: translateY(-1px);
+}
+
+.filtro-chip.active {
+    background: var(--primary, #0084ff);
+    border-color: var(--primary, #0084ff);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 132, 255, 0.3);
+}
+
+@media (max-width: 768px) {
+    .filtros-rapidos {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .filtro-chip {
+        flex-shrink: 0;
+        padding: 6px 12px;
+        font-size: 0.78rem;
+    }
+}
+
 /* ═══════════════════════════════════════════════════════════════
    DASHBOARD - RESPONSIVIDADE COMPLETA
    Forçado com !important para sobrescrever estilos.css externo
@@ -827,4 +920,62 @@
     min-width: 130px;
 }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filtros rápidos: Todos / Abertos / Em andamento / Pendentes / Hoje
+(function() {
+    const chips = document.querySelectorAll('#filtros-rapidos .filtro-chip');
+    const rows = document.querySelectorAll('.table-desktop-view tbody tr');
+    const cards = document.querySelectorAll('.mobile-cards-view .chamado-card');
+    const vazio = document.getElementById('filtro-vazio');
+
+    // Data de hoje no fuso local (formato YYYY-MM-DD)
+    const d = new Date();
+    const hoje = d.getFullYear() + '-' +
+                 String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                 String(d.getDate()).padStart(2, '0');
+
+    let filtroAtivo = 'todos';
+
+    function match(el) {
+        const status = el.getAttribute('data-status') || '';
+        const criado = el.getAttribute('data-criado') || '';
+
+        if (filtroAtivo === 'todos') return true;
+        if (filtroAtivo === 'hoje') return criado === hoje;
+        return status === filtroAtivo;
+    }
+
+    function aplicarFiltro() {
+        let visiveis = 0;
+
+        rows.forEach(function(row) {
+            const ok = match(row);
+            row.style.display = ok ? '' : 'none';
+            if (ok) visiveis++;
+        });
+
+        cards.forEach(function(card) {
+            card.style.display = match(card) ? '' : 'none';
+        });
+
+        if (vazio) {
+            vazio.style.display = (visiveis === 0) ? 'block' : 'none';
+        }
+    }
+
+    chips.forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            chips.forEach(function(c) { c.classList.remove('active'); });
+            this.classList.add('active');
+            filtroAtivo = this.getAttribute('data-filtro');
+            aplicarFiltro();
+        });
+    });
+
+    aplicarFiltro();
+})();
+</script>
 {% endblock %}
