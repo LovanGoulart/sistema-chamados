@@ -30,9 +30,26 @@
     </div>
 </div>
 
-<!-- Busca em tempo real (único campo) -->
+<!-- Filtros rápidos + Busca em tempo real -->
 <div class="card card-filters">
     <div class="card-body">
+        <!--<div class="filtros-rapidos" id="filtros-rapidos">
+            <button class="filtro-chip active" data-filtro="todos">
+                <i class="fas fa-border-all"></i> Todos
+            </button>
+            <button class="filtro-chip" data-filtro="hoje">
+                <i class="fas fa-calendar-day"></i> Hoje
+            </button>
+            <button class="filtro-chip" data-filtro="aberto">
+                <i class="fas fa-folder-open"></i> Abertos
+            </button>
+            <button class="filtro-chip" data-filtro="em_andamento">
+                <i class="fas fa-spinner"></i> Em andamento
+            </button>
+            <button class="filtro-chip" data-filtro="pendente">
+                <i class="fas fa-pause-circle"></i> Pendentes
+            </button>
+        </div>-->
         <div class="search-wrapper">
             <i class="fas fa-search search-icon"></i>
             <input type="text" id="busca-tempo-real" placeholder="Digite uma palavra-chave" autocomplete="off">
@@ -79,6 +96,7 @@
                         data-prioridade="{{ chamado.prioridade.value|lower }}"
                         data-setor="{{ chamado.setor_destino.nome|lower }}"
                         data-responsavel="{{ (chamado.atendente.nome if chamado.atendente else 'não atribuído')|lower }}"
+                        data-criado="{{ chamado.created_at.strftime('%Y-%m-%d') }}"
                         data-status-ordem="{% if chamado.status.value in ['resolvido', 'fechado'] %}1{% else %}0{% endif %}">
                         <td><a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}">#{{ chamado.id }}</a></td>
                         {% if current_user.is_admin() %}
@@ -151,6 +169,7 @@
                  data-prioridade="{{ chamado.prioridade.value|lower }}"
                  data-setor="{{ chamado.setor_destino.nome|lower }}"
                  data-responsavel="{{ (chamado.atendente.nome if chamado.atendente else 'não atribuído')|lower }}"
+                 data-criado="{{ chamado.created_at.strftime('%Y-%m-%d') }}"
                  data-status-ordem="{% if chamado.status.value in ['resolvido', 'fechado'] %}1{% else %}0{% endif %}">
                 <div class="chamado-card-header">
                     <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="chamado-card-id">#{{ chamado.id }}</a>
@@ -207,12 +226,12 @@
             {% endfor %}
         </div>
 
-        <!-- Estado vazio para busca -->
+        <!-- Estado vazio para busca/filtro -->
         <div class="empty-state" id="busca-vazia" style="display:none">
             <i class="fas fa-search"></i>
-            <p>Nenhum chamado encontrado para esta busca</p>
+            <p>Nenhum chamado encontrado</p>
             <button class="btn btn-outline" id="btn-limpar-busca-vazia">
-                <i class="fas fa-undo"></i> Limpar busca
+                <i class="fas fa-undo"></i> Limpar filtros
             </button>
         </div>
 
@@ -231,6 +250,67 @@
 
 {% block extra_css %}
 <style>
+/* ═══════════════════════════════════════════════════════════════
+   FILTROS RÁPIDOS (CHIPS)
+   ═══════════════════════════════════════════════════════════════ */
+
+.card-filters .filtros-rapidos {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.filtro-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border-color, #e9ecef);
+    background: var(--bg-body, #f8f9fa);
+    color: var(--text-secondary, #6c757d);
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.filtro-chip i {
+    font-size: 0.75rem;
+}
+
+.filtro-chip:hover {
+    border-color: var(--primary, #f46c6c);
+    color: var(--primary, #f46c6c);
+    transform: translateY(-1px);
+}
+
+.filtro-chip.active {
+    background: var(--primary, #f46c6c);
+    border-color: var(--primary, #f46c6c);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(244, 108, 108, 0.3);
+}
+
+@media (max-width: 768px) {
+    .card-filters .filtros-rapidos {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .filtro-chip {
+        flex-shrink: 0;
+        padding: 6px 12px;
+        font-size: 0.78rem;
+    }
+}
+
 /* ═══════════════════════════════════════════════════════════════
    BUSCA EM TEMPO REAL - ÚNICO CAMPO
    ═══════════════════════════════════════════════════════════════ */
@@ -1011,87 +1091,75 @@
     reordenarPorStatus();
 })();
 
-// Live search em tempo real
+// Filtros rápidos + Live search combinados
 (function() {
     const inputBusca = document.getElementById('busca-tempo-real');
     const btnLimpar = document.getElementById('limpar-busca');
     const contagem = document.getElementById('resultados-contagem');
     const vazioBusca = document.getElementById('busca-vazia');
     const btnLimparVazio = document.getElementById('btn-limpar-busca-vazia');
+    const chips = document.querySelectorAll('#filtros-rapidos .filtro-chip');
 
     const rows = document.querySelectorAll('.chamado-row');
     const cards = document.querySelectorAll('.chamado-card');
+
+    // Data de hoje no fuso local (formato YYYY-MM-DD)
+    const d = new Date();
+    const hoje = d.getFullYear() + '-' +
+                 String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                 String(d.getDate()).padStart(2, '0');
+
+    let filtroAtivo = 'todos';
+
+    function matchFiltroRapido(el) {
+        const status = el.getAttribute('data-status') || '';
+        const criado = el.getAttribute('data-criado') || '';
+
+        if (filtroAtivo === 'todos') return true;
+        if (filtroAtivo === 'hoje') return criado === hoje;
+        return status === filtroAtivo;
+    }
+
+    function matchBusca(el, termoLower) {
+        const campos = ['data-titulo', 'data-descricao', 'data-local', 'data-status',
+                        'data-prioridade', 'data-setor', 'data-responsavel', 'data-id'];
+        for (let i = 0; i < campos.length; i++) {
+            const valor = el.getAttribute(campos[i]) || '';
+            if (valor.includes(termoLower)) return true;
+        }
+        return false;
+    }
 
     function filtrarChamados(termo) {
         const termoLower = termo.trim().toLowerCase();
         let visiveis = 0;
 
-        if (!termoLower) {
-            rows.forEach(row => row.style.display = '');
-            cards.forEach(card => card.style.display = '');
-            if (contagem) contagem.textContent = '';
-            if (vazioBusca) vazioBusca.style.display = 'none';
-            if (btnLimpar) btnLimpar.style.display = 'none';
-            return;
+        if (btnLimpar) {
+            btnLimpar.style.display = termoLower ? 'flex' : 'none';
         }
 
-        if (btnLimpar) btnLimpar.style.display = 'flex';
-
         rows.forEach(function(row) {
-            const titulo = row.getAttribute('data-titulo') || '';
-            const descricao = row.getAttribute('data-descricao') || '';
-            const local = row.getAttribute('data-local') || '';
-            const status = row.getAttribute('data-status') || '';
-            const prioridade = row.getAttribute('data-prioridade') || '';
-            const setor = row.getAttribute('data-setor') || '';
-            const responsavel = row.getAttribute('data-responsavel') || '';
-            const id = row.getAttribute('data-id') || '';
-
-            const match = titulo.includes(termoLower) ||
-                          descricao.includes(termoLower) ||
-                          local.includes(termoLower) ||
-                          status.includes(termoLower) ||
-                          prioridade.includes(termoLower) ||
-                          setor.includes(termoLower) ||
-                          responsavel.includes(termoLower) ||
-                          id.includes(termoLower);
-
-            if (match) {
-                row.style.display = '';
-                visiveis++;
-            } else {
-                row.style.display = 'none';
-            }
+            const ok = matchFiltroRapido(row) && (!termoLower || matchBusca(row, termoLower));
+            row.style.display = ok ? '' : 'none';
+            if (ok) visiveis++;
         });
 
         cards.forEach(function(card) {
-            const titulo = card.getAttribute('data-titulo') || '';
-            const descricao = card.getAttribute('data-descricao') || '';
-            const local = card.getAttribute('data-local') || '';
-            const status = card.getAttribute('data-status') || '';
-            const prioridade = card.getAttribute('data-prioridade') || '';
-            const setor = card.getAttribute('data-setor') || '';
-            const responsavel = card.getAttribute('data-responsavel') || '';
-            const id = card.getAttribute('data-id') || '';
-
-            const match = titulo.includes(termoLower) ||
-                          descricao.includes(termoLower) ||
-                          local.includes(termoLower) ||
-                          status.includes(termoLower) ||
-                          prioridade.includes(termoLower) ||
-                          setor.includes(termoLower) ||
-                          responsavel.includes(termoLower) ||
-                          id.includes(termoLower);
-
-            card.style.display = match ? '' : 'none';
+            const ok = matchFiltroRapido(card) && (!termoLower || matchBusca(card, termoLower));
+            card.style.display = ok ? '' : 'none';
         });
 
         if (contagem) {
-            if (visiveis === 0) {
-                contagem.textContent = 'Nenhum resultado encontrado';
-                contagem.classList.add('no-results');
+            if (termoLower || filtroAtivo !== 'todos') {
+                if (visiveis === 0) {
+                    contagem.textContent = 'Nenhum resultado encontrado';
+                    contagem.classList.add('no-results');
+                } else {
+                    contagem.textContent = visiveis + ' resultado' + (visiveis !== 1 ? 's' : '') + ' encontrado' + (visiveis !== 1 ? 's' : '');
+                    contagem.classList.remove('no-results');
+                }
             } else {
-                contagem.textContent = visiveis + ' resultado' + (visiveis !== 1 ? 's' : '') + ' encontrado' + (visiveis !== 1 ? 's' : '');
+                contagem.textContent = '';
                 contagem.classList.remove('no-results');
             }
         }
@@ -1101,6 +1169,26 @@
         }
     }
 
+    function limparTudo() {
+        if (inputBusca) inputBusca.value = '';
+        chips.forEach(function(c) { c.classList.remove('active'); });
+        const chipTodos = document.querySelector('#filtros-rapidos .filtro-chip[data-filtro="todos"]');
+        if (chipTodos) chipTodos.classList.add('active');
+        filtroAtivo = 'todos';
+        filtrarChamados('');
+    }
+
+    // Eventos dos chips de filtro
+    chips.forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            chips.forEach(function(c) { c.classList.remove('active'); });
+            this.classList.add('active');
+            filtroAtivo = this.getAttribute('data-filtro');
+            filtrarChamados(inputBusca ? inputBusca.value : '');
+        });
+    });
+
+    // Eventos da busca
     if (inputBusca) {
         inputBusca.addEventListener('input', function() {
             filtrarChamados(this.value);
@@ -1117,12 +1205,7 @@
     }
 
     if (btnLimparVazio) {
-        btnLimparVazio.addEventListener('click', function() {
-            if (inputBusca) {
-                inputBusca.value = '';
-                filtrarChamados('');
-            }
-        });
+        btnLimparVazio.addEventListener('click', limparTudo);
     }
 
     filtrarChamados('');
