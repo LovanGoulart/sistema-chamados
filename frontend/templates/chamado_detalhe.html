@@ -90,7 +90,7 @@
         <div class="header-descricao-mobile">
 
             <p class="header-descricao-texto">
-                {{ chamado.descricao }}
+                {{ chamado.descricao | trim }}
             </p>
 
             <span class="meta-sep">|</span>
@@ -409,7 +409,7 @@
                     </h4>
 
                     <p class="descricao-texto">
-                        {{ chamado.descricao }}
+                        {{ chamado.descricao | trim }}
                     </p>
 
                 </div>
@@ -1479,7 +1479,9 @@
     line-height: 1.7;
     color: var(--text-primary);
     font-size: 0.95rem;
-    white-space: pre-wrap;
+    text-align: left;
+    text-indent: 0;
+    white-space: pre-line;
 }
 
 .detalhes-grid-empresarial {
@@ -2381,7 +2383,9 @@
         color: var(--text-secondary);
         line-height: 1.6;
         margin: 0 0 8px 0;
-        white-space: pre-wrap;
+        text-align: left;
+        text-indent: 0;
+        white-space: pre-line;
     }
 
     .header-local-mobile {
