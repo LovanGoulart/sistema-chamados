@@ -1,449 +1,1151 @@
 {% extends "base.html" %}
 
 {% block title %}Chamado #{{ chamado.id }}{% endblock %}
+
 {% block page_title %}Chamado #{{ chamado.id }}{% endblock %}
 
 {% block content %}
+
 <div class="chamado-detalhe">
 
-        <!-- ═══════════════════════════════════════════════════════════════
-         ALERTA DE DATA PREVISTA
-         ═══════════════════════════════════════════════════════════════ -->
-    {% set status_data = verificar_data_destaque(chamado.data_preferencial) %}
-    {% if status_data in ['vencida', 'hoje', 'proxima'] and chamado.status.value not in ['resolvido', 'fechado'] %}
-    <div class="alert alert-destaque alert-data-{{ status_data }}">
-        <i class="fas fa-exclamation-circle"></i>
-        <strong>
-            {% if status_data == 'vencida' %}
-                Atenção:
-            {% elif status_data == 'hoje' %}
-                Hoje:
-            {% elif status_data == 'proxima' %}
-                Próximo:
-            {% endif %}
-        </strong>
+<!-- ═══════════════════════════════════════════════════════════════
+     ALERTA DE DATA PREVISTA
+     ═══════════════════════════════════════════════════════════════ -->
+
+{% set status_data = verificar_data_destaque(chamado.data_preferencial) %}
+
+{% if status_data in ['vencida', 'hoje', 'proxima'] and chamado.status.value not in ['resolvido', 'fechado'] %}
+<div class="alert alert-destaque alert-data-{{ status_data }}">
+    <i class="fas fa-exclamation-circle"></i>
+
+    <strong>
         {% if status_data == 'vencida' %}
-            A data preferencial para este chamado já foi atingida! Era {% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}!
+            Atenção:
         {% elif status_data == 'hoje' %}
-            A data preferencial para este chamado é hoje, {% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}!
+            Hoje:
         {% elif status_data == 'proxima' %}
-            A data preferencial para este chamado é amanhã, {% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}!
+            Próximo:
         {% endif %}
-    </div>
+    </strong>
+
+    {% if status_data == 'vencida' %}
+        A data preferencial para este chamado já foi atingida!
+        Era {% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}!
+    {% elif status_data == 'hoje' %}
+        A data preferencial para este chamado é hoje,
+        {% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}!
+    {% elif status_data == 'proxima' %}
+        A data preferencial para este chamado é amanhã,
+        {% if chamado.data_preferencial %}{{ formatar_data(chamado.data_preferencial) }}{% endif %}!
     {% endif %}
-
-    <!-- ═══════════════════════════════════════════════════════════════
-         HEADER EMPRESARIAL - INFO + AÇÕES
-         ═══════════════════════════════════════════════════════════════ -->
-    <div class="chamado-header-empresarial">
-        <!-- Coluna Esquerda: Info Principal -->
-        <div class="header-info-col">
-            <div class="header-badges">
-                <span class="badge-prioridade badge-large" style="background: {{ get_prioridade_cor(chamado.prioridade.value) }}">
-                    <i class="fas fa-flag"></i> {{ get_prioridade_label(chamado.prioridade.value) }}
-                </span>
-                <span class="badge-status badge-large" style="background: {{ get_status_cor(chamado.status.value) }}">
-                    {{ get_status_label(chamado.status.value) }}
-                </span>
-                {% if chamado.data_preferencial %}
-                <span class="badge-data {% set status_data_badge = verificar_data_destaque(chamado.data_preferencial) %}{% if status_data_badge in ['vencida', 'hoje', 'proxima'] %}badge-data-{{ status_data_badge }}{% endif %}">
-                    <i class="fas fa-calendar-alt"></i> {{ formatar_data(chamado.data_preferencial) }}
-                </span>
-                {% endif %}
-            </div>
-            <h1 class="chamado-titulo-principal">{{ chamado.titulo }}</h1>
-
-            <!-- Descrição e Local - MOBILE ONLY -->
-            <div class="header-descricao-mobile">
-                <p class="header-descricao-texto">{{ chamado.descricao }}</p>
-                <span class="meta-sep">|</span>
-                <!--<div class="header-local-mobile">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>{{ chamado.local }}</span>
-                </div>-->
-            </div>
-
-            <!-- Meta info em linha compacta -->
-            <div class="header-meta-inline">
-                <span><i class="fas fa-map-marker-alt"></i> <strong>Local:</strong> {{ chamado.local }}</span>
-                <!--<span class="meta-sep">|</span>-->
-                <span><i class="fas fa-building"></i> <strong>Área patrimonial:</strong> {{ chamado.area_patrimonial }}</span>
-                <span><i class="fas fa-user"></i> <strong>Solicitante:</strong> {{ chamado.usuario.nome }}</span>
-                <!--<span class="meta-sep">|</span>-->
-                <span><i class="fas fa-building"></i> <strong>Setor:</strong> {{ chamado.setor_destino.nome }}</span>
-                <span class="meta-sep">|</span>
-                <span><i class="fas fa-clock"></i> <strong>Aberto:</strong> {{ formatar_data_curta(chamado.created_at) }}</span>
-                {% if chamado.atendente %}
-                <!--<span class="meta-sep">|</span>-->
-                <span><i class="fas fa-user-check"></i> <strong>Responsável:</strong> {{ chamado.atendente.nome }}</span>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Coluna Direita: Ações Rápidas (apenas admin/setor) -->
-        {% if current_user.perfil.value in ['admin', 'setor'] and chamado.status.value not in ['resolvido', 'fechado'] %}
-        <div class="header-acoes-col">
-            <form method="POST" action="{{ url_for('main.atualizar_status_chamado', chamado_id=chamado.id) }}" class="acoes-rapidas">
-                <div class="acao-select-group">
-                    <label for="status"><i class="fas fa-exchange-alt"></i> Status</label>
-                    <select name="status" id="status" onchange="mostrarCampoSolucao(this)" class="select-status">
-                        <option value="aberto" {% if chamado.status.value == 'aberto' %}selected{% endif %}>Aberto</option>
-                        <option value="em_andamento" {% if chamado.status.value == 'em_andamento' %}selected{% endif %}>Em Andamento</option>
-                        <option value="pendente" {% if chamado.status.value == 'pendente' %}selected{% endif %}>Pendente</option>
-                        <option value="resolvido" {% if chamado.status.value == 'resolvido' %}selected{% endif %}>Resolvido</option>
-                        <option value="fechado" {% if chamado.status.value == 'fechado' %}selected{% endif %}>Fechado</option>
-                    </select>
-                </div>
-
-                <div class="acao-solucao" id="campoSolucao" style="display:none;">
-                    <label for="solucao_tecnica"><i class="fas fa-clipboard-check"></i> Solução Técnica <span class="required">*</span></label>
-                    <textarea name="solucao_tecnica" id="solucao_tecnica" rows="2" placeholder="Descreva o que foi realizado para resolver..."></textarea>
-                    <small class="hint-solucao">Obrigatório ao resolver ou fechar. Mínimo 5 caracteres.</small>
-                </div>
-
-                <div class="acao-obs" id="observacaoStatus" style="display:none;">
-                    <label for="observacao"><i class="fas fa-comment"></i> Observação</label>
-                    <textarea name="observacao" id="observacao" rows="2" placeholder="Motivo da alteração (opcional)..."></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-atualizar">
-                    <i class="fas fa-check"></i> Atualizar Status
-                </button>
-
-                {% if not chamado.atendente %}
-                <div class="auto-assign-info">
-                    <i class="fas fa-info-circle"></i> Ao atualizar, este chamado será atribuído automaticamente a você
-                </div>
-                {% endif %}
-            </form>
-        </div>
-        {% endif %}
-    </div>
-
-    <div class="chamado-grid-empresarial">
-        <!-- ═══════════════════════════════════════════════════════════════
-             COLUNA PRINCIPAL (2/3)
-             ═══════════════════════════════════════════════════════════════ -->
-        <div class="chamado-main-empresarial">
-
-            <!-- CARD SOLUÇÃO TÉCNICA / OBSERVAÇÃO DE STATUS -->
-{% if chamado.solucao_tecnica or chamado.observacao %}
-<div class="card card-solucao status-{{ chamado.status.value }}">
-    <div class="card-header">
-        <h3>
-            {% if chamado.status.value == 'resolvido' %}
-                <i class="fas fa-check-circle"></i> Solução Técnica Registrada
-            {% elif chamado.status.value == 'pendente' %}
-                <i class="fas fa-exclamation-triangle"></i> Chamado em Pendência
-            {% elif chamado.status.value == 'fechado' %}
-                <i class="fas fa-lock"></i> Chamado Encerrado
-            {% else %}
-                <i class="fas fa-tools"></i> Solução Técnica Registrada
-            {% endif %}
-        </h3>
-    </div>
-    <div class="card-body">
-        <div class="solucao-conteudo">
-            <p>{{ chamado.solucao_tecnica or chamado.observacao }}</p>
-        </div>
-        {% if chamado.data_resolucao or chamado.updated_at %}
-        <div class="solucao-meta">
-            <small><i class="fas fa-clock"></i> {{ formatar_data(chamado.data_resolucao or chamado.updated_at) }}</small>
-            {% if chamado.atendente %}
-            <small><i class="fas fa-user"></i> {{ chamado.atendente.nome }}</small>
-            {% endif %}
-        </div>
-        {% endif %}
-    </div>
 </div>
 {% endif %}
 
-            <!-- CARD DESCRIÇÃO E DETALHES -->
-            <div class="card card-detalhes">
-                <div class="card-header">
-                    <h3><i class="fas fa-align-left"></i> Detalhes do Chamado</h3>
-                </div>
-                <div class="card-body">
-                    <!-- Descrição -->
-                    <div class="secao-descricao">
-                        <h4 class="secao-titulo"><i class="fas fa-file-alt"></i> Descrição</h4>
-                        <p class="descricao-texto">{{ chamado.descricao }}</p>
-                    </div>
 
-                    <!-- Grid de detalhes em cards -->
-                    <div class="detalhes-grid-empresarial">
-                        <div class="detalhe-item">
-                            <span class="det-label"><i class="fas fa-map-marker-alt"></i> Local</span>
-                            <span class="det-value">{{ chamado.local }}</span>
-                        </div>
-                        {% if chamado.area_patrimonial %}
-                        <div class="detalhe-item">
-                            <span class="det-label"><i class="fas fa-building"></i> Área Patrimonial</span>
-                            <span class="det-value">{{ chamado.area_patrimonial }}</span>
-                        </div>
-                        {% endif %}
-                        {% if chamado.data_preferencial %}
-                        <div class="detalhe-item {% set status_data_det = verificar_data_destaque(chamado.data_preferencial) %}{% if status_data_det in ['vencida', 'hoje', 'proxima'] %}detalhe-{{ status_data_det }}{% endif %}">
-                            <span class="det-label"><i class="fas fa-calendar-alt"></i> Data Preferencial</span>
-                            <span class="det-value">{{ formatar_data(chamado.data_preferencial) }}</span>
-                        </div>
-                        {% endif %}
-                        <div class="detalhe-item">
-                            <span class="det-label"><i class="fas fa-sync-alt"></i> Última Atualização</span>
-                            <span class="det-value">{{ formatar_data_curta(chamado.updated_at) }}</span>
-                        </div>
-                        {% if chamado.data_resolucao %}
-                        <div class="detalhe-item detalhe-sucesso">
-                            <span class="det-label"><i class="fas fa-check-circle"></i> Resolvido em</span>
-                            <span class="det-value">{{ formatar_data(chamado.data_resolucao) }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+<!-- ═══════════════════════════════════════════════════════════════
+     HEADER EMPRESARIAL - INFO + AÇÕES
+     ═══════════════════════════════════════════════════════════════ -->
 
-            <!-- CARD ANEXOS -->
-            <div class="card card-anexos">
-                <div class="card-header">
-                    <h3><i class="fas fa-paperclip"></i> Anexos {% if anexos %}<span class="anexo-count">{{ anexos|length }}</span>{% endif %}</h3>
-                </div>
-                <div class="card-body">
-                    {% if anexos %}
-                    <div class="anexos-galeria">
-                        {% for anexo in anexos %}
-                        <div class="anexo-card" onclick="abrirAnexo('{{ url_for('main.ver_anexo', anexo_id=anexo.id) }}', '{{ anexo.tipo_arquivo }}')">
-                            {% if anexo.tipo_arquivo in ['jpg','jpeg','png','gif','webp'] %}
-                            <div class="anexo-preview-imagem">
-                                <img src="{{ url_for('main.ver_anexo', anexo_id=anexo.id) }}" alt="{{ anexo.nome_arquivo }}" loading="lazy">
-                                <div class="anexo-overlay">
-                                    <i class="fas fa-search-plus"></i>
-                                </div>
-                            </div>
-                            {% else %}
-                            <div class="anexo-preview-arquivo">
-                                <i class="fas fa-{% if anexo.tipo_arquivo == 'pdf' %}file-pdf{% else %}file{% endif %}"></i>
-                                <span class="anexo-ext">{{ anexo.tipo_arquivo.upper() }}</span>
-                            </div>
-                            {% endif %}
-                            <div class="anexo-info-card">
-                                <span class="anexo-nome-card" title="{{ anexo.nome_arquivo }}">{{ anexo.nome_arquivo }}</span>
-                                <span class="anexo-meta-card">{{ (anexo.tamanho / 1024)|round(1) }} KB</span>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <p class="anexos-vazio"><i class="fas fa-paperclip"></i> Nenhum anexo anexado</p>
-                    {% endif %}
+<div class="chamado-header-empresarial">
 
-                    <!-- Upload -->
-                    {% if chamado.status.value not in ['resolvido', 'fechado'] %}
-                    <div class="upload-area-nova">
-                        <form method="POST" action="{{ url_for('main.upload_anexo', chamado_id=chamado.id) }}" enctype="multipart/form-data" id="formUpload" style="max-width:100%;">
-                            <div class="upload-botoes">
-                                <button type="button" class="btn-upload" onclick="abrirInputFile('galeria')">
-                                    <i class="fas fa-images"></i>
-                                    <span>Galeria</span>
-                                </button>
+    <!-- Coluna Esquerda: Info Principal -->
+    <div class="header-info-col">
 
-                                <button type="button" class="btn-upload btn-camera" onclick="abrirInputFile('camera')">
-                                    <i class="fas fa-camera"></i>
-                                    <span>Câmera</span>
-                                </button>
-                            </div>
-                            <!-- Input único, controlado via JS -->
-                            <input type="file" name="arquivo" id="inputAnexo" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="display:none;" onchange="previewEEnviar(this)">
-                            <div class="upload-preview" id="uploadPreview"></div>
-                        </form>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+        <div class="header-badges">
 
-            <!-- CARD CHAT/MESSAGES -->
-            <div class="card card-messenger" id="mensagens">
-                <div class="card-header">
-                    <h3><i class="fas fa-comments"></i> Comunicação</h3>
-                    <span class="msg-count">{{ mensagens|length }} mensagens</span>
-                </div>
-                <div class="card-body card-body-messenger">
-                    {% if mensagens %}
-                    <div class="mensagens-container" id="mensagensContainer">
-                        {% for mensagem in mensagens %}
-                        {% if mensagem.autor and mensagem.autor.nome == 'Assistente Virtual' %}
-                        <div class="mensagem-bubble mensagem-bot">
-                            <div class="mensagem-inner">
-                                <div class="mensagem-info">
-                                    <span class="mensagem-autor"><i class="fas fa-robot"></i> {{ mensagem.autor.nome }} <span class="badge-ia">IA</span></span>
-                                    <span class="mensagem-hora">{{ formatar_data(mensagem.created_at) }}</span>
-                                </div>
-                                <p class="mensagem-texto">{{ mensagem.conteudo }}</p>
-                            </div>
-                        </div>
-                        {% else %}
-                        <div class="mensagem-bubble {% if mensagem.usuario_id == current_user.id %}mensagem-enviada{% else %}mensagem-recebida{% endif %}">
-                            <div class="mensagem-inner">
-                                <div class="mensagem-info">
-                                    <span class="mensagem-autor">{{ mensagem.autor.nome }}</span>
-                                    <span class="mensagem-hora">{{ formatar_data(mensagem.created_at) }}</span>
-                                </div>
-                                <p class="mensagem-texto">{{ mensagem.conteudo }}</p>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="mensagens-container vazio" id="mensagensContainer">
-                        <div class="empty-state small">
-                            <i class="fas fa-comment-dots"></i>
-                            <p>Nenhuma mensagem ainda</p>
-                            <p class="text-muted">O Assistente de TI responde automaticamente. Um atendente humano assumirá se necessário.</p>
-                        </div>
-                    </div>
-                    {% endif %}
+            <span
+                class="badge-prioridade badge-large"
+                style="background: {{ get_prioridade_cor(chamado.prioridade.value) }}"
+            >
+                <i class="fas fa-flag"></i>
+                {{ get_prioridade_label(chamado.prioridade.value) }}
+            </span>
 
-                    {% if chamado.status.value not in ['resolvido', 'fechado'] %}
-                    <form method="POST" action="{{ url_for('main.enviar_mensagem', chamado_id=chamado.id) }}" class="mensagem-form-messenger" id="formMensagem">
-                        <div class="input-group-messenger">
-                            <input type="text" name="conteudo" id="inputMensagem" placeholder="Digite sua mensagem..." required autocomplete="off">
-                            <button type="submit" class="btn btn-primary btn-send">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
-                    </form>
-                    {% else %}
-                    <div class="chat-bloqueado">
-                        <i class="fas fa-lock"></i> Chamado encerrado — chat desativado
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+            <span
+                class="badge-status badge-large"
+                style="background: {{ get_status_cor(chamado.status.value) }}"
+            >
+                {{ get_status_label(chamado.status.value) }}
+            </span>
+
+            {% if chamado.data_preferencial %}
+            <span class="badge-data
+                {% set status_data_badge = verificar_data_destaque(chamado.data_preferencial) %}
+                {% if status_data_badge in ['vencida', 'hoje', 'proxima'] %}
+                    badge-data-{{ status_data_badge }}
+                {% endif %}
+            ">
+                <i class="fas fa-calendar-alt"></i>
+                {{ formatar_data(chamado.data_preferencial) }}
+            </span>
+            {% endif %}
+
         </div>
 
-        <!-- ═══════════════════════════════════════════════════════════════
-             COLUNA LATERAL (1/3) - TIMELINE + INFO RÁPIDA
-             ═══════════════════════════════════════════════════════════════ -->
-        <div class="chamado-sidebar-empresarial">
-            <!-- Info rápida do chamado -->
-            <div class="card card-info-rapida">
-                <div class="card-header">
-                    <h3><i class="fas fa-info-circle"></i> Resumo</h3>
+        <h1 class="chamado-titulo-principal">
+            {{ chamado.titulo }}
+        </h1>
+
+        <!-- Descrição - MOBILE ONLY -->
+        <div class="header-descricao-mobile">
+
+            <p class="header-descricao-texto">
+                {{ chamado.descricao }}
+            </p>
+
+            <span class="meta-sep">|</span>
+
+            <!--
+            <div class="header-local-mobile">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ chamado.local }}</span>
+            </div>
+            -->
+
+        </div>
+
+        <!-- Meta info em linha compacta -->
+        <div class="header-meta-inline">
+
+            <span>
+                <i class="fas fa-map-marker-alt"></i>
+                <strong>Local:</strong>
+                {{ chamado.local }}
+            </span>
+
+            <span>
+                <i class="fas fa-building"></i>
+                <strong>Área patrimonial:</strong>
+                {{ chamado.area_patrimonial }}
+            </span>
+
+            <span>
+                <i class="fas fa-user"></i>
+                <strong>Solicitante:</strong>
+                {{ chamado.usuario.nome }}
+            </span>
+
+            <span>
+                <i class="fas fa-building"></i>
+                <strong>Setor:</strong>
+                {{ chamado.setor_destino.nome }}
+            </span>
+
+            <span class="meta-sep">|</span>
+
+            <span>
+                <i class="fas fa-clock"></i>
+                <strong>Aberto:</strong>
+                {{ formatar_data_curta(chamado.created_at) }}
+            </span>
+
+            {% if chamado.atendente %}
+            <span>
+                <i class="fas fa-user-check"></i>
+                <strong>Responsável:</strong>
+                {{ chamado.atendente.nome }}
+            </span>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Coluna Direita: Ações Rápidas -->
+    {% if current_user.perfil.value in ['admin', 'setor'] and chamado.status.value not in ['resolvido', 'fechado'] %}
+
+    <div class="header-acoes-col">
+
+        <form
+            method="POST"
+            action="{{ url_for('main.atualizar_status_chamado', chamado_id=chamado.id) }}"
+            class="acoes-rapidas"
+            id="formStatus"
+        >
+
+            <div class="acao-select-group">
+
+                <label for="status">
+                    <i class="fas fa-exchange-alt"></i>
+                    Status
+                </label>
+
+                <select
+                    name="status"
+                    id="status"
+                    onchange="mostrarCampoSolucao(this)"
+                    class="select-status"
+                >
+
+                    <option
+                        value="aberto"
+                        {% if chamado.status.value == 'aberto' %}selected{% endif %}
+                    >
+                        Aberto
+                    </option>
+
+                    <option
+                        value="em_andamento"
+                        {% if chamado.status.value == 'em_andamento' %}selected{% endif %}
+                    >
+                        Em Andamento
+                    </option>
+
+                    <option
+                        value="pendente"
+                        {% if chamado.status.value == 'pendente' %}selected{% endif %}
+                    >
+                        Pendente
+                    </option>
+
+                    <option
+                        value="resolvido"
+                        {% if chamado.status.value == 'resolvido' %}selected{% endif %}
+                    >
+                        Resolvido
+                    </option>
+
+                    <option
+                        value="fechado"
+                        {% if chamado.status.value == 'fechado' %}selected{% endif %}
+                    >
+                        Fechado
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div
+                class="acao-solucao"
+                id="campoSolucao"
+                style="display:none;"
+            >
+
+                <label for="solucao_tecnica">
+                    <i class="fas fa-clipboard-check"></i>
+                    Solução Técnica
+                    <span class="required">*</span>
+                </label>
+
+                <textarea
+                    name="solucao_tecnica"
+                    id="solucao_tecnica"
+                    rows="2"
+                    placeholder="Descreva o que foi realizado para resolver..."
+                ></textarea>
+
+                <small class="hint-solucao">
+                    Obrigatório ao resolver ou fechar. Mínimo 5 caracteres.
+                </small>
+
+            </div>
+
+
+            <div
+                class="acao-obs"
+                id="observacaoStatus"
+                style="display:none;"
+            >
+
+                <label for="observacao">
+                    <i class="fas fa-comment"></i>
+                    Observação
+                </label>
+
+                <textarea
+                    name="observacao"
+                    id="observacao"
+                    rows="2"
+                    placeholder="Motivo da alteração (opcional)..."
+                ></textarea>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="btn btn-primary btn-atualizar"
+            >
+                <i class="fas fa-check"></i>
+                Atualizar Status
+            </button>
+
+
+            {% if not chamado.atendente %}
+            <div class="auto-assign-info">
+                <i class="fas fa-info-circle"></i>
+                Ao atualizar, este chamado será atribuído automaticamente a você
+            </div>
+            {% endif %}
+
+        </form>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     GRID PRINCIPAL
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="chamado-grid-empresarial">
+
+
+    <!-- ═══════════════════════════════════════════════════════════
+         COLUNA PRINCIPAL
+         ═══════════════════════════════════════════════════════════ -->
+
+    <div class="chamado-main-empresarial">
+
+
+        <!-- ═══════════════════════════════════════════════════════
+             CARD SOLUÇÃO TÉCNICA
+             ═══════════════════════════════════════════════════════ -->
+
+        {% if chamado.solucao_tecnica or chamado.observacao %}
+
+        <div class="card card-solucao status-{{ chamado.status.value }}">
+
+            <div class="card-header">
+
+                <h3>
+
+                    {% if chamado.status.value == 'resolvido' %}
+
+                        <i class="fas fa-check-circle"></i>
+                        Solução Técnica Registrada
+
+                    {% elif chamado.status.value == 'pendente' %}
+
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Chamado em Pendência
+
+                    {% elif chamado.status.value == 'fechado' %}
+
+                        <i class="fas fa-lock"></i>
+                        Chamado Encerrado
+
+                    {% else %}
+
+                        <i class="fas fa-tools"></i>
+                        Solução Técnica Registrada
+
+                    {% endif %}
+
+                </h3>
+
+            </div>
+
+
+            <div class="card-body">
+
+                <div class="solucao-conteudo">
+
+                    <p>
+                        {{ chamado.solucao_tecnica or chamado.observacao }}
+                    </p>
+
                 </div>
-                <div class="card-body">
-                    <div class="info-item">
-                        <span class="info-label">ID</span>
-                        <span class="info-value">#{{ chamado.id }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Status</span>
-                        <span class="info-value">
-                            <span class="badge-status" style="background: {{ get_status_cor(chamado.status.value) }}">
-                                {{ get_status_label(chamado.status.value) }}
-                            </span>
-                        </span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Prioridade</span>
-                        <span class="info-value">
-                            <span class="badge-prioridade" style="background: {{ get_prioridade_cor(chamado.prioridade.value) }}">
-                                {{ get_prioridade_label(chamado.prioridade.value) }}
-                            </span>
-                        </span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Solicitante</span>
-                        <span class="info-value">{{ chamado.usuario.nome }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Setor Destino</span>
-                        <span class="info-value">{{ chamado.setor_destino.nome }}</span>
-                    </div>
+
+
+                {% if chamado.data_resolucao or chamado.updated_at %}
+
+                <div class="solucao-meta">
+
+                    <small>
+                        <i class="fas fa-clock"></i>
+                        {{ formatar_data(chamado.data_resolucao or chamado.updated_at) }}
+                    </small>
+
                     {% if chamado.atendente %}
-                    <div class="info-item">
-                        <span class="info-label">Responsável</span>
-                        <span class="info-value">{{ chamado.atendente.nome }}</span>
-                    </div>
-                    {% else %}
-                    <div class="info-item info-pendente">
-                        <span class="info-label">Responsável</span>
-                        <span class="info-value"><i class="fas fa-user-clock"></i> Aguardando atribuição</span>
-                    </div>
+
+                    <small>
+                        <i class="fas fa-user"></i>
+                        {{ chamado.atendente.nome }}
+                    </small>
+
                     {% endif %}
-                    <div class="info-item">
-                        <span class="info-label">Aberto em</span>
-                        <span class="info-value">{{ formatar_data(chamado.created_at) }}</span>
-                    </div>
-                    {% if chamado.data_resolucao %}
-                    <div class="info-item">
-                        <span class="info-label">Resolvido em</span>
-                        <span class="info-value">{{ formatar_data(chamado.data_resolucao) }}</span>
-                    </div>
-                    {% endif %}
+
                 </div>
+
+                {% endif %}
+
             </div>
 
-            <!-- Timeline -->
-            <div class="card card-timeline">
-                <div class="card-header">
-                    <h3><i class="fas fa-history"></i> Timeline</h3>
-                </div>
-                <div class="card-body">
-                    <div class="timeline-nova">
-                        <div class="timeline-item-nova">
-                            <div class="timeline-icon criado"><i class="fas fa-plus"></i></div>
-                            <div class="timeline-content-nova">
-                                <span class="timeline-acao">Chamado criado</span>
-                                <span class="timeline-data">{{ formatar_data(chamado.created_at) }}</span>
-                            </div>
-                        </div>
-                        {% if chamado.status.value != 'aberto' %}
-                        <div class="timeline-item-nova">
-                            <div class="timeline-icon alterado"><i class="fas fa-exchange-alt"></i></div>
-                            <div class="timeline-content-nova">
-                                <span class="timeline-acao">Status: {{ get_status_label(chamado.status.value) }}</span>
-                                <span class="timeline-data">{{ formatar_data(chamado.updated_at) }}</span>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% if chamado.atendente %}
-                        <div class="timeline-item-nova">
-                            <div class="timeline-icon atribuido"><i class="fas fa-user-check"></i></div>
-                            <div class="timeline-content-nova">
-                                <span class="timeline-acao">Atribuído a {{ chamado.atendente.nome }}</span>
-                                <span class="timeline-data">{{ formatar_data(chamado.updated_at) }}</span>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% if chamado.data_resolucao %}
-                        <div class="timeline-item-nova">
-                            <div class="timeline-icon resolvido"><i class="fas fa-check"></i></div>
-                            <div class="timeline-content-nova">
-                                <span class="timeline-acao">Chamado resolvido</span>
-                                <span class="timeline-data">{{ formatar_data(chamado.data_resolucao) }}</span>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
         </div>
+
+        {% endif %}
+
+
+        <!-- ═══════════════════════════════════════════════════════
+             CARD DETALHES
+             ═══════════════════════════════════════════════════════ -->
+
+        <div class="card card-detalhes">
+
+            <div class="card-header">
+
+                <h3>
+                    <i class="fas fa-align-left"></i>
+                    Detalhes do Chamado
+                </h3>
+
+            </div>
+
+
+            <div class="card-body">
+
+                <div class="secao-descricao">
+
+                    <h4 class="secao-titulo">
+                        <i class="fas fa-file-alt"></i>
+                        Descrição
+                    </h4>
+
+                    <p class="descricao-texto">
+                        {{ chamado.descricao }}
+                    </p>
+
+                </div>
+
+
+                <div class="detalhes-grid-empresarial">
+
+                    <div class="detalhe-item">
+
+                        <span class="det-label">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Local
+                        </span>
+
+                        <span class="det-value">
+                            {{ chamado.local }}
+                        </span>
+
+                    </div>
+
+
+                    {% if chamado.area_patrimonial %}
+
+                    <div class="detalhe-item">
+
+                        <span class="det-label">
+                            <i class="fas fa-building"></i>
+                            Área Patrimonial
+                        </span>
+
+                        <span class="det-value">
+                            {{ chamado.area_patrimonial }}
+                        </span>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    {% if chamado.data_preferencial %}
+
+                    <div class="detalhe-item
+                        {% set status_data_det = verificar_data_destaque(chamado.data_preferencial) %}
+                        {% if status_data_det in ['vencida', 'hoje', 'proxima'] %}
+                            detalhe-{{ status_data_det }}
+                        {% endif %}
+                    ">
+
+                        <span class="det-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            Data Preferencial
+                        </span>
+
+                        <span class="det-value">
+                            {{ formatar_data(chamado.data_preferencial) }}
+                        </span>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <div class="detalhe-item">
+
+                        <span class="det-label">
+                            <i class="fas fa-sync-alt"></i>
+                            Última Atualização
+                        </span>
+
+                        <span class="det-value">
+                            {{ formatar_data_curta(chamado.updated_at) }}
+                        </span>
+
+                    </div>
+
+
+                    {% if chamado.data_resolucao %}
+
+                    <div class="detalhe-item detalhe-sucesso">
+
+                        <span class="det-label">
+                            <i class="fas fa-check-circle"></i>
+                            Resolvido em
+                        </span>
+
+                        <span class="det-value">
+                            {{ formatar_data(chamado.data_resolucao) }}
+                        </span>
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ═══════════════════════════════════════════════════════
+             CARD ANEXOS
+             ═══════════════════════════════════════════════════════ -->
+
+        <div class="card card-anexos">
+
+            <div class="card-header">
+
+                <h3>
+
+                    <i class="fas fa-paperclip"></i>
+                    Anexos
+
+                    {% if anexos %}
+                    <span class="anexo-count">
+                        {{ anexos|length }}
+                    </span>
+                    {% endif %}
+
+                </h3>
+
+            </div>
+
+
+            <div class="card-body">
+
+                {% if anexos %}
+
+                <div class="anexos-galeria">
+
+                    {% for anexo in anexos %}
+
+                    <div
+                        class="anexo-card"
+                        onclick="abrirAnexo(
+                            '{{ url_for('main.ver_anexo', anexo_id=anexo.id) }}',
+                            '{{ anexo.tipo_arquivo }}'
+                        )"
+                    >
+
+                        {% if anexo.tipo_arquivo in ['jpg','jpeg','png','gif','webp'] %}
+
+                        <div class="anexo-preview-imagem">
+
+                            <img
+                                src="{{ url_for('main.ver_anexo', anexo_id=anexo.id) }}"
+                                alt="{{ anexo.nome_arquivo }}"
+                                loading="lazy"
+                            >
+
+                            <div class="anexo-overlay">
+                                <i class="fas fa-search-plus"></i>
+                            </div>
+
+                        </div>
+
+                        {% else %}
+
+                        <div class="anexo-preview-arquivo">
+
+                            <i class="fas fa-{% if anexo.tipo_arquivo == 'pdf' %}file-pdf{% else %}file{% endif %}"></i>
+
+                            <span class="anexo-ext">
+                                {{ anexo.tipo_arquivo.upper() }}
+                            </span>
+
+                        </div>
+
+                        {% endif %}
+
+
+                        <div class="anexo-info-card">
+
+                            <span
+                                class="anexo-nome-card"
+                                title="{{ anexo.nome_arquivo }}"
+                            >
+                                {{ anexo.nome_arquivo }}
+                            </span>
+
+                            <span class="anexo-meta-card">
+                                {{ (anexo.tamanho / 1024)|round(1) }} KB
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+                {% else %}
+
+                <p class="anexos-vazio">
+                    <i class="fas fa-paperclip"></i>
+                    Nenhum anexo anexado
+                </p>
+
+                {% endif %}
+
+
+                <!-- Upload -->
+
+                {% if chamado.status.value not in ['resolvido', 'fechado'] %}
+
+                <div class="upload-area-nova">
+
+                    <form
+                        method="POST"
+                        action="{{ url_for('main.upload_anexo', chamado_id=chamado.id) }}"
+                        enctype="multipart/form-data"
+                        id="formUpload"
+                        style="max-width:100%;"
+                    >
+
+                        <div class="upload-botoes">
+
+                            <button
+                                type="button"
+                                class="btn-upload"
+                                onclick="abrirInputFile('galeria')"
+                            >
+                                <i class="fas fa-images"></i>
+                                <span>Galeria</span>
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="btn-upload btn-camera"
+                                onclick="abrirInputFile('camera')"
+                            >
+                                <i class="fas fa-camera"></i>
+                                <span>Câmera</span>
+                            </button>
+
+                        </div>
+
+
+                        <input
+                            type="file"
+                            name="arquivo"
+                            id="inputAnexo"
+                            accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                            style="display:none;"
+                            onchange="previewEEnviar(this)"
+                        >
+
+
+                        <div
+                            class="upload-preview"
+                            id="uploadPreview"
+                        ></div>
+
+                    </form>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- ═══════════════════════════════════════════════════════
+             CARD CHAT
+             
+             IMPORTANTE:
+             ESTE CHAT É SOMENTE USUÁRIO ↔ TÉCNICO.
+             NÃO EXISTE MAIS TRATAMENTO PARA ASSISTENTE VIRTUAL.
+             ═══════════════════════════════════════════════════════ -->
+
+        <div
+            class="card card-messenger"
+            id="mensagens"
+        >
+
+            <div class="card-header">
+
+                <h3>
+                    <i class="fas fa-comments"></i>
+                    Comunicação
+                </h3>
+
+                <span class="msg-count">
+                    {{ mensagens|length }} mensagens
+                </span>
+
+            </div>
+
+
+            <div class="card-body card-body-messenger">
+
+                {% if mensagens %}
+
+                <div
+                    class="mensagens-container"
+                    id="mensagensContainer"
+                >
+
+                    {% for mensagem in mensagens %}
+
+                    <!--
+                        Todas as mensagens são tratadas da mesma forma.
+
+                        Se a mensagem pertence ao usuário atual:
+                            mensagem-enviada
+
+                        Caso contrário:
+                            mensagem-recebida
+
+                        Não existe mais mensagem-bot ou badge-IA.
+                    -->
+
+                    <div
+                        class="mensagem-bubble
+                        {% if mensagem.usuario_id == current_user.id %}
+                            mensagem-enviada
+                        {% else %}
+                            mensagem-recebida
+                        {% endif %}"
+                    >
+
+                        <div class="mensagem-inner">
+
+                            <div class="mensagem-info">
+
+                                <span class="mensagem-autor">
+                                    {{ mensagem.autor.nome }}
+                                </span>
+
+                                <span class="mensagem-hora">
+                                    {{ formatar_data(mensagem.created_at) }}
+                                </span>
+
+                            </div>
+
+
+                            <p class="mensagem-texto">
+                                {{ mensagem.conteudo }}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+                {% else %}
+
+                <div
+                    class="mensagens-container vazio"
+                    id="mensagensContainer"
+                >
+
+                    <div class="empty-state small">
+
+                        <i class="fas fa-comment-dots"></i>
+
+                        <p>
+                            Nenhuma mensagem ainda
+                        </p>
+
+                        <p class="text-muted">
+                            Envie uma mensagem para se comunicar com o técnico responsável pelo chamado.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+
+                {% if chamado.status.value not in ['resolvido', 'fechado'] %}
+
+                <form
+                    method="POST"
+                    action="{{ url_for('main.enviar_mensagem', chamado_id=chamado.id) }}"
+                    class="mensagem-form-messenger"
+                    id="formMensagem"
+                >
+
+                    <div class="input-group-messenger">
+
+                        <input
+                            type="text"
+                            name="conteudo"
+                            id="inputMensagem"
+                            placeholder="Digite sua mensagem..."
+                            required
+                            autocomplete="off"
+                        >
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary btn-send"
+                        >
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+
+                    </div>
+
+                </form>
+
+                {% else %}
+
+                <div class="chat-bloqueado">
+
+                    <i class="fas fa-lock"></i>
+                    Chamado encerrado — chat desativado
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
     </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SIDEBAR
+         ═══════════════════════════════════════════════════════════ -->
+
+    <div class="chamado-sidebar-empresarial">
+
+
+        <!-- Info rápida -->
+
+        <div class="card card-info-rapida">
+
+            <div class="card-header">
+
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    Resumo
+                </h3>
+
+            </div>
+
+
+            <div class="card-body">
+
+                <div class="info-item">
+                    <span class="info-label">ID</span>
+                    <span class="info-value">#{{ chamado.id }}</span>
+                </div>
+
+
+                <div class="info-item">
+
+                    <span class="info-label">Status</span>
+
+                    <span class="info-value">
+
+                        <span
+                            class="badge-status"
+                            style="background: {{ get_status_cor(chamado.status.value) }}"
+                        >
+                            {{ get_status_label(chamado.status.value) }}
+                        </span>
+
+                    </span>
+
+                </div>
+
+
+                <div class="info-item">
+
+                    <span class="info-label">Prioridade</span>
+
+                    <span class="info-value">
+
+                        <span
+                            class="badge-prioridade"
+                            style="background: {{ get_prioridade_cor(chamado.prioridade.value) }}"
+                        >
+                            {{ get_prioridade_label(chamado.prioridade.value) }}
+                        </span>
+
+                    </span>
+
+                </div>
+
+
+                <div class="info-item">
+
+                    <span class="info-label">Solicitante</span>
+
+                    <span class="info-value">
+                        {{ chamado.usuario.nome }}
+                    </span>
+
+                </div>
+
+
+                <div class="info-item">
+
+                    <span class="info-label">Setor Destino</span>
+
+                    <span class="info-value">
+                        {{ chamado.setor_destino.nome }}
+                    </span>
+
+                </div>
+
+
+                {% if chamado.atendente %}
+
+                <div class="info-item">
+
+                    <span class="info-label">Responsável</span>
+
+                    <span class="info-value">
+                        {{ chamado.atendente.nome }}
+                    </span>
+
+                </div>
+
+                {% else %}
+
+                <div class="info-item info-pendente">
+
+                    <span class="info-label">Responsável</span>
+
+                    <span class="info-value">
+                        <i class="fas fa-user-clock"></i>
+                        Aguardando atribuição
+                    </span>
+
+                </div>
+
+                {% endif %}
+
+
+                <div class="info-item">
+
+                    <span class="info-label">Aberto em</span>
+
+                    <span class="info-value">
+                        {{ formatar_data(chamado.created_at) }}
+                    </span>
+
+                </div>
+
+
+                {% if chamado.data_resolucao %}
+
+                <div class="info-item">
+
+                    <span class="info-label">Resolvido em</span>
+
+                    <span class="info-value">
+                        {{ formatar_data(chamado.data_resolucao) }}
+                    </span>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- Timeline -->
+
+        <div class="card card-timeline">
+
+            <div class="card-header">
+
+                <h3>
+                    <i class="fas fa-history"></i>
+                    Timeline
+                </h3>
+
+            </div>
+
+
+            <div class="card-body">
+
+                <div class="timeline-nova">
+
+                    <div class="timeline-item-nova">
+
+                        <div class="timeline-icon criado">
+                            <i class="fas fa-plus"></i>
+                        </div>
+
+                        <div class="timeline-content-nova">
+
+                            <span class="timeline-acao">
+                                Chamado criado
+                            </span>
+
+                            <span class="timeline-data">
+                                {{ formatar_data(chamado.created_at) }}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    {% if chamado.status.value != 'aberto' %}
+
+                    <div class="timeline-item-nova">
+
+                        <div class="timeline-icon alterado">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+
+                        <div class="timeline-content-nova">
+
+                            <span class="timeline-acao">
+                                Status: {{ get_status_label(chamado.status.value) }}
+                            </span>
+
+                            <span class="timeline-data">
+                                {{ formatar_data(chamado.updated_at) }}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    {% if chamado.atendente %}
+
+                    <div class="timeline-item-nova">
+
+                        <div class="timeline-icon atribuido">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+
+                        <div class="timeline-content-nova">
+
+                            <span class="timeline-acao">
+                                Atribuído a {{ chamado.atendente.nome }}
+                            </span>
+
+                            <span class="timeline-data">
+                                {{ formatar_data(chamado.updated_at) }}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    {% if chamado.data_resolucao %}
+
+                    <div class="timeline-item-nova">
+
+                        <div class="timeline-icon resolvido">
+                            <i class="fas fa-check"></i>
+                        </div>
+
+                        <div class="timeline-content-nova">
+
+                            <span class="timeline-acao">
+                                Chamado resolvido
+                            </span>
+
+                            <span class="timeline-data">
+                                {{ formatar_data(chamado.data_resolucao) }}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
 </div>
 
-<!-- MODAL PARA VISUALIZAR IMAGEM -->
-<div class="modal-imagem" id="modalImagem" onclick="fecharModal()">
-    <div class="modal-imagem-conteudo">
-        <img src="" alt="Preview" id="modalImagemSrc">
-        <button class="modal-fechar" onclick="fecharModal()"><i class="fas fa-times"></i></button>
-    </div>
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL PARA VISUALIZAR IMAGEM
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div
+    class="modal-imagem"
+    id="modalImagem"
+    onclick="fecharModal()"
+>
+
+<div
+    class="modal-imagem-conteudo"
+    onclick="event.stopPropagation()"
+>
+
+    <img
+        src=""
+        alt="Preview"
+        id="modalImagemSrc"
+    >
+
+    <button
+        type="button"
+        class="modal-fechar"
+        onclick="fecharModal()"
+    >
+        <i class="fas fa-times"></i>
+    </button>
+
 </div>
+</div>
+
 {% endblock %}
 
 {% block extra_css %}
+
 <style>
+
 /* ═══════════════════════════════════════════════════════════════
-   ALERTAS DE DATA PREFERENCIAL - CORREÇÃO MOBILE
+   ALERTAS DE DATA PREFERENCIAL
    ═══════════════════════════════════════════════════════════════ */
 
 .alert-destaque {
@@ -470,7 +1172,6 @@
     flex-shrink: 0;
 }
 
-/* Cores específicas */
 .alert-data-vencida {
     background: rgba(220, 53, 69, 0.08);
     border-left: 4px solid #dc3545;
@@ -501,80 +1202,6 @@
     color: #17a2b8;
 }
 
-/* ═══ CORREÇÃO MOBILE - ALERTA DE DATA ═══ */
-@media (max-width: 768px) {
-    .alert-destaque {
-        flex-direction: row;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 12px 14px;
-        font-size: 0.88rem;
-        line-height: 1.45;
-    }
-
-    .alert-destaque i {
-        font-size: 1.1rem;
-        margin-top: 3px;
-    }
-
-    .alert-destaque strong {
-        white-space: normal;
-        display: inline;
-    }
-
-    /* Força o texto a ficar em linha contínua, quebrando apenas quando necessário */
-    .alert-destaque {
-        word-break: keep-all;
-        overflow-wrap: break-word;
-        hyphens: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .alert-destaque {
-        padding: 10px 12px;
-        font-size: 0.85rem;
-        gap: 8px;
-        border-radius: 8px;
-    }
-
-    .alert-destaque i {
-        font-size: 1rem;
-        margin-top: 2px;
-    }
-}
-
-.alert-data-vencida {
-    background: rgba(220, 53, 69, 0.08);
-    border-left: 4px solid #dc3545;
-    color: #721c24;
-}
-
-.alert-data-vencida i {
-    color: #dc3545;
-}
-
-.alert-data-hoje {
-    background: rgba(255, 193, 7, 0.12);
-    border-left: 4px solid #ffc107;
-    color: #856404;
-}
-
-.alert-data-hoje i {
-    color: #ffc107;
-}
-
-.alert-data-proxima {
-    background: rgba(23, 162, 184, 0.08);
-    border-left: 4px solid #17a2b8;
-    color: #0c5460;
-}
-
-.alert-data-proxima i {
-    color: #17a2b8;
-}
-
-/* Badges de data com cores */
 .badge-data-vencida {
     background: #dc3545 !important;
     color: white !important;
@@ -590,7 +1217,6 @@
     color: white !important;
 }
 
-/* Detalhes com destaque de data */
 .detalhe-vencida {
     border-left: 3px solid #dc3545 !important;
     background: rgba(220, 53, 69, 0.04) !important;
@@ -605,6 +1231,7 @@
     border-left: 3px solid #17a2b8 !important;
     background: rgba(23, 162, 184, 0.04) !important;
 }
+
 
 /* ═══════════════════════════════════════════════════════════════
    HEADER EMPRESARIAL
@@ -667,7 +1294,6 @@
     font-weight: 300;
 }
 
-/* Ações rápidas */
 .header-acoes-col {
     min-width: 280px;
     max-width: 320px;
@@ -715,13 +1341,15 @@
     box-shadow: 0 0 0 3px rgba(244, 108, 108, 0.1);
 }
 
-.acao-solucao, .acao-obs {
+.acao-solucao,
+.acao-obs {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-.acao-solucao label, .acao-obs label {
+.acao-solucao label,
+.acao-obs label {
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-secondary);
@@ -729,7 +1357,8 @@
     letter-spacing: 0.5px;
 }
 
-.acao-solucao label i, .acao-obs label i {
+.acao-solucao label i,
+.acao-obs label i {
     margin-right: 4px;
     color: var(--primary);
 }
@@ -743,7 +1372,8 @@
     color: var(--text-muted);
 }
 
-.acao-solucao textarea, .acao-obs textarea {
+.acao-solucao textarea,
+.acao-obs textarea {
     padding: 10px 12px;
     border: 1.5px solid var(--border-color);
     border-radius: var(--border-radius-sm);
@@ -752,9 +1382,11 @@
     background: var(--bg-input);
     resize: vertical;
     width: 100%;
+    box-sizing: border-box;
 }
 
-.acao-solucao textarea:focus, .acao-obs textarea:focus {
+.acao-solucao textarea:focus,
+.acao-obs textarea:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(244, 108, 108, 0.1);
@@ -778,6 +1410,7 @@
     margin-right: 4px;
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
    GRID EMPRESARIAL
    ═══════════════════════════════════════════════════════════════ */
@@ -790,20 +1423,26 @@
 }
 
 @media (max-width: 1024px) {
+
     .chamado-grid-empresarial {
         grid-template-columns: 1fr;
     }
+
     .chamado-sidebar-empresarial {
         order: -1;
     }
+
     .chamado-header-empresarial {
         grid-template-columns: 1fr;
     }
+
     .header-acoes-col {
         max-width: 100%;
         min-width: auto;
     }
+
 }
+
 
 /* ═══════════════════════════════════════════════════════════════
    CARD DETALHES
@@ -896,8 +1535,9 @@
     font-size: 0.9rem;
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   CARD INFO RÁPIDA (Sidebar)
+   CARD INFO RÁPIDA
    ═══════════════════════════════════════════════════════════════ */
 
 .card-info-rapida .card-body {
@@ -938,8 +1578,9 @@
     font-size: 0.8rem;
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   ANEXOS - GALERIA COM PREVIEW
+   ANEXOS
    ═══════════════════════════════════════════════════════════════ */
 
 .card-anexos .card-body {
@@ -1078,7 +1719,9 @@
     margin-bottom: 12px;
 }
 
+
 /* Upload */
+
 .upload-area-nova {
     padding-top: 12px;
     border-top: 1px dashed var(--border-color);
@@ -1172,6 +1815,7 @@
     gap: 6px;
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
    MODAL IMAGEM
    ═══════════════════════════════════════════════════════════════ */
@@ -1225,6 +1869,7 @@
 .modal-fechar:hover {
     background: rgba(255,255,255,0.4);
 }
+
 
 /* ═══════════════════════════════════════════════════════════════
    CARD SOLUÇÃO TÉCNICA
@@ -1293,8 +1938,10 @@
     gap: 5px;
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
    CHAT ESTILO MESSENGER
+   SOMENTE USUÁRIO ↔ TÉCNICO
    ═══════════════════════════════════════════════════════════════ */
 
 .card-messenger {
@@ -1493,57 +2140,7 @@
 
 
 /* ═══════════════════════════════════════════════════════════════
-   MENSAGEM DO ASSISTENTE DE TI (BOT/IA)
-   ═══════════════════════════════════════════════════════════════ */
-
-.mensagem-bot {
-    align-self: flex-start;
-    justify-content: flex-start;
-}
-
-.mensagem-bot .mensagem-inner {
-    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
-    color: #1e1b4b;
-    border-radius: 18px 18px 18px 4px;
-    border: 1px solid #d8b4fe;
-    padding: 8px 12px;
-    box-shadow: 0 1px 2px rgba(124, 58, 237, 0.08);
-}
-
-.mensagem-bot .mensagem-autor {
-    color: #7c3aed;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.mensagem-bot .mensagem-autor i {
-    margin-right: 4px;
-}
-
-.badge-ia {
-    background: #7c3aed;
-    color: #fff;
-    font-size: 9px;
-    font-weight: 700;
-    padding: 1px 6px;
-    border-radius: 8px;
-    margin-left: 5px;
-    vertical-align: middle;
-    letter-spacing: 0.5px;
-}
-
-.mensagem-bot .mensagem-hora {
-    color: #6b7280;
-    font-size: 11px;
-}
-
-.mensagem-bot .mensagem-texto {
-    color: #1e1b4b;
-    margin: 2px 0 0 0;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   TIMELINE NOVA
+   TIMELINE
    ═══════════════════════════════════════════════════════════════ */
 
 .card-timeline .card-body {
@@ -1589,10 +2186,22 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
-.timeline-icon.criado { background: linear-gradient(135deg, #28a745, #20c997); }
-.timeline-icon.alterado { background: linear-gradient(135deg, #ffc107, #ff9800); color: #333; }
-.timeline-icon.atribuido { background: linear-gradient(135deg, #17a2b8, #0d8a9c); }
-.timeline-icon.resolvido { background: linear-gradient(135deg, #6c757d, #495057); }
+.timeline-icon.criado {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.timeline-icon.alterado {
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    color: #333;
+}
+
+.timeline-icon.atribuido {
+    background: linear-gradient(135deg, #17a2b8, #0d8a9c);
+}
+
+.timeline-icon.resolvido {
+    background: linear-gradient(135deg, #6c757d, #495057);
+}
 
 .timeline-content-nova {
     display: flex;
@@ -1612,13 +2221,23 @@
     color: var(--text-muted);
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
    ANIMAÇÕES
    ═══════════════════════════════════════════════════════════════ */
 
 @keyframes msgEntrar {
-    from { opacity: 0; transform: translateY(8px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
 }
 
 .mensagens-container::-webkit-scrollbar {
@@ -1634,11 +2253,35 @@
     border-radius: 3px;
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
    RESPONSIVIDADE
    ═══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
+
+    .alert-destaque {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 14px;
+        font-size: 0.88rem;
+        line-height: 1.45;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+        hyphens: none;
+    }
+
+    .alert-destaque i {
+        font-size: 1.1rem;
+        margin-top: 3px;
+    }
+
+    .alert-destaque strong {
+        white-space: normal;
+        display: inline;
+    }
+
     .chamado-header-empresarial {
         padding: 16px;
         grid-template-columns: 1fr;
@@ -1691,106 +2334,43 @@
         height: 400px;
     }
 
-    /* Reordenação mobile: Solução Técnica acima do Resumo */
     .chamado-sidebar-empresarial {
-        display: flex !important;
-        flex-direction: column !important;
-    }
-    .chamado-sidebar-empresarial .card-timeline {
-        order: 1 !important;
-    }
-    .chamado-sidebar-empresarial .card-info-rapida {
-        order: 2 !important;
+        display: none !important;
     }
 
-    /* Reordenação mobile: Header no topo, Solução Técnica em 2º */
+    .chamado-grid-empresarial {
+        grid-template-columns: 1fr !important;
+    }
+
     .chamado-detalhe {
         display: flex !important;
         flex-direction: column !important;
     }
+
     .chamado-detalhe .chamado-header-empresarial {
         order: -10 !important;
     }
+
     .chamado-detalhe .card-solucao {
         order: -9 !important;
     }
-    .chamado-detalhe .card-info-rapida {
-        order: -8 !important;
-    }
-    .chamado-detalhe .card-timeline {
-        order: -7 !important;
-    }
+
     .chamado-detalhe .card-detalhes {
         order: -6 !important;
     }
+
     .chamado-detalhe .card-anexos {
         order: -5 !important;
     }
+
     .chamado-detalhe .card-messenger {
         order: -4 !important;
     }
-}
 
-@media (max-width: 480px) {
-    .anexos-galeria {
-        grid-template-columns: repeat(2, 1fr);
-        max-width: 100%;
-        overflow: hidden;
-    }
-
-    .anexo-card {
-        min-width: 0;
-        max-width: 100%;
-    }
-
-    .anexo-info-card {
-        max-width: 100%;
-        overflow: hidden;
-    }
-
-    .mensagem-bubble {
-        max-width: 85%;
-    }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   OCULTAR RESUMO E TIMELINE APENAS NO MOBILE
-   Adicionado em 04/06/2026
-   ═══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-    /* Esconder card de resumo (info rápida) no mobile */
-    .chamado-sidebar-empresarial .card-info-rapida {
+    .card-detalhes {
         display: none !important;
     }
 
-    /* Esconder card de timeline no mobile */
-    .chamado-sidebar-empresarial .card-timeline {
-        display: none !important;
-    }
-
-    /* Ocultar toda a sidebar lateral no mobile */
-    .chamado-sidebar-empresarial {
-        display: none !important;
-    }
-
-    /* Ajustar grid para ocupar largura total no mobile */
-    .chamado-grid-empresarial {
-        grid-template-columns: 1fr !important;
-    }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   DESCRIÇÃO E LOCAL NO HEADER - MOBILE ONLY
-   ═══════════════════════════════════════════════════════════════ */
-
-/* Por padrão (PC) - esconder os campos mobile */
-.header-descricao-mobile {
-    display: none;
-}
-
-/* Somente no mobile - mostrar descrição e local no header */
-@media (max-width: 768px) {
     .header-descricao-mobile {
         display: block;
         margin-bottom: 12px;
@@ -1818,250 +2398,699 @@
         font-size: 0.9rem;
     }
 
-    /* Esconder card de detalhes no mobile */
-    .card-detalhes {
-        display: none !important;
+}
+
+
+@media (max-width: 480px) {
+
+    .alert-destaque {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        gap: 8px;
+        border-radius: 8px;
     }
+
+    .alert-destaque i {
+        font-size: 1rem;
+        margin-top: 2px;
+    }
+
+    .anexos-galeria {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .anexo-card {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .anexo-info-card {
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .mensagem-bubble {
+        max-width: 85%;
+    }
+
 }
 
 </style>
+
 {% endblock %}
 
 {% block extra_js %}
+
 <script>
+
 /* ═══════════════════════════════════════════════════════════════
    MOSTRAR CAMPOS DE OBSERVAÇÃO/SOLUÇÃO
    ═══════════════════════════════════════════════════════════════ */
+
 function mostrarCampoSolucao(select) {
+
     const campoSolucao = document.getElementById('campoSolucao');
     const textareaSolucao = document.getElementById('solucao_tecnica');
+
     const observacaoDiv = document.getElementById('observacaoStatus');
     const textareaObservacao = document.getElementById('observacao');
 
-    if (select.value === 'resolvido' || select.value === 'fechado') {
+
+    if (
+        select.value === 'resolvido' ||
+        select.value === 'fechado'
+    ) {
+
         campoSolucao.style.display = 'flex';
-        textareaSolucao.setAttribute('required', 'required');
+
+        textareaSolucao.setAttribute(
+            'required',
+            'required'
+        );
+
     } else {
+
         campoSolucao.style.display = 'none';
-        textareaSolucao.removeAttribute('required');
+
+        textareaSolucao.removeAttribute(
+            'required'
+        );
+
         textareaSolucao.value = '';
+
     }
+
 
     if (select.value === 'pendente') {
+
         observacaoDiv.style.display = 'flex';
-        textareaObservacao.setAttribute('required', 'required');
+
+        textareaObservacao.setAttribute(
+            'required',
+            'required'
+        );
+
     } else {
+
         observacaoDiv.style.display = 'none';
-        textareaObservacao.removeAttribute('required');
+
+        textareaObservacao.removeAttribute(
+            'required'
+        );
+
         textareaObservacao.value = '';
+
     }
+
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   RESETAR FORMULÁRIO AO CARREGAR A PÁGINA (impede cache do navegador)
+   RESETAR FORMULÁRIO AO CARREGAR
    ═══════════════════════════════════════════════════════════════ */
+
 (function() {
-    const statusSelect = document.getElementById('status');
-    const textareaSolucao = document.getElementById('solucao_tecnica');
-    const textareaObservacao = document.getElementById('observacao');
-    const campoSolucao = document.getElementById('campoSolucao');
-    const observacaoDiv = document.getElementById('observacaoStatus');
+
+    const statusSelect =
+        document.getElementById('status');
+
+    const textareaSolucao =
+        document.getElementById('solucao_tecnica');
+
+    const textareaObservacao =
+        document.getElementById('observacao');
+
+    const campoSolucao =
+        document.getElementById('campoSolucao');
+
+    const observacaoDiv =
+        document.getElementById('observacaoStatus');
+
 
     if (statusSelect) {
-        // Sempre reseta para o valor atual do chamado vindo do servidor
-        const statusAtual = statusSelect.querySelector('option[selected]');
+
+        const statusAtual =
+            statusSelect.querySelector(
+                'option[selected]'
+            );
+
         if (statusAtual) {
-            statusSelect.value = statusAtual.value;
+            statusSelect.value =
+                statusAtual.value;
         }
 
-        // Limpa todos os campos extras
-        if (textareaSolucao) textareaSolucao.value = '';
-        if (textareaObservacao) textareaObservacao.value = '';
-        if (campoSolucao) campoSolucao.style.display = 'none';
-        if (observacaoDiv) observacaoDiv.style.display = 'none';
-        if (textareaSolucao) textareaSolucao.removeAttribute('required');
-        if (textareaObservacao) textareaObservacao.removeAttribute('required');
+
+        if (textareaSolucao) {
+            textareaSolucao.value = '';
+        }
+
+        if (textareaObservacao) {
+            textareaObservacao.value = '';
+        }
+
+        if (campoSolucao) {
+            campoSolucao.style.display = 'none';
+        }
+
+        if (observacaoDiv) {
+            observacaoDiv.style.display = 'none';
+        }
+
+        if (textareaSolucao) {
+            textareaSolucao.removeAttribute(
+                'required'
+            );
+        }
+
+        if (textareaObservacao) {
+            textareaObservacao.removeAttribute(
+                'required'
+            );
+        }
+
     }
+
 })();
 
+
 /* ═══════════════════════════════════════════════════════════════
-   ENVIAR STATUS VIA AJAX (SEM RECARREGAR PÁGINA)
+   ENVIAR STATUS VIA AJAX
    ═══════════════════════════════════════════════════════════════ */
+
 (function() {
-    const formStatus = document.getElementById('formStatus');
+
+    const formStatus =
+        document.getElementById('formStatus');
+
+
     if (formStatus) {
-        formStatus.addEventListener('submit', function(e) {
-            e.preventDefault(); // Impede o envio tradicional
 
-            const formData = new FormData(formStatus);
-            const actionUrl = formStatus.getAttribute('action');
+        formStatus.addEventListener(
+            'submit',
+            function(e) {
 
-            fetch(actionUrl, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    // Limpa os campos após sucesso
-                    document.getElementById('solucao_tecnica').value = '';
-                    document.getElementById('observacao').value = '';
-                    document.getElementById('campoSolucao').style.display = 'none';
-                    document.getElementById('observacaoStatus').style.display = 'none';
+                e.preventDefault();
 
-                    // Recarrega a página para mostrar a atualização
-                    window.location.reload();
-                } else {
-                    alert('Erro ao atualizar status. Tente novamente.');
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                alert('Erro ao atualizar status. Tente novamente.');
-            });
-        });
+
+                const formData =
+                    new FormData(formStatus);
+
+                const actionUrl =
+                    formStatus.getAttribute(
+                        'action'
+                    );
+
+
+                fetch(
+                    actionUrl,
+                    {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With':
+                                'XMLHttpRequest'
+                        }
+                    }
+                )
+
+                .then(function(response) {
+
+                    if (response.ok) {
+
+                        const solucao =
+                            document.getElementById(
+                                'solucao_tecnica'
+                            );
+
+                        const observacao =
+                            document.getElementById(
+                                'observacao'
+                            );
+
+                        const campoSolucao =
+                            document.getElementById(
+                                'campoSolucao'
+                            );
+
+                        const observacaoStatus =
+                            document.getElementById(
+                                'observacaoStatus'
+                            );
+
+
+                        if (solucao) {
+                            solucao.value = '';
+                        }
+
+                        if (observacao) {
+                            observacao.value = '';
+                        }
+
+                        if (campoSolucao) {
+                            campoSolucao.style.display =
+                                'none';
+                        }
+
+                        if (observacaoStatus) {
+                            observacaoStatus.style.display =
+                                'none';
+                        }
+
+
+                        window.location.reload();
+
+                    } else {
+
+                        alert(
+                            'Erro ao atualizar status. Tente novamente.'
+                        );
+
+                    }
+
+                })
+
+                .catch(function(error) {
+
+                    console.error(
+                        'Erro:',
+                        error
+                    );
+
+                    alert(
+                        'Erro ao atualizar status. Tente novamente.'
+                    );
+
+                });
+
+            }
+        );
+
     }
+
 })();
 
+
 /* ═══════════════════════════════════════════════════════════════
-   ENVIAR MENSAGEM VIA AJAX (SEM RECARREGAR PÁGINA)
+   ENVIAR MENSAGEM DO CHAT VIA AJAX
+   SOMENTE USUÁRIO ↔ TÉCNICO
    ═══════════════════════════════════════════════════════════════ */
+
 (function() {
-    const formMensagem = document.getElementById('formMensagem');
-    const inputMensagem = document.getElementById('inputMensagem');
 
-    if (formMensagem && inputMensagem) {
-        formMensagem.addEventListener('submit', function(e) {
-            e.preventDefault(); // Impede o envio tradicional
+    const formMensagem =
+        document.getElementById(
+            'formMensagem'
+        );
 
-            const mensagem = inputMensagem.value.trim();
-            if (mensagem.length === 0) return;
+    const inputMensagem =
+        document.getElementById(
+            'inputMensagem'
+        );
 
-            const formData = new FormData(formMensagem);
-            const actionUrl = formMensagem.getAttribute('action');
 
-            fetch(actionUrl, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+    if (
+        formMensagem &&
+        inputMensagem
+    ) {
+
+        formMensagem.addEventListener(
+            'submit',
+            function(e) {
+
+                e.preventDefault();
+
+
+                const mensagem =
+                    inputMensagem.value.trim();
+
+
+                if (
+                    mensagem.length === 0
+                ) {
+                    return;
                 }
-            })
-            .then(response => {
-                if (response.ok) {
-                    // Limpa o campo após sucesso
-                    inputMensagem.value = '';
 
-                    // Recarrega a página para mostrar a nova mensagem
-                    window.location.reload();
-                } else {
-                    alert('Erro ao enviar mensagem. Tente novamente.');
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                alert('Erro ao enviar mensagem. Tente novamente.');
-            });
-        });
+
+                const formData =
+                    new FormData(
+                        formMensagem
+                    );
+
+                const actionUrl =
+                    formMensagem.getAttribute(
+                        'action'
+                    );
+
+
+                fetch(
+                    actionUrl,
+                    {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With':
+                                'XMLHttpRequest'
+                        }
+                    }
+                )
+
+                .then(function(response) {
+
+                    if (response.ok) {
+
+                        inputMensagem.value = '';
+
+                        window.location.reload();
+
+                    } else {
+
+                        alert(
+                            'Erro ao enviar mensagem. Tente novamente.'
+                        );
+
+                    }
+
+                })
+
+                .catch(function(error) {
+
+                    console.error(
+                        'Erro:',
+                        error
+                    );
+
+                    alert(
+                        'Erro ao enviar mensagem. Tente novamente.'
+                    );
+
+                });
+
+            }
+        );
+
     }
+
 })();
 
+
 /* ═══════════════════════════════════════════════════════════════
-   ABRIR ANEXO (imagem em modal / arquivo em nova aba)
+   ABRIR ANEXO
    ═══════════════════════════════════════════════════════════════ */
+
 function abrirAnexo(url, tipo) {
-    if (['jpg','jpeg','png','gif','webp'].includes(tipo.toLowerCase())) {
-        const modal = document.getElementById('modalImagem');
-        const img = document.getElementById('modalImagemSrc');
+
+    if (
+        [
+            'jpg',
+            'jpeg',
+            'png',
+            'gif',
+            'webp'
+        ].includes(
+            tipo.toLowerCase()
+        )
+    ) {
+
+        const modal =
+            document.getElementById(
+                'modalImagem'
+            );
+
+        const img =
+            document.getElementById(
+                'modalImagemSrc'
+            );
+
+
         img.src = url;
-        modal.classList.add('ativo');
-        document.body.style.overflow = 'hidden';
+
+        modal.classList.add(
+            'ativo'
+        );
+
+        document.body.style.overflow =
+            'hidden';
+
     } else {
-        window.location.href = url;
+
+        window.location.href =
+            url;
+
     }
+
 }
+
 
 function fecharModal() {
-    const modal = document.getElementById('modalImagem');
-    modal.classList.remove('ativo');
-    document.body.style.overflow = '';
-    document.getElementById('modalImagemSrc').src = '';
+
+    const modal =
+        document.getElementById(
+            'modalImagem'
+        );
+
+    modal.classList.remove(
+        'ativo'
+    );
+
+    document.body.style.overflow =
+        '';
+
+    document.getElementById(
+        'modalImagemSrc'
+    ).src = '';
+
 }
 
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') fecharModal();
-});
+
+document.addEventListener(
+    'keydown',
+    function(e) {
+
+        if (e.key === 'Escape') {
+            fecharModal();
+        }
+
+    }
+);
+
 
 /* ═══════════════════════════════════════════════════════════════
    PREVIEW E ENVIO DE UPLOAD
    ═══════════════════════════════════════════════════════════════ */
+
 function abrirInputFile(tipo) {
-    const input = document.getElementById('inputAnexo');
+
+    const input =
+        document.getElementById(
+            'inputAnexo'
+        );
+
+
     if (tipo === 'camera') {
-        input.setAttribute('accept', 'image/*');
-        input.setAttribute('capture', 'environment');
+
+        input.setAttribute(
+            'accept',
+            'image/*'
+        );
+
+        input.setAttribute(
+            'capture',
+            'environment'
+        );
+
     } else {
-        input.setAttribute('accept', 'image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt');
-        input.removeAttribute('capture');
+
+        input.setAttribute(
+            'accept',
+            'image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt'
+        );
+
+        input.removeAttribute(
+            'capture'
+        );
+
     }
+
+
     input.click();
+
 }
+
 
 function previewEEnviar(input) {
-    const preview = document.getElementById('uploadPreview');
-    const form = document.getElementById('formUpload');
 
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const reader = new FileReader();
+    const preview =
+        document.getElementById(
+            'uploadPreview'
+        );
 
-        reader.onload = function(e) {
-            const isImage = file.type.startsWith('image/');
-            preview.innerHTML = `
-                <div class="preview-item">
-                    ${isImage ? `<img src="${e.target.result}" alt="Preview">` : `<i class="fas fa-file" style="font-size:2rem;color:var(--primary)"></i>`}
-                    <div class="preview-info">
-                        <span class="preview-nome">${file.name}</span>
-                        <span style="font-size:0.7rem;color:var(--text-muted)">${(file.size/1024).toFixed(1)} KB</span>
+    const form =
+        document.getElementById(
+            'formUpload'
+        );
+
+
+    if (
+        input.files &&
+        input.files[0]
+    ) {
+
+        const file =
+            input.files[0];
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            function(e) {
+
+                const isImage =
+                    file.type.startsWith(
+                        'image/'
+                    );
+
+
+                preview.innerHTML = `
+
+                    <div class="preview-item">
+
+                        ${
+                            isImage
+
+                            ? `
+                                <img
+                                    src="${e.target.result}"
+                                    alt="Preview"
+                                >
+                            `
+
+                            : `
+                                <i
+                                    class="fas fa-file"
+                                    style="font-size:2rem;color:var(--primary)"
+                                ></i>
+                            `
+                        }
+
+
+                        <div class="preview-info">
+
+                            <span class="preview-nome">
+                                ${file.name}
+                            </span>
+
+                            <span
+                                style="font-size:0.7rem;color:var(--text-muted)"
+                            >
+                                ${(file.size / 1024).toFixed(1)} KB
+                            </span>
+
+                        </div>
+
+
+                        <div class="preview-acoes">
+
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-primary"
+                                onclick="document.getElementById('formUpload').submit()"
+                            >
+                                <i class="fas fa-upload"></i>
+                                Enviar
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline"
+                                onclick="limparPreview()"
+                            >
+                                <i class="fas fa-times"></i>
+                            </button>
+
+                        </div>
+
                     </div>
-                    <div class="preview-acoes">
-                        <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('formUpload').submit()">
-                            <i class="fas fa-upload"></i> Enviar
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline" onclick="limparPreview()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            preview.classList.add('ativo');
-        };
 
-        if (file.type.startsWith('image/')) {
-            reader.readAsDataURL(file);
+                `;
+
+
+                preview.classList.add(
+                    'ativo'
+                );
+
+            };
+
+
+        if (
+            file.type.startsWith(
+                'image/'
+            )
+        ) {
+
+            reader.readAsDataURL(
+                file
+            );
+
         } else {
-            reader.onload({target: {result: ''}});
+
+            reader.onload({
+                target: {
+                    result: ''
+                }
+            });
+
         }
+
     }
+
 }
+
 
 function limparPreview() {
-    const preview = document.getElementById('uploadPreview');
+
+    const preview =
+        document.getElementById(
+            'uploadPreview'
+        );
+
     preview.innerHTML = '';
-    preview.classList.remove('ativo');
-    document.getElementById('inputAnexo').value = '';
+
+    preview.classList.remove(
+        'ativo'
+    );
+
+    document.getElementById(
+        'inputAnexo'
+    ).value = '';
+
 }
+
 
 /* ═══════════════════════════════════════════════════════════════
    AUTO-SCROLL DAS MENSAGENS
    ═══════════════════════════════════════════════════════════════ */
+
 (function() {
-    const container = document.getElementById('mensagensContainer');
+
+    const container =
+        document.getElementById(
+            'mensagensContainer'
+        );
+
+
     if (container) {
-        container.scrollTop = container.scrollHeight;
+
+        container.scrollTop =
+            container.scrollHeight;
+
     }
+
 })();
+
 </script>
+
 {% endblock %}

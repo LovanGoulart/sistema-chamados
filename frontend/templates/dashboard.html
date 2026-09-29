@@ -89,12 +89,12 @@
                             {% endif %}
                             <th style="width:120px" class="status-col">Status</th>
                             <th style="width:100px" class="prioridade-col">Prioridade</th>
-                            <th style="width:120px">Data</th>
+                            <th style="width:110px">Data</th>
                             <th style="width:20%">Descrição</th>
-                            <th style="width:13%">Local</th>
+                            <th style="width:12%">Local</th>
                             <!--<th style="width:120px">Data Prevista</th>-->
                             <th style="width:13%">Área</th>
-                            <th style="width:70px;text-align:center">Ações</th>
+                            <!--<th style="width:70px;text-align:center">Ações</th>-->
                         </tr>
                     </thead>
                     <tbody>
@@ -102,7 +102,10 @@
                         {% set status_data = verificar_data_destaque(chamado.data_preferencial) %}
                         <tr data-status="{{ chamado.status.value|lower }}"
                             data-criado="{{ chamado.created_at.strftime('%Y-%m-%d') }}"
-                            class="{% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-hoje{% endif %}">
+                            data-url="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}"
+                            tabindex="0"
+                            role="link"
+                            class="chamado-row {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-hoje{% endif %}">
                             <td><a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}">#{{ chamado.id }}</a></td>
                             {% if current_user.is_admin() %}
                             <td>
@@ -164,13 +167,13 @@
                             <td style="white-space: normal; word-break: break-word; overflow-wrap: break-word;">
                                 {{ chamado.area_patrimonial or 'Não informado' }}
                             </td>
-                            <td>
+                            <!--<td>
                                 <div class="table-actions">
                                     <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="btn-icon" title="Ver detalhes">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
-                            </td>
+                            </td>-->
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -181,9 +184,12 @@
             <div class="mobile-cards-view">
                 {% for chamado in chamados_ativos %}
                 {% set status_data = verificar_data_destaque(chamado.data_preferencial) %}
-                <div class="chamado-card {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-hoje{% endif %}"
+                <div class="chamado-card chamado-card-clicavel {% if chamado.prioridade.value == 'urgente' %}row-urgente{% elif chamado.prioridade.value == 'alta' %}row-alta{% endif %} {% if status_data == 'vencida' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-vencida{% elif status_data == 'hoje' and chamado.status.value not in ['resolvido', 'fechado'] %}row-data-hoje{% endif %}"
                      data-status="{{ chamado.status.value|lower }}"
-                     data-criado="{{ chamado.created_at.strftime('%Y-%m-%d') }}">
+                     data-criado="{{ chamado.created_at.strftime('%Y-%m-%d') }}"
+                     data-url="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}"
+                     tabindex="0"
+                     role="link">
                     <div class="chamado-card-header">
                         <a href="{{ url_for('main.chamado_detalhe', chamado_id=chamado.id) }}" class="chamado-card-id">#{{ chamado.id }}</a>
                         <div class="chamado-card-badges">
@@ -634,6 +640,29 @@
     background: var(--bg-hover, rgba(0,0,0,0.03)) !important;
 }
 
+/* ─── CHAMADO INTEIRO CLICÁVEL ─── */
+.data-table tbody tr.chamado-row {
+    cursor: pointer;
+}
+
+.data-table tbody tr.chamado-row:focus {
+    outline: 2px solid var(--primary, #0084ff);
+    outline-offset: -2px;
+}
+
+.data-table tbody tr.chamado-row td {
+    user-select: none;
+}
+
+.chamado-card-clicavel {
+    cursor: pointer;
+}
+
+.chamado-card-clicavel:focus {
+    outline: 2px solid var(--primary, #0084ff);
+    outline-offset: 2px;
+}
+
 /* ─── VIEW MOBILE: CARDS ─── */
 .mobile-cards-view {
     display: none;
@@ -976,6 +1005,40 @@
     });
 
     aplicarFiltro();
+
+    // ─── Clique na linha/card inteiro para abrir o chamado ───
+    function configurarChamadosClicaveis() {
+        const elementos = document.querySelectorAll(
+            '.table-desktop-view tbody tr.chamado-row, .mobile-cards-view .chamado-card-clicavel'
+        );
+
+        elementos.forEach(function(elemento) {
+            elemento.addEventListener('click', function(event) {
+                // Links e botões internos continuam funcionando normalmente.
+                if (event.target.closest('a, button, input, select, textarea, label')) {
+                    return;
+                }
+
+                const url = elemento.getAttribute('data-url');
+                if (url) {
+                    window.location.href = url;
+                }
+            });
+
+            // Acessibilidade: Enter e Espaço também abrem o chamado.
+            elemento.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    const url = elemento.getAttribute('data-url');
+                    if (url) {
+                        window.location.href = url;
+                    }
+                }
+            });
+        });
+    }
+
+    configurarChamadosClicaveis();
 })();
 </script>
 {% endblock %}
