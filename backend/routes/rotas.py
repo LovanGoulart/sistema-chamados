@@ -882,15 +882,16 @@ def admin_usuarios():
     """Gerenciamento de usuários (apenas admin).
 
     Ordenação:
-      - Ativos primeiro (mais recentes no topo)
-      - Inativos depois (mais recentes no topo)
+      - Usuários ativos primeiro
+      - Usuários inativos depois
+      - Dentro de cada grupo, ordem alfabética pelo nome
     """
+
     if not current_user.is_admin():
         flash('Acesso restrito a administradores.', 'error')
         return redirect(url_for('main.dashboard'))
 
-    pagina = request.args.get('page', 1, type=int)
-    busca = request.args.get('busca', '')
+    busca = request.args.get('busca', '').strip()
 
     query = Usuario.query
 
@@ -902,18 +903,24 @@ def admin_usuarios():
             )
         )
 
-    usuarios = query.order_by(Usuario.ativo.desc(), Usuario.created_at.desc()).paginate(
-        page=pagina, per_page=10, error_out=False
+    # Ativos primeiro e, dentro de cada grupo, ordem alfabética
+    usuarios = query.order_by(
+        Usuario.ativo.desc(),
+        Usuario.nome.asc()
+    ).all()
+
+    setores = Setor.query.filter_by(
+        ativo=True
+    ).order_by(
+        Setor.nome
+    ).all()
+
+    return render_template(
+        'admin_usuarios.html',
+        usuarios=usuarios,
+        setores=setores,
+        busca=busca
     )
-
-    setores = Setor.query.filter_by(ativo=True).order_by(Setor.nome).all()
-
-    return render_template('admin_usuarios.html', 
-                         usuarios=usuarios, 
-                         setores=setores, 
-                         busca=busca)
-
-
 @main.route('/admin/usuarios/novo', methods=['POST'])
 @login_required
 def admin_criar_usuario():
