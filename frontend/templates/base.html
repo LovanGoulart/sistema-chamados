@@ -2463,154 +2463,430 @@
         })();
     </script>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         AUTO-REFRESH A CADA 60 SEGUNDOS — PRESERVA DADOS DIGITADOS
-         ═══════════════════════════════════════════════════════════════ -->
-    <script>
-    (function() {
-        const STORAGE_KEY = 'autoRefresh_formData_' + location.pathname;
-        const SCROLL_KEY  = 'autoRefresh_scroll_' + location.pathname;
-        const FOCUS_KEY   = 'autoRefresh_focus_' + location.pathname;
-        const INTERVAL    = 60000; // 60 segundos
+<!-- ============================================================
+     SINCRONIZAÇÃO SILENCIOSA DOS CHAMADOS
+     
+     NÃO usa location.reload().
+     NÃO recarrega a página.
+     NÃO altera scroll.
+     NÃO fecha modais.
+     NÃO interfere no chat.
+     
+     Verifica alterações a cada 5 segundos.
+     ============================================================ -->
 
-        // ─── 1. ANTES DE SAIR: salvar todos os dados dos formulários ───
-        function salvarDados() {
-            const dados = {};
-            document.querySelectorAll('input, textarea, select').forEach(function(el) {
-                if (el.name || el.id) {
-                    const chave = el.name || el.id;
-                    if (el.type === 'checkbox' || el.type === 'radio') {
-                        dados[chave] = el.checked;
-                    } else if (el.type === 'file') {
-                        // Não salva arquivos (por segurança/não é possível)
-                    } else {
-                        dados[chave] = el.value;
-                    }
-                }
-            });
-            try {
-                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
-                sessionStorage.setItem(SCROLL_KEY, JSON.stringify({
-                    x: window.scrollX,
-                    y: window.scrollY
-                }));
-                const ativo = document.activeElement;
-                if (ativo && (ativo.tagName === 'INPUT' || ativo.tagName === 'TEXTAREA' || ativo.tagName === 'SELECT')) {
-                    sessionStorage.setItem(FOCUS_KEY, ativo.name || ativo.id || '');
-                }
-            } catch(e) {}
+<script id="sincronizacao-silenciosa-chamados">
+
+(function () {
+
+    const INTERVALO = 5000; // 5 segundos
+
+    let sincronizando = false;
+
+    let ultimoEstadoChamados = null;
+
+
+    // ============================================================
+    // CRIA UMA ASSINATURA DOS CHAMADOS
+    // ============================================================
+
+    function criarAssinatura(chamados) {
+
+        if (!Array.isArray(chamados)) {
+            return '';
         }
 
-        // ─── 2. AO CARREGAR: restaurar dados salvos ───
-        function restaurarDados() {
-            try {
-                const salvos = sessionStorage.getItem(STORAGE_KEY);
-                if (!salvos) return;
-                const dados = JSON.parse(salvos);
+        return chamados.map(function (chamado) {
 
-                document.querySelectorAll('input, textarea, select').forEach(function(el) {
-                    const chave = el.name || el.id;
-                    if (chave && dados.hasOwnProperty(chave)) {
-                        if (el.type === 'checkbox' || el.type === 'radio') {
-                            el.checked = dados[chave];
-                        } else if (el.type !== 'file' && el.type !== 'password') {
-                            el.value = dados[chave];
-                            // Dispara evento input para máscaras/validações
-                            el.dispatchEvent(new Event('input', { bubbles: true }));
+            return [
+                chamado.id,
+                chamado.titulo,
+                chamado.descricao,
+                chamado.local,
+                chamado.status,
+                chamado.prioridade,
+                chamado.setor,
+                chamado.responsavel,
+                chamado.data_preferencial,
+                chamado.updated_at
+            ].join('|');
+
+        }).join('||');
+    }
+
+
+    // ============================================================
+    // ATUALIZA SOMENTE A LISTA DE CHAMADOS
+    // ============================================================
+
+    async function sincronizarChamados() {
+
+        // Só faz a sincronização nas páginas relacionadas a chamados.
+        const caminho = window.location.pathname;
+
+        const paginaChamados =
+            caminho === '/chamados' ||
+            caminho === '/dashboard' ||
+            caminho.startsWith('/chamados/');
+
+        if (!paginaChamados) {
+            return;
+        }
+
+
+        // Não atualiza enquanto o usuário estiver digitando.
+        const ativo = document.activeElement;
+
+        if (
+            ativo &&
+            (
+                ativo.tagName === 'INPUT' ||
+                ativo.tagName === 'TEXTAREA' ||
+                ativo.tagName === 'SELECT'
+            )
+        ) {
+            return;
+        }
+
+
+        // Evita requisições simultâneas.
+        if (sincronizando) {
+            return;
+        }
+
+        sincronizando = true;
+
+
+        try {
+
+            const resposta = await fetch(
+                "{{ url_for('api.api_sincronizar_chamados') }}",
+                {
+                    method: 'GET',
+
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    },
+
+                    cache: 'no-store'
+                }
+            );
+
+
+            if (resposta.status === 401) {
+                return;
+            }
+
+
+            if (!resposta.ok) {
+                return;
+            }
+
+
+            const dados = await resposta.json();
+
+
+            if (
+                !dados.success ||
+                !Array.isArray(dados.chamados)
+            ) {
+                return;
+            }
+
+
+            const novaAssinatura =
+                criarAssinatura(dados.chamados);
+
+
+            // Primeira execução.
+            if (ultimoEstadoChamados === null) {
+
+                ultimoEstadoChamados =
+                    novaAssinatura;
+
+                return;
+            }
+
+
+            // Nada mudou.
+            if (
+                novaAssinatura ===
+                ultimoEstadoChamados
+            ) {
+                return;
+            }
+
+
+            // Alguma coisa mudou.
+            ultimoEstadoChamados =
+                novaAssinatura;
+
+
+            console.debug(
+                'Chamados atualizados silenciosamente.'
+            );
+
+
+            /*
+             * A página de chamados possui sua própria
+             * estrutura de tabela/cards e filtros.
+             *
+             * Em vez de recarregar a página inteira,
+             * buscamos somente o HTML atualizado da página
+             * e substituímos as áreas da lista.
+             */
+            await atualizarListaVisual();
+
+
+        } catch (erro) {
+
+            // Erro silencioso.
+            // Não interrompe o funcionamento da página.
+
+            console.debug(
+                'Sincronização de chamados ignorada:',
+                erro
+            );
+
+        } finally {
+
+            sincronizando = false;
+
+        }
+
+    }
+
+
+    // ============================================================
+    // ATUALIZA SOMENTE OS CONTAINERS DOS CHAMADOS
+    // ============================================================
+
+    async function atualizarListaVisual() {
+
+        const tabelaAtual =
+            document.querySelector(
+                '#tabela-chamados tbody'
+            );
+
+        const cardsAtual =
+            document.querySelector(
+                '#cards-chamados'
+            );
+
+
+        /*
+         * Se não estamos em uma tela que possui
+         * a lista de chamados, não fazemos nada.
+         */
+        if (!tabelaAtual && !cardsAtual) {
+            return;
+        }
+
+
+        const resposta = await fetch(
+            window.location.href,
+            {
+                method: 'GET',
+
+                headers: {
+                    'Accept': 'text/html',
+                    'Cache-Control': 'no-cache'
+                },
+
+                cache: 'no-store'
+            }
+        );
+
+
+        if (!resposta.ok) {
+            return;
+        }
+
+
+        const html =
+            await resposta.text();
+
+
+        const parser =
+            new DOMParser();
+
+
+        const documento =
+            parser.parseFromString(
+                html,
+                'text/html'
+            );
+
+
+        /*
+         * --------------------------------------------------------
+         * TABELA DESKTOP
+         * --------------------------------------------------------
+         */
+
+        if (tabelaAtual) {
+
+            const novaTabela =
+                documento.querySelector(
+                    '#tabela-chamados tbody'
+                );
+
+            if (novaTabela) {
+
+                tabelaAtual.innerHTML =
+                    novaTabela.innerHTML;
+
+            }
+
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * CARDS MOBILE
+         * --------------------------------------------------------
+         */
+
+        if (cardsAtual) {
+
+            const novosCards =
+                documento.querySelector(
+                    '#cards-chamados'
+                );
+
+            if (novosCards) {
+
+                cardsAtual.innerHTML =
+                    novosCards.innerHTML;
+
+            }
+
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * REATIVA O COMPORTAMENTO DAS LINHAS/CARDS
+         * --------------------------------------------------------
+         */
+
+        inicializarCliqueChamados();
+
+
+        /*
+         * --------------------------------------------------------
+         * REAPLICA OS FILTROS DA PÁGINA
+         * --------------------------------------------------------
+         */
+
+        if (
+            typeof window.aplicarFiltrosChamados ===
+            'function'
+        ) {
+
+            window.aplicarFiltrosChamados();
+
+        }
+
+    }
+
+
+    // ============================================================
+    // CLIQUE NAS LINHAS/CARDS
+    // ============================================================
+
+    function inicializarCliqueChamados() {
+
+        document
+            .querySelectorAll(
+                '.chamado-row[data-url], .chamado-card[data-url]'
+            )
+            .forEach(function (elemento) {
+
+                if (
+                    elemento.dataset
+                        .sincronizacaoClique === '1'
+                ) {
+                    return;
+                }
+
+
+                elemento.dataset
+                    .sincronizacaoClique = '1';
+
+
+                elemento.addEventListener(
+                    'click',
+                    function (evento) {
+
+                        /*
+                         * Não intercepta links,
+                         * botões ou elementos interativos.
+                         */
+
+                        if (
+                            evento.target.closest('a') ||
+                            evento.target.closest('button') ||
+                            evento.target.closest('input') ||
+                            evento.target.closest('select') ||
+                            evento.target.closest('textarea')
+                        ) {
+                            return;
                         }
+
+
+                        const url =
+                            elemento.dataset.url;
+
+
+                        if (url) {
+                            window.location.href =
+                                url;
+                        }
+
                     }
-                });
+                );
 
-                // Restaurar scroll
-                const scroll = sessionStorage.getItem(SCROLL_KEY);
-                if (scroll) {
-                    const pos = JSON.parse(scroll);
-                    window.scrollTo(pos.x, pos.y);
-                }
+            });
 
-                // Restaurar foco
-                const foco = sessionStorage.getItem(FOCUS_KEY);
-                if (foco) {
-                    const el = document.querySelector('[name="' + foco + '"], #' + foco);
-                    if (el) {
-                        setTimeout(function() { el.focus(); }, 100);
-                    }
-                }
+    }
 
-                // Limpar dados restaurados
-                sessionStorage.removeItem(STORAGE_KEY);
-                sessionStorage.removeItem(SCROLL_KEY);
-                sessionStorage.removeItem(FOCUS_KEY);
-            } catch(e) {}
+
+    // ============================================================
+    // INICIALIZAÇÃO
+    // ============================================================
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
+
+            inicializarCliqueChamados();
+
+            /*
+             * Primeira consulta após 5 segundos.
+             */
+            setTimeout(
+                sincronizarChamados,
+                INTERVALO
+            );
+
+
+            /*
+             * Depois continua verificando.
+             */
+            setInterval(
+                sincronizarChamados,
+                INTERVALO
+            );
+
         }
+    );
 
-        // ─── 3. VERIFICAR SE O USUÁRIO ESTÁ DIGITANDO ───
-        function usuarioInteragindo() {
-            const ativo = document.activeElement;
-            if (!ativo) return false;
-            if (ativo.tagName === 'INPUT' || ativo.tagName === 'TEXTAREA' || ativo.tagName === 'SELECT') {
-                return true;
-            }
-            // Verifica se algum modal está aberto
-            const modais = document.querySelectorAll('.modal.active, .modal.ativo');
-            if (modais.length > 0) return true;
-            return false;
-        }
 
-        // ─── 4. TIMER DE ATUALIZAÇÃO ───
-        let timer = null;
+})();
 
-        function agendarRefresh() {
-            if (timer) clearTimeout(timer);
-            timer = setTimeout(function() {
-                if (usuarioInteragindo()) {
-                    // Se o usuário está digitando, adia 30 segundos
-                    agendarRefreshAdiado();
-                    return;
-                }
-                salvarDados();
-                location.reload();
-            }, INTERVAL);
-        }
-
-        function agendarRefreshAdiado() {
-            if (timer) clearTimeout(timer);
-            timer = setTimeout(function() {
-                if (usuarioInteragindo()) {
-                    // Ainda digitando, adia mais 30s
-                    agendarRefreshAdiado();
-                    return;
-                }
-                salvarDados();
-                location.reload();
-            }, 30000); // 30 segundos de adiamento
-        }
-
-        // ─── 5. EVENTOS: salvar dados periodicamente ───
-        document.addEventListener('input', function(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-                salvarDados();
-            }
-        }, true);
-
-        document.addEventListener('change', function(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-                salvarDados();
-            }
-        }, true);
-
-        // ─── 6. INICIALIZAÇÃO ───
-        document.addEventListener('DOMContentLoaded', function() {
-            restaurarDados();
-            agendarRefresh();
-        });
-
-        // ─── 7. ANTES DE SAIR DA PÁGINA (navegação manual) ───
-        window.addEventListener('beforeunload', function() {
-            salvarDados();
-        });
-    })();
-    </script>
+</script>
 
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 

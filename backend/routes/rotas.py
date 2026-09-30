@@ -1311,3 +1311,99 @@ def api_chamado(chamado_id):
         return jsonify({'error': 'Permissão negada'}), 403
 
     return jsonify(chamado.to_dict())
+
+@api.route('/chamados/sincronizar')
+@login_required
+def api_sincronizar_chamados():
+    """
+    Retorna os chamados que o usuário atual pode visualizar.
+
+    Essa API é usada pelo JavaScript para atualização silenciosa,
+    sem recarregar a página inteira.
+    """
+
+    try:
+        # Usa exatamente o mesmo serviço que a tela de chamados utiliza.
+        # Assim, as permissões continuam sendo respeitadas.
+        resultado = ChamadoService.listar_chamados(
+            current_user,
+            {},
+            1,
+            99999
+        )
+
+        chamados = get_chamados_ordenados(resultado)
+
+        dados = []
+
+        for chamado in chamados:
+            dados.append({
+                'id': chamado.id,
+                'titulo': chamado.titulo,
+                'descricao': chamado.descricao,
+                'local': chamado.local or '',
+
+                'status': (
+                    chamado.status.value
+                    if hasattr(chamado.status, 'value')
+                    else str(chamado.status)
+                ),
+
+                'prioridade': (
+                    chamado.prioridade.value
+                    if hasattr(chamado.prioridade, 'value')
+                    else str(chamado.prioridade)
+                ),
+
+                'setor': (
+                    chamado.setor_destino.nome
+                    if chamado.setor_destino
+                    else ''
+                ),
+
+                'responsavel': (
+                    chamado.atendente.nome
+                    if chamado.atendente
+                    else ''
+                ),
+
+                'usuario': (
+                    chamado.usuario.nome
+                    if chamado.usuario
+                    else ''
+                ),
+
+                'data_preferencial': (
+                    chamado.data_preferencial.isoformat()
+                    if chamado.data_preferencial
+                    else None
+                ),
+
+                'created_at': (
+                    chamado.created_at.isoformat()
+                    if chamado.created_at
+                    else None
+                ),
+
+                'updated_at': (
+                    chamado.updated_at.isoformat()
+                    if chamado.updated_at
+                    else None
+                )
+            })
+
+        return jsonify({
+            'success': True,
+            'chamados': dados,
+            'timestamp': datetime.now().isoformat()
+        })
+
+    except Exception as e:
+        current_app.logger.exception(
+            'Erro ao sincronizar chamados'
+        )
+
+        return jsonify({
+            'success': False,
+            'error': 'Não foi possível sincronizar os chamados.'
+        }), 500
