@@ -364,13 +364,13 @@
                         <span>Dashboards</span>
                     </a>
                 </li>
-                <li class="{% if request.endpoint == 'main.notificacoes' %}active{% endif %}">
+                <!--<li class="{% if request.endpoint == 'main.notificacoes' %}active{% endif %}">
                     <a href="{{ url_for('main.notificacoes') }}">
                         <i class="fas fa-bell"></i>
                         <span>Notificações</span>
                         <span class="badge" id="notifCount" style="display:none">0</span>
                     </a>
-                </li>
+                </li>-->
                 <li class="{% if request.endpoint in ['main.novo_chamado'] %}active{% endif %}">
                     <a href="{{ url_for('main.novo_chamado') }}">
                         <i class="fas fa-plus-circle"></i>
