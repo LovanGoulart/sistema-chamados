@@ -2888,7 +2888,68 @@
 
 </script>
 
+
+    <!-- ============================================================
+         INSTALAÇÃO DO APP (PWA) - beforeinstallprompt
+         Mostra o botão #btnInstalarApp quando o navegador permite
+         instalar o app. Sem este bloco, o botão fica escondido
+         para sempre.
+         ============================================================ -->
+    {% if current_user.is_authenticated %}
+    <script>
+    (function() {
+        'use strict';
+
+        let deferredPrompt = null;
+
+        const btnInstalar = document.getElementById('btnInstalarApp');
+
+        if (!btnInstalar) return;
+
+        // Se o app JÁ estiver instalado, mantém o botão escondido
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+            || window.navigator.standalone === true;
+
+        if (isStandalone) {
+            btnInstalar.style.display = 'none';
+        }
+
+        // O navegador dispara este evento quando o site é "instalável"
+        // (manifest OK + service worker ativo + HTTPS + critérios do navegador)
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();        // impede o mini-banner automático do navegador
+            deferredPrompt = e;        // guarda o evento para abrir no clique
+            btnInstalar.style.display = 'flex';
+        });
+
+        // Clique no botão → abre a janela nativa de instalação
+        btnInstalar.addEventListener('click', function() {
+            if (!deferredPrompt) return;
+
+            deferredPrompt.prompt();
+
+            deferredPrompt.userChoice.then(function(choiceResult) {
+                if (choiceResult.outcome === 'accepted') {
+                    btnInstalar.style.display = 'none';
+                }
+                deferredPrompt = null;
+            });
+        });
+
+        // Depois de instalado com sucesso, esconde o botão
+        window.addEventListener('appinstalled', function() {
+            btnInstalar.style.display = 'none';
+            deferredPrompt = null;
+        });
+    })();
+    </script>
+    {% endif %}
+
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+
+    {% if current_user.is_authenticated %}
+    <script src="{{ url_for('static', filename='js/pwa.js') }}"></script>
+    {% endif %}
 
     {% if current_user.is_authenticated and current_user.perfil.value == 'usuario' %}
     <script>
@@ -2916,7 +2977,6 @@
             if (closeBtn) closeBtn.addEventListener('click', fecharMenu);
             overlay.addEventListener('click', fecharMenu);
 
-            // Fechar ao clicar em link
             menu.querySelectorAll('a').forEach(function(link) {
                 link.addEventListener('click', function() {
                     fecharMenu();
