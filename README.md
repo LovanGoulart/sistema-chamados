@@ -131,9 +131,39 @@ wsgi.py
 
 ## Demonstração
 
-O sistema possui telas de acompanhamento, abertura e detalhamento de chamados, além de dashboards e assistente virtual.
+## 📸 Demonstração do sistema
 
-As imagens públicas de demonstração devem utilizar dados fictícios ou informações anonimizadas.
+### Visão geral
+
+Painel inicial com indicadores de atendimento, filtros e listagem dos chamados, reunindo status, prioridades e setores de destino.
+
+![Visão geral do Sistema de Chamados](vis%C3%A3o%20geral.png)
+
+### Assistente virtual com inteligência artificial
+
+O usuário descreve o problema em uma conversa. O assistente oferece orientações, coleta as informações necessárias e solicita confirmação antes de registrar o chamado.
+
+A imagem mostra a confirmação do usuário, a mensagem de sucesso e os dados do chamado criado.
+
+![Chatbot criando um chamado após a confirmação do usuário](abertura%20de%20chamado%20pelo%20chatbot.png)
+
+### Abertura de chamado por formulário
+
+Além do assistente virtual, o sistema permite registrar solicitações manualmente, informando título, setor de destino, prioridade, local, descrição e informações complementares.
+
+![Formulário de abertura de chamado](abertura%20manual%20de%20chamados.png)
+
+### Acompanhamento das solicitações
+
+Na tela Meus Chamados, o usuário consulta suas solicitações, pesquisa registros e acompanha o status, a prioridade e o setor responsável, com acesso à comunicação do atendimento.
+
+![Tela de acompanhamento dos chamados do usuário](meus%20chamados.png)
+
+### Dashboards por setor
+
+Gráficos apresentam a distribuição dos chamados por setor, status e prioridade, apoiando o acompanhamento das demandas.
+
+![Dashboards com indicadores dos chamados por setor](dashboards.png)
 
 ## Aspectos técnicos do projeto
 
