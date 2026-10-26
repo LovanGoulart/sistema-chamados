@@ -234,17 +234,37 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ── Loading state em botões de submit ──
-    document.querySelectorAll('form').forEach(function(form) {
-        form.addEventListener('submit', function() {
-            const submitBtn = form.querySelector('button[type="submit"]');
-            if (submitBtn && !submitBtn.dataset.noLoading) {
-                submitBtn.disabled = true;
-                submitBtn.dataset.originalText = submitBtn.innerHTML;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
-            }
-        });
+// ── Loading state em botões de submit ──
+document.querySelectorAll('form').forEach(function(form) {
+
+    form.addEventListener('submit', function() {
+
+        /*
+         * O formulário do Assistente Virtual possui
+         * seu próprio controle de envio.
+         *
+         * NÃO aplicar "Processando..." ao chat.
+         */
+        if (form.id === 'chatwaForm') {
+            return;
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        if (submitBtn && !submitBtn.dataset.noLoading) {
+
+            submitBtn.disabled = true;
+
+            submitBtn.dataset.originalText =
+                submitBtn.innerHTML;
+
+            submitBtn.innerHTML =
+                '<i class="fas fa-spinner fa-spin"></i> Processando...';
+        }
+
     });
+
+});
 
     // ── DataTables-like sorting (simples) ──
     document.querySelectorAll('.data-table th[data-sort]').forEach(function(th) {

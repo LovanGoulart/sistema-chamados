@@ -616,28 +616,68 @@ def atribuir_chamado(chamado_id):
 @main.route('/chamados/<int:chamado_id>/mensagem', methods=['POST'])
 @login_required
 def enviar_mensagem(chamado_id):
-    """Envia uma mensagem em um chamado."""
+    """
+    Envia uma mensagem em um chamado.
+
+    IMPORTANTE:
+    - Este chat é EXCLUSIVAMENTE entre o usuário e o técnico/atendente.
+    - O Assistente Virtual NÃO responde neste chat.
+    - O Assistente Virtual continua funcionando separadamente
+      através das rotas próprias do /api/assistente.
+    """
     chamado = Chamado.query.get_or_404(chamado_id)
 
-    # NOVA REGRA: Usar função auxiliar de permissão
+    # Verificar permissão para enviar mensagem
     if not pode_enviar_mensagem(chamado):
         flash('Permissão negada.', 'error')
-        return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
+        return redirect(
+            url_for('main.chamado_detalhe', chamado_id=chamado_id)
+        )
 
+    # Obter conteúdo da mensagem
     conteudo = request.form.get('conteudo', '').strip()
 
     if not conteudo:
         flash('Digite uma mensagem.', 'error')
-        return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
+        return redirect(
+            url_for('main.chamado_detalhe', chamado_id=chamado_id)
+        )
 
     try:
-        MensagemService.enviar_mensagem(chamado_id, current_user.id, conteudo)
+        # ==============================================================
+        # ENVIO DA MENSAGEM
+        # ==============================================================
+        # A mensagem é enviada SOMENTE pelo usuário logado.
+        # Não existe mais nenhuma chamada para IA aqui.
+        MensagemService.enviar_mensagem(
+            chamado_id,
+            current_user.id,
+            conteudo
+        )
+
+        # ==============================================================
+        # IMPORTANTE:
+        # NÃO colocar aqui:
+        #
+        # from backend.services.ia_service import responder_como_bot_async
+        # responder_como_bot_async(...)
+        #
+        # Essa chamada era a responsável por fazer o Assistente
+        # Virtual responder automaticamente dentro do chamado.
+        # ==============================================================
+
         flash('Mensagem enviada!', 'success')
+
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(
+            f'Erro ao enviar mensagem no chamado #{chamado_id}: {str(e)}'
+        )
         flash(f'Erro ao enviar mensagem: {str(e)}', 'error')
 
-    return redirect(url_for('main.chamado_detalhe', chamado_id=chamado_id))
+    return redirect(
+        url_for('main.chamado_detalhe', chamado_id=chamado_id)
+    )
 
 
 @main.route('/chamados/<int:chamado_id>/upload', methods=['POST'])
@@ -842,15 +882,16 @@ def admin_usuarios():
     """Gerenciamento de usuários (apenas admin).
 
     Ordenação:
-      - Ativos primeiro (mais recentes no topo)
-      - Inativos depois (mais recentes no topo)
+      - Usuários ativos primeiro
+      - Usuários inativos depois
+      - Dentro de cada grupo, ordem alfabética pelo nome
     """
+
     if not current_user.is_admin():
         flash('Acesso restrito a administradores.', 'error')
         return redirect(url_for('main.dashboard'))
 
-    pagina = request.args.get('page', 1, type=int)
-    busca = request.args.get('busca', '')
+    busca = request.args.get('busca', '').strip()
 
     query = Usuario.query
 
@@ -862,18 +903,24 @@ def admin_usuarios():
             )
         )
 
-    usuarios = query.order_by(Usuario.ativo.desc(), Usuario.created_at.desc()).paginate(
-        page=pagina, per_page=10, error_out=False
+    # Ativos primeiro e, dentro de cada grupo, ordem alfabética
+    usuarios = query.order_by(
+        Usuario.ativo.desc(),
+        Usuario.nome.asc()
+    ).all()
+
+    setores = Setor.query.filter_by(
+        ativo=True
+    ).order_by(
+        Setor.nome
+    ).all()
+
+    return render_template(
+        'admin_usuarios.html',
+        usuarios=usuarios,
+        setores=setores,
+        busca=busca
     )
-
-    setores = Setor.query.filter_by(ativo=True).order_by(Setor.nome).all()
-
-    return render_template('admin_usuarios.html', 
-                         usuarios=usuarios, 
-                         setores=setores, 
-                         busca=busca)
-
-
 @main.route('/admin/usuarios/novo', methods=['POST'])
 @login_required
 def admin_criar_usuario():
@@ -1264,3 +1311,99 @@ def api_chamado(chamado_id):
         return jsonify({'error': 'Permissão negada'}), 403
 
     return jsonify(chamado.to_dict())
+
+@api.route('/chamados/sincronizar')
+@login_required
+def api_sincronizar_chamados():
+    """
+    Retorna os chamados que o usuário atual pode visualizar.
+
+    Essa API é usada pelo JavaScript para atualização silenciosa,
+    sem recarregar a página inteira.
+    """
+
+    try:
+        # Usa exatamente o mesmo serviço que a tela de chamados utiliza.
+        # Assim, as permissões continuam sendo respeitadas.
+        resultado = ChamadoService.listar_chamados(
+            current_user,
+            {},
+            1,
+            99999
+        )
+
+        chamados = get_chamados_ordenados(resultado)
+
+        dados = []
+
+        for chamado in chamados:
+            dados.append({
+                'id': chamado.id,
+                'titulo': chamado.titulo,
+                'descricao': chamado.descricao,
+                'local': chamado.local or '',
+
+                'status': (
+                    chamado.status.value
+                    if hasattr(chamado.status, 'value')
+                    else str(chamado.status)
+                ),
+
+                'prioridade': (
+                    chamado.prioridade.value
+                    if hasattr(chamado.prioridade, 'value')
+                    else str(chamado.prioridade)
+                ),
+
+                'setor': (
+                    chamado.setor_destino.nome
+                    if chamado.setor_destino
+                    else ''
+                ),
+
+                'responsavel': (
+                    chamado.atendente.nome
+                    if chamado.atendente
+                    else ''
+                ),
+
+                'usuario': (
+                    chamado.usuario.nome
+                    if chamado.usuario
+                    else ''
+                ),
+
+                'data_preferencial': (
+                    chamado.data_preferencial.isoformat()
+                    if chamado.data_preferencial
+                    else None
+                ),
+
+                'created_at': (
+                    chamado.created_at.isoformat()
+                    if chamado.created_at
+                    else None
+                ),
+
+                'updated_at': (
+                    chamado.updated_at.isoformat()
+                    if chamado.updated_at
+                    else None
+                )
+            })
+
+        return jsonify({
+            'success': True,
+            'chamados': dados,
+            'timestamp': datetime.now().isoformat()
+        })
+
+    except Exception as e:
+        current_app.logger.exception(
+            'Erro ao sincronizar chamados'
+        )
+
+        return jsonify({
+            'success': False,
+            'error': 'Não foi possível sincronizar os chamados.'
+        }), 500

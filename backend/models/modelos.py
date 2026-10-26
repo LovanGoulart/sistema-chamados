@@ -283,3 +283,34 @@ class Notificacao(db.Model):
             'link': self.link,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+
+    # ============================================================
+# ADICIONAR ESTE MODELO NO FINAL DO ARQUIVO modelos.py
+# (depois da classe Notificacao)
+# ============================================================
+
+class MensagemChatAssistente(db.Model):
+    """Mensagens do chat geral com o Assistente Virtual
+    (conversa livre, sem vínculo com chamado)."""
+    __tablename__ = 'chat_assistente_mensagens'
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    origem = db.Column(db.String(10), nullable=False, default='usuario')  # 'usuario' | 'bot'
+    conteudo = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=agora_brasil_naive)
+
+    # Relacionamento
+    autor = db.relationship('Usuario', backref='mensagens_chat_assistente', lazy=True)
+
+    def __repr__(self):
+        return f'<ChatAssistente #{self.id} ({self.origem})>'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'usuario_id': self.usuario_id,
+            'origem': self.origem,
+            'conteudo': self.conteudo,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }

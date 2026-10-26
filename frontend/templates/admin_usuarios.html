@@ -29,7 +29,7 @@
 <!-- Lista de usuários -->
 <div class="card">
     <div class="card-body">
-        {% if usuarios.items %}
+        {% if usuarios %}
 
         <!-- ═══ VIEW: TABELA (desktop e tablet) ═══ -->
         <div class="table-responsive table-desktop-view" id="tabela-usuarios">
@@ -49,7 +49,7 @@
                 </thead>
                 <tbody>
                     {% set mostrou_separador = false %}
-                    {% for usuario in usuarios.items %}
+                    {% for usuario in usuarios %}
 
                     {% if not usuario.ativo and not mostrou_separador %}
                         {% set mostrou_separador = true %}
@@ -130,7 +130,7 @@
         <!-- ═══ VIEW: CARDS (mobile) ═══ -->
         <div class="mobile-cards-view" id="cards-usuarios">
             {% set mostrou_separador_mobile = false %}
-            {% for usuario in usuarios.items %}
+            {% for usuario in usuarios %}
 
             {% if not usuario.ativo and not mostrou_separador_mobile %}
                 {% set mostrou_separador_mobile = true %}
@@ -221,29 +221,7 @@
             </button>
         </div>
 
-        <!-- Paginação -->
-        {% if usuarios.pages > 1 %}
-        <div class="pagination" id="paginacao-usuarios">
-            {% if usuarios.has_prev %}
-            <a href="{{ url_for('main.admin_usuarios', page=usuarios.prev_num, busca=busca) }}" class="pagination-item"><i class="fas fa-chevron-left"></i></a>
-            {% endif %}
-            {% for page_num in usuarios.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                {% if page_num %}
-                    {% if page_num == usuarios.page %}
-                    <span class="pagination-item active">{{ page_num }}</span>
-                    {% else %}
-                    <a href="{{ url_for('main.admin_usuarios', page=page_num, busca=busca) }}" class="pagination-item">{{ page_num }}</a>
-                    {% endif %}
-                {% else %}
-                    <span class="pagination-item disabled">...</span>
-                {% endif %}
-            {% endfor %}
-            {% if usuarios.has_next %}
-            <a href="{{ url_for('main.admin_usuarios', page=usuarios.next_num, busca=busca) }}" class="pagination-item"><i class="fas fa-chevron-right"></i></a>
-            {% endif %}
-        </div>
-        {% endif %}
-
+        
         {% else %}
         <div class="empty-state">
             <i class="fas fa-users-slash"></i>
@@ -1427,7 +1405,6 @@ function openDeleteModal(id, nome) {
     const contagem = document.getElementById('resultados-contagem');
     const vazioBusca = document.getElementById('busca-vazia');
     const btnLimparVazio = document.getElementById('btn-limpar-busca-vazia');
-    const paginacao = document.getElementById('paginacao-usuarios');
 
     const rows = document.querySelectorAll('.usuario-row');
     const cards = document.querySelectorAll('.usuario-card');
@@ -1471,12 +1448,10 @@ function openDeleteModal(id, nome) {
             if (contagem) contagem.textContent = '';
             if (vazioBusca) vazioBusca.style.display = 'none';
             if (btnLimpar) btnLimpar.style.display = 'none';
-            if (paginacao) paginacao.style.display = '';
             return;
         }
 
         if (btnLimpar) btnLimpar.style.display = 'flex';
-        if (paginacao) paginacao.style.display = 'none';
 
         rows.forEach(function(row) {
             const nome = row.getAttribute('data-nome') || '';
