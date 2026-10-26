@@ -129,8 +129,6 @@ wsgi.py
 - **templates:** páginas renderizadas pela aplicação.
 - **static:** estilos, scripts e recursos visuais.
 
-## Demonstração
-
 ## 📸 Demonstração do sistema
 
 ### Visão geral
