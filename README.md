@@ -129,8 +129,6 @@ wsgi.py
 - **templates:** páginas renderizadas pela aplicação.
 - **static:** estilos, scripts e recursos visuais.
 
-## Demonstração
-
 ## 📸 Demonstração do sistema
 
 ### Visão geral
@@ -186,5 +184,4 @@ A configuração da integração de IA deve corresponder à versão do assistent
 ## Autor
 
 Desenvolvido por **Lovan Goulart**.
-
 [Perfil no GitHub](https://github.com/LovanGoulart)
