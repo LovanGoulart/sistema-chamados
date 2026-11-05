@@ -413,11 +413,14 @@ self.addEventListener('periodicsync', (event) => {
 async function checkNewNotifications() {
   // Verificar novas notificações em background
   try {
-    const response = await fetch('/api/notificacoes/pendentes');
+    const response = await fetch('/api/notificacoes/nao-lidas', { cache: 'no-store', credentials: 'same-origin' });
     if (response.ok) {
       const data = await response.json();
-      if (data.count > 0) {
-        self.registration.showNotification(
+      // Somente avisar sobre IDs novos na vida deste worker; não repetir a cada sync.
+      if (data.count > 0 && data.ultimo_id > (self.ultimoAvisoPeriodico || 0)) {
+        if (!self.ultimoAvisoPeriodico) { self.ultimoAvisoPeriodico = data.ultimo_id; return; }
+        self.ultimoAvisoPeriodico = data.ultimo_id;
+        await self.registration.showNotification(
           'Sistema de Chamados',
           {
             body: `Você tem ${data.count} notificação(ões) nova(s)`,
