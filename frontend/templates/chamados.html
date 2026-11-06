@@ -33,12 +33,12 @@
 <!-- Filtros rápidos + Busca em tempo real -->
 <div class="card card-filters">
     <div class="card-body">
-        <!--<div class="filtros-rapidos" id="filtros-rapidos">
+        <div class="filtros-rapidos" id="filtros-rapidos">
             <button class="filtro-chip active" data-filtro="todos">
                 <i class="fas fa-border-all"></i> Todos
             </button>
-            <button class="filtro-chip" data-filtro="hoje">
-                <i class="fas fa-calendar-day"></i> Hoje
+            <button class="filtro-chip" data-filtro="recentes">
+                <i class="fas fa-sort-amount-down"></i> Recentes
             </button>
             <button class="filtro-chip" data-filtro="aberto">
                 <i class="fas fa-folder-open"></i> Abertos
@@ -49,7 +49,7 @@
             <button class="filtro-chip" data-filtro="pendente">
                 <i class="fas fa-pause-circle"></i> Pendentes
             </button>
-        </div>-->
+        </div>
         <div class="search-wrapper">
             <i class="fas fa-search search-icon"></i>
             <input type="text" id="busca-tempo-real" placeholder="Digite uma palavra-chave" autocomplete="off">
@@ -62,7 +62,7 @@
 </div>
 
 <!-- Lista de chamados -->
-<div class="card">
+<div class="card" id="lista-chamados-atualizavel">
     <div class="card-body">
         {% if chamados.items %}
 
@@ -1118,12 +1118,12 @@
     const inputBusca = document.getElementById('busca-tempo-real');
     const btnLimpar = document.getElementById('limpar-busca');
     const contagem = document.getElementById('resultados-contagem');
-    const vazioBusca = document.getElementById('busca-vazia');
-    const btnLimparVazio = document.getElementById('btn-limpar-busca-vazia');
+    const obterVazioBusca = () => document.getElementById('busca-vazia');
+
     const chips = document.querySelectorAll('#filtros-rapidos .filtro-chip');
 
-    const rows = document.querySelectorAll('.chamado-row');
-    const cards = document.querySelectorAll('.chamado-card');
+    const obterLinhas = () => document.querySelectorAll('#lista-chamados-atualizavel .chamado-row');
+    const obterCards = () => document.querySelectorAll('#lista-chamados-atualizavel .chamado-card');
 
     // Data de hoje no fuso local (formato YYYY-MM-DD)
     const d = new Date();
@@ -1138,7 +1138,7 @@
         const criado = el.getAttribute('data-criado') || '';
 
         if (filtroAtivo === 'todos') return true;
-        if (filtroAtivo === 'hoje') return criado === hoje;
+        if (filtroAtivo === 'recentes') return true;
         return status === filtroAtivo;
     }
 
@@ -1152,7 +1152,21 @@
         return false;
     }
 
+    function ordenarRecentes() {
+        if (filtroAtivo !== 'recentes') return;
+        ['#tabela-chamados tbody', '#cards-chamados'].forEach(function (seletor) {
+            const alvo = document.querySelector(seletor);
+            if (!alvo) return;
+            Array.from(alvo.children).sort(function (a, b) {
+                const dataA = a.getAttribute('data-criado') || '';
+                const dataB = b.getAttribute('data-criado') || '';
+                return dataB.localeCompare(dataA) || Number(b.dataset.id || 0) - Number(a.dataset.id || 0);
+            }).forEach(function (el) { alvo.appendChild(el); });
+        });
+    }
+
     function filtrarChamados(termo) {
+        ordenarRecentes();
         const termoLower = termo.trim().toLowerCase();
         let visiveis = 0;
 
@@ -1160,13 +1174,13 @@
             btnLimpar.style.display = termoLower ? 'flex' : 'none';
         }
 
-        rows.forEach(function(row) {
+        obterLinhas().forEach(function(row) {
             const ok = matchFiltroRapido(row) && (!termoLower || matchBusca(row, termoLower));
             row.style.display = ok ? '' : 'none';
             if (ok) visiveis++;
         });
 
-        cards.forEach(function(card) {
+        obterCards().forEach(function(card) {
             const ok = matchFiltroRapido(card) && (!termoLower || matchBusca(card, termoLower));
             card.style.display = ok ? '' : 'none';
         });
@@ -1186,6 +1200,7 @@
             }
         }
 
+        const vazioBusca = obterVazioBusca();
         if (vazioBusca) {
             vazioBusca.style.display = (visiveis === 0) ? 'block' : 'none';
         }
@@ -1226,10 +1241,11 @@
         });
     }
 
-    if (btnLimparVazio) {
-        btnLimparVazio.addEventListener('click', limparTudo);
-    }
+    document.addEventListener('click', function (evento) {
+        if (evento.target.closest('#btn-limpar-busca-vazia')) limparTudo();
+    });
 
+    window.aplicarFiltrosChamados = function () { filtrarChamados(inputBusca ? inputBusca.value : ''); };
     filtrarChamados('');
 })();
 
@@ -1283,6 +1299,7 @@
         });
     }
 
+    window.configurarCliquesChamados = configurarChamadosClicaveis;
     configurarChamadosClicaveis();
 })();
 </script>

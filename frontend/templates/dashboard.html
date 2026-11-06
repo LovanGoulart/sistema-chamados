@@ -77,7 +77,7 @@
                 <!--<a href="{{ url_for('main.chamados') }}" class="btn btn-sm btn-outline">Ver todos</a>-->
             </div>
         </div>
-        <div class="card-body">
+        <div class="card-body" id="dashboard-chamados-atualizavel">
             {% if chamados_ativos %}
 
             <!-- VIEW: TABELA (desktop e tablet) -->
@@ -960,14 +960,23 @@
 // Filtros rápidos: Todos / Hoje / Abertos / Em andamento / Pendentes / Recentes
 (function() {
     const chips = document.querySelectorAll('#filtros-rapidos .filtro-chip');
-    const tbody = document.querySelector('.table-desktop-view tbody');
-    const cardsContainer = document.querySelector('.mobile-cards-view');
-    const vazio = document.getElementById('filtro-vazio');
+    const lista = document.getElementById('dashboard-chamados-atualizavel');
+    let tbody = lista.querySelector('.table-desktop-view tbody');
+    let cardsContainer = lista.querySelector('.mobile-cards-view');
+    let vazio = lista.querySelector('#filtro-vazio');
 
     // Guarda a ordem original vinda do backend
     // (data prevista hoje no topo -> status -> prioridade -> data de criação)
-    const linhasOriginais = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
-    const cardsOriginais = cardsContainer ? Array.from(cardsContainer.querySelectorAll('.chamado-card')) : [];
+    let linhasOriginais = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+    let cardsOriginais = cardsContainer ? Array.from(cardsContainer.querySelectorAll('.chamado-card')) : [];
+
+    function recuperarElementosAtualizados() {
+        tbody = lista.querySelector('.table-desktop-view tbody');
+        cardsContainer = lista.querySelector('.mobile-cards-view');
+        vazio = lista.querySelector('#filtro-vazio');
+        linhasOriginais = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+        cardsOriginais = cardsContainer ? Array.from(cardsContainer.querySelectorAll('.chamado-card')) : [];
+    }
 
     // Data de hoje no fuso local (formato YYYY-MM-DD)
     const d = new Date();
@@ -1041,6 +1050,8 @@
             this.classList.add('active');
             filtroAtivo = this.getAttribute('data-filtro');
             aplicarFiltro();
+            // O filtro selecionado deve refletir os dados atuais do servidor.
+            atualizarChamadosDashboard(true);
         });
     });
 
@@ -1048,11 +1059,13 @@
 
     // ─── Clique na linha/card inteiro para abrir o chamado ───
     function configurarChamadosClicaveis() {
-        const elementos = document.querySelectorAll(
+        const elementos = lista.querySelectorAll(
             '.table-desktop-view tbody tr.chamado-row, .mobile-cards-view .chamado-card-clicavel'
         );
 
         elementos.forEach(function(elemento) {
+            if (elemento.dataset.cliqueConfigurado === 'true') return;
+            elemento.dataset.cliqueConfigurado = 'true';
             elemento.addEventListener('click', function(event) {
                 // Links e botões internos continuam funcionando normalmente.
                 if (event.target.closest('a, button, input, select, textarea, label')) {
@@ -1079,6 +1092,63 @@
     }
 
     configurarChamadosClicaveis();
+
+    // A página Início tem uma lista própria, diferente de /chamados.
+    // A atualização abaixo substitui somente a lista, preservando botões,
+    // filtro ativo, rolagem, campos e outras funcionalidades do dashboard.
+    let emAtualizacao = false;
+    let atualizarNovamente = false;
+    let ultimaResposta = null;
+
+    async function atualizarChamadosDashboard(forcar = false) {
+        if (document.hidden || !lista.isConnected) return;
+        if (emAtualizacao) {
+            if (forcar) atualizarNovamente = true;
+            return;
+        }
+        emAtualizacao = true;
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('_atualizacao_dashboard', Date.now().toString());
+            const resposta = await fetch(url.toString(), {
+                method: 'GET',
+                credentials: 'same-origin',
+                cache: 'no-store',
+                headers: { 'Accept': 'text/html', 'Cache-Control': 'no-cache' }
+            });
+            if (!resposta.ok || resposta.redirected || !resposta.headers.get('content-type')?.includes('text/html')) return;
+            const documento = new DOMParser().parseFromString(await resposta.text(), 'text/html');
+            const conteudoNovo = documento.getElementById('dashboard-chamados-atualizavel');
+            if (!conteudoNovo) return;
+
+            // Comparar com a última resposta do servidor, não com o DOM filtrado.
+            // Os filtros aplicam style.display e não devem provocar substituições contínuas.
+            const htmlNovo = conteudoNovo.innerHTML;
+            if (ultimaResposta === htmlNovo) return;
+            ultimaResposta = htmlNovo;
+            lista.innerHTML = htmlNovo;
+            recuperarElementosAtualizados();
+            aplicarFiltro();
+            configurarChamadosClicaveis();
+        } catch (erro) {
+            console.debug('Atualização do dashboard indisponível:', erro);
+        } finally {
+            emAtualizacao = false;
+            if (atualizarNovamente) {
+                atualizarNovamente = false;
+                atualizarChamadosDashboard(true);
+            }
+        }
+    }
+
+    window.atualizarChamadosDashboard = atualizarChamadosDashboard;
+    setInterval(function () { atualizarChamadosDashboard(); }, 5000);
+    window.addEventListener('focus', function () { atualizarChamadosDashboard(true); });
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) atualizarChamadosDashboard(true);
+    });
+    // Confere imediatamente, inclusive quando a página veio do histórico/cache.
+    atualizarChamadosDashboard(true);
 })();
 </script>
 {% endblock %}

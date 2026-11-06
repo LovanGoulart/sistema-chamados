@@ -4,7 +4,7 @@
    Stale-While-Revalidate (API), Network-Only (POST/auth)
    ═══════════════════════════════════════════════════════════════ */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const PAGES_CACHE = `pages-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
@@ -126,6 +126,15 @@ self.addEventListener('fetch', (event) => {
 
   // Ignorar requisições de extensões do browser
   if (url.protocol === 'chrome-extension:' || url.protocol === 'moz-extension:') {
+    return;
+  }
+
+  // Nunca armazenar telas autenticadas, listas de chamados ou seus dados.
+  // Consultas do atualizador sempre precisam buscar a versão real no servidor.
+  if (url.origin === self.location.origin && (
+      request.mode === 'navigate' ||
+      /^(\/chamados(?:\/|$)|\/meus-chamados(?:\/|$)|\/notificacoes(?:\/|$)|\/dashboard(?:\/|$))/.test(url.pathname)
+  )) {
     return;
   }
 

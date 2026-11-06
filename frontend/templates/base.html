@@ -2476,416 +2476,67 @@
      ============================================================ -->
 
 <script id="sincronizacao-silenciosa-chamados">
-
 (function () {
+    'use strict';
+    const INTERVALO_MS = 5000;
+    let emAndamento = null;
+    let ultimaVersao = null;
 
-    const INTERVALO = 5000; // 5 segundos
-
-    let sincronizando = false;
-
-    let ultimoEstadoChamados = null;
-
-
-    // ============================================================
-    // CRIA UMA ASSINATURA DOS CHAMADOS
-    // ============================================================
-
-    function criarAssinatura(chamados) {
-
-        if (!Array.isArray(chamados)) {
-            return '';
-        }
-
-        return chamados.map(function (chamado) {
-
-            return [
-                chamado.id,
-                chamado.titulo,
-                chamado.descricao,
-                chamado.local,
-                chamado.status,
-                chamado.prioridade,
-                chamado.setor,
-                chamado.responsavel,
-                chamado.data_preferencial,
-                chamado.updated_at
-            ].join('|');
-
-        }).join('||');
+    function container() {
+        return document.getElementById('lista-chamados-atualizavel');
     }
 
-
-    // ============================================================
-    // ATUALIZA SOMENTE A LISTA DE CHAMADOS
-    // ============================================================
-
-    async function sincronizarChamados() {
-
-        // Só faz a sincronização nas páginas relacionadas a chamados.
-        const caminho = window.location.pathname;
-
-        const paginaChamados =
-            caminho === '/chamados' ||
-            caminho === '/dashboard' ||
-            caminho.startsWith('/chamados/');
-
-        if (!paginaChamados) {
-            return;
+    // Atualiza somente a lista. Os filtros, o campo de busca, a rolagem e os
+    // demais formulários permanecem intactos.
+    async function atualizarListaChamados(forcar = false) {
+        const atual = container();
+        if (!atual || document.hidden) return;
+        if (emAndamento) {
+            if (!forcar) return emAndamento;
+            try { await emAndamento; } catch (_) { /* nova tentativa abaixo */ }
         }
-
-
-        // Não atualiza enquanto o usuário estiver digitando.
-        const ativo = document.activeElement;
-
-        if (
-            ativo &&
-            (
-                ativo.tagName === 'INPUT' ||
-                ativo.tagName === 'TEXTAREA' ||
-                ativo.tagName === 'SELECT'
-            )
-        ) {
-            return;
-        }
-
-
-        // Evita requisições simultâneas.
-        if (sincronizando) {
-            return;
-        }
-
-        sincronizando = true;
-
-
-        try {
-
-            const resposta = await fetch(
-                "{{ url_for('api.api_sincronizar_chamados') }}",
-                {
-                    method: 'GET',
-
-                    headers: {
-                        'Accept': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    },
-
-                    cache: 'no-store'
-                }
-            );
-
-
-            if (resposta.status === 401) {
-                return;
-            }
-
-
-            if (!resposta.ok) {
-                return;
-            }
-
-
-            const dados = await resposta.json();
-
-
-            if (
-                !dados.success ||
-                !Array.isArray(dados.chamados)
-            ) {
-                return;
-            }
-
-
-            const novaAssinatura =
-                criarAssinatura(dados.chamados);
-
-
-            // Primeira execução.
-            if (ultimoEstadoChamados === null) {
-
-                ultimoEstadoChamados =
-                    novaAssinatura;
-
-                return;
-            }
-
-
-            // Nada mudou.
-            if (
-                novaAssinatura ===
-                ultimoEstadoChamados
-            ) {
-                return;
-            }
-
-
-            // Alguma coisa mudou.
-            ultimoEstadoChamados =
-                novaAssinatura;
-
-
-            console.debug(
-                'Chamados atualizados silenciosamente.'
-            );
-
-
-            /*
-             * A página de chamados possui sua própria
-             * estrutura de tabela/cards e filtros.
-             *
-             * Em vez de recarregar a página inteira,
-             * buscamos somente o HTML atualizado da página
-             * e substituímos as áreas da lista.
-             */
-            await atualizarListaVisual();
-
-
-        } catch (erro) {
-
-            // Erro silencioso.
-            // Não interrompe o funcionamento da página.
-
-            console.debug(
-                'Sincronização de chamados ignorada:',
-                erro
-            );
-
-        } finally {
-
-            sincronizando = false;
-
-        }
-
-    }
-
-
-    // ============================================================
-    // ATUALIZA SOMENTE OS CONTAINERS DOS CHAMADOS
-    // ============================================================
-
-    async function atualizarListaVisual() {
-
-        const tabelaAtual =
-            document.querySelector(
-                '#tabela-chamados tbody'
-            );
-
-        const cardsAtual =
-            document.querySelector(
-                '#cards-chamados'
-            );
-
-
-        /*
-         * Se não estamos em uma tela que possui
-         * a lista de chamados, não fazemos nada.
-         */
-        if (!tabelaAtual && !cardsAtual) {
-            return;
-        }
-
-
-        const resposta = await fetch(
-            window.location.href,
-            {
-                method: 'GET',
-
-                headers: {
-                    'Accept': 'text/html',
-                    'Cache-Control': 'no-cache'
-                },
-
-                cache: 'no-store'
-            }
-        );
-
-
-        if (!resposta.ok) {
-            return;
-        }
-
-
-        const html =
-            await resposta.text();
-
-
-        const parser =
-            new DOMParser();
-
-
-        const documento =
-            parser.parseFromString(
-                html,
-                'text/html'
-            );
-
-
-        /*
-         * --------------------------------------------------------
-         * TABELA DESKTOP
-         * --------------------------------------------------------
-         */
-
-        if (tabelaAtual) {
-
-            const novaTabela =
-                documento.querySelector(
-                    '#tabela-chamados tbody'
-                );
-
-            if (novaTabela) {
-
-                tabelaAtual.innerHTML =
-                    novaTabela.innerHTML;
-
-            }
-
-        }
-
-
-        /*
-         * --------------------------------------------------------
-         * CARDS MOBILE
-         * --------------------------------------------------------
-         */
-
-        if (cardsAtual) {
-
-            const novosCards =
-                documento.querySelector(
-                    '#cards-chamados'
-                );
-
-            if (novosCards) {
-
-                cardsAtual.innerHTML =
-                    novosCards.innerHTML;
-
-            }
-
-        }
-
-
-        /*
-         * --------------------------------------------------------
-         * REATIVA O COMPORTAMENTO DAS LINHAS/CARDS
-         * --------------------------------------------------------
-         */
-
-        inicializarCliqueChamados();
-
-
-        /*
-         * --------------------------------------------------------
-         * REAPLICA OS FILTROS DA PÁGINA
-         * --------------------------------------------------------
-         */
-
-        if (
-            typeof window.aplicarFiltrosChamados ===
-            'function'
-        ) {
-
-            window.aplicarFiltrosChamados();
-
-        }
-
-    }
-
-
-    // ============================================================
-    // CLIQUE NAS LINHAS/CARDS
-    // ============================================================
-
-    function inicializarCliqueChamados() {
-
-        document
-            .querySelectorAll(
-                '.chamado-row[data-url], .chamado-card[data-url]'
-            )
-            .forEach(function (elemento) {
-
-                if (
-                    elemento.dataset
-                        .sincronizacaoClique === '1'
-                ) {
-                    return;
-                }
-
-
-                elemento.dataset
-                    .sincronizacaoClique = '1';
-
-
-                elemento.addEventListener(
-                    'click',
-                    function (evento) {
-
-                        /*
-                         * Não intercepta links,
-                         * botões ou elementos interativos.
-                         */
-
-                        if (
-                            evento.target.closest('a') ||
-                            evento.target.closest('button') ||
-                            evento.target.closest('input') ||
-                            evento.target.closest('select') ||
-                            evento.target.closest('textarea')
-                        ) {
-                            return;
-                        }
-
-
-                        const url =
-                            elemento.dataset.url;
-
-
-                        if (url) {
-                            window.location.href =
-                                url;
-                        }
-
-                    }
-                );
-
+        emAndamento = (async function () {
+            const resposta = await fetch(window.location.pathname + window.location.search, {
+                credentials: 'same-origin',
+                cache: 'no-store',
+                headers: { 'Accept': 'text/html', 'Cache-Control': 'no-cache' }
             });
-
+            if (!resposta.ok || resposta.redirected && new URL(resposta.url).pathname.includes('/login')) return;
+            const documento = new DOMParser().parseFromString(await resposta.text(), 'text/html');
+            const novo = documento.getElementById('lista-chamados-atualizavel');
+            if (!novo) return;
+            // Evita modificar o DOM quando os chamados não mudaram.
+            const versao = novo.innerHTML;
+            if (!forcar && versao === ultimaVersao) return;
+            ultimaVersao = versao;
+            if (novo.innerHTML !== atual.innerHTML) {
+                atual.innerHTML = novo.innerHTML;
+                // Filtros reaplicados sobre os NOVOS elementos.
+                if (typeof window.aplicarFiltrosChamados === 'function') window.aplicarFiltrosChamados();
+                if (typeof window.configurarCliquesChamados === 'function') window.configurarCliquesChamados();
+            }
+        })();
+        try { await emAndamento; }
+        catch (erro) { console.debug('Não foi possível atualizar a lista de chamados:', erro); }
+        finally { emAndamento = null; }
     }
 
-
-    // ============================================================
-    // INICIALIZAÇÃO
-    // ============================================================
-
-    document.addEventListener(
-        'DOMContentLoaded',
-        function () {
-
-            inicializarCliqueChamados();
-
-            /*
-             * Primeira consulta após 5 segundos.
-             */
-            setTimeout(
-                sincronizarChamados,
-                INTERVALO
-            );
-
-
-            /*
-             * Depois continua verificando.
-             */
-            setInterval(
-                sincronizarChamados,
-                INTERVALO
-            );
-
-        }
-    );
-
-
+    window.atualizarListaChamados = atualizarListaChamados;
+    document.addEventListener('DOMContentLoaded', function () {
+        const atual = container();
+        if (!atual) return;
+        ultimaVersao = atual.innerHTML;
+        // Clique num filtro força a leitura dos dados mais recentes do servidor.
+        document.querySelectorAll('#filtros-rapidos .filtro-chip').forEach(function (botao) {
+            botao.addEventListener('click', function () { atualizarListaChamados(true); });
+        });
+        setInterval(function () { atualizarListaChamados(false); }, INTERVALO_MS);
+        window.addEventListener('focus', function () { atualizarListaChamados(true); });
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) atualizarListaChamados(true);
+        });
+    });
 })();
-
 </script>
 
 
@@ -2945,7 +2596,7 @@
     </script>
     {% endif %}
 
-    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js', v='20261105b') }}"></script>
 
     {% if current_user.is_authenticated %}
     <script src="{{ url_for('static', filename='js/pwa.js') }}"></script>

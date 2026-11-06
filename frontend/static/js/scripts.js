@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ── Carregar contador de notificações ──
     atualizarContadorNotificacoes();
-    setInterval(atualizarContadorNotificacoes, 30000); // Atualizar a cada 30s
+    setInterval(atualizarContadorNotificacoes, 5000); // Atualizar a cada 5s
 
     // ── Scroll to Top Button ──
     const scrollToTopBtn = document.getElementById('scrollToTop');
@@ -346,14 +346,39 @@ function atualizarDropdown(notificacoes) {
         return;
     }
 
-    list.innerHTML = notificacoes.map(function(n) {
-        return '<div class="notificacao-item notificacao-nao-lida">' +
-            '<div class="notificacao-icon"><i class="fas fa-bell"></i></div>' +
-            '<div class="notificacao-conteudo">' +
-            '<h4 class="notificacao-titulo">' + escapeHtml(n.titulo) + '</h4>' +
-            '<p class="notificacao-mensagem">' + escapeHtml(n.mensagem) + '</p>' +
-            '</div></div>';
-    }).join('');
+    list.replaceChildren();
+    notificacoes.forEach(function (n) {
+        const item = document.createElement('a');
+        item.className = 'notificacao-item notificacao-nao-lida';
+        const endereco = typeof n.link === 'string' ? n.link : '';
+        // A notificação nunca pode redirecionar para um domínio externo.
+        let destino = '/notificacoes';
+        if (/^\/chamados\/\d+(?:[?#].*)?$/.test(endereco)) destino = endereco;
+        item.href = destino;
+        item.style.cssText = 'display:flex;text-decoration:none;color:inherit;cursor:pointer;';
+        const icone = document.createElement('div');
+        icone.className = 'notificacao-icon';
+        icone.innerHTML = '<i class="fas fa-bell"></i>';
+        const conteudo = document.createElement('div');
+        conteudo.className = 'notificacao-conteudo';
+        const titulo = document.createElement('h4');
+        titulo.className = 'notificacao-titulo';
+        titulo.textContent = n.titulo || 'Notificação';
+        const mensagem = document.createElement('p');
+        mensagem.className = 'notificacao-mensagem';
+        mensagem.textContent = n.mensagem || '';
+        conteudo.append(titulo, mensagem);
+        item.append(icone, conteudo);
+        item.addEventListener('click', function () {
+            // A navegação continua mesmo se a requisição falhar.
+            if (Number.isInteger(n.id)) {
+                fetch('/notificacoes/' + n.id + '/ler', {
+                    method: 'POST', credentials: 'same-origin', keepalive: true
+                }).catch(function () {});
+            }
+        });
+        list.appendChild(item);
+    });
 }
 
 function carregarNotificacoes() {

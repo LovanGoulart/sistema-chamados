@@ -31,7 +31,7 @@
 </div>
 
 <!-- Lista de chamados -->
-<div class="card">
+<div class="card" id="lista-chamados-atualizavel">
     <div class="card-body">
         {% if chamados_ordenados %}
 
@@ -224,20 +224,21 @@
     const inputBusca = document.getElementById('busca-tempo-real');
     const btnLimpar = document.getElementById('limpar-busca');
     const contagem = document.getElementById('resultados-contagem');
-    const vazioBusca = document.getElementById('busca-vazia');
-    const btnLimparVazio = document.getElementById('btn-limpar-busca-vazia');
+    const obterVazioBusca = () => document.getElementById('busca-vazia');
 
-    const rows = document.querySelectorAll('.chamado-row');
-    const cards = document.querySelectorAll('.chamado-card');
+
+    const obterLinhas = () => document.querySelectorAll('#lista-chamados-atualizavel .chamado-row');
+    const obterCards = () => document.querySelectorAll('#lista-chamados-atualizavel .chamado-card');
 
     function filtrarChamados(termo) {
         const termoLower = termo.trim().toLowerCase();
         let visiveis = 0;
 
         if (!termoLower) {
-            rows.forEach(row => row.style.display = '');
-            cards.forEach(card => card.style.display = '');
+            obterLinhas().forEach(row => row.style.display = '');
+            obterCards().forEach(card => card.style.display = '');
             if (contagem) contagem.textContent = '';
+            const vazioBusca = obterVazioBusca();
             if (vazioBusca) vazioBusca.style.display = 'none';
             if (btnLimpar) btnLimpar.style.display = 'none';
             return;
@@ -245,7 +246,7 @@
 
         if (btnLimpar) btnLimpar.style.display = 'flex';
 
-        rows.forEach(function(row) {
+        obterLinhas().forEach(function(row) {
             const titulo = row.getAttribute('data-titulo') || '';
             const descricao = row.getAttribute('data-descricao') || '';
             const local = row.getAttribute('data-local') || '';
@@ -270,7 +271,7 @@
             }
         });
 
-        cards.forEach(function(card) {
+        obterCards().forEach(function(card) {
             const titulo = card.getAttribute('data-titulo') || '';
             const descricao = card.getAttribute('data-descricao') || '';
             const local = card.getAttribute('data-local') || '';
@@ -300,6 +301,7 @@
             }
         }
 
+        const vazioBusca = obterVazioBusca();
         if (vazioBusca) {
             vazioBusca.style.display = (visiveis === 0) ? 'block' : 'none';
         }
@@ -320,15 +322,14 @@
         });
     }
 
-    if (btnLimparVazio) {
-        btnLimparVazio.addEventListener('click', function() {
-            if (inputBusca) {
-                inputBusca.value = '';
-                filtrarChamados('');
-            }
-        });
-    }
+    document.addEventListener('click', function (evento) {
+        if (evento.target.closest('#btn-limpar-busca-vazia') && inputBusca) {
+            inputBusca.value = '';
+            filtrarChamados('');
+        }
+    });
 
+    window.aplicarFiltrosChamados = function () { filtrarChamados(inputBusca ? inputBusca.value : ''); };
     filtrarChamados('');
 })();
 
@@ -372,6 +373,7 @@
         });
     }
 
+    window.configurarCliquesChamados = configurarChamadosClicaveis;
     configurarChamadosClicaveis();
 })();
 </script>
