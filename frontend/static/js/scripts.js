@@ -491,3 +491,102 @@ function openEditSetorModal(id, nome, descricao, ativo) {
 
     openModal('modalEditarSetor');
 }
+
+/* ── Alertas flutuantes: somente notificações já autorizadas pelo servidor. ──
+   O backend já filtra Notificacao por current_user.id. Não envia informações
+   de chamados de outros usuários, nem consulta endpoints administrativos. */
+(function () {
+    'use strict';
+    const userMeta = document.querySelector('meta[name="chamados-notification-user"]');
+    if (!userMeta || !userMeta.content) return; // login/páginas públicas
+    const storageKey = 'chamados_alertas_v1_usuario_' + userMeta.content;
+    const endpoint = '/api/notificacoes/nao-lidas';
+    let ativo = false;
+    let baselinePronta = false;
+    let vistos = new Set();
+
+    try {
+        const salvos = JSON.parse(localStorage.getItem(storageKey) || 'null');
+        if (salvos && Array.isArray(salvos.ids)) {
+            vistos = new Set(salvos.ids.map(String));
+            baselinePronta = true;
+        }
+    } catch (_) { /* O modo privado pode bloquear o armazenamento. */ }
+
+    function guardar() {
+        try { localStorage.setItem(storageKey, JSON.stringify({ids: Array.from(vistos).slice(-120), time: Date.now()})); }
+        catch (_) { /* não interfere na navegação */ }
+    }
+    function destinoSeguro(link) {
+        if (typeof link !== 'string' || !link.startsWith('/') || link.startsWith('//') || link.startsWith('/\\')) return '/notificacoes';
+        try { const url = new URL(link, location.origin); return url.origin === location.origin ? url.pathname + url.search + url.hash : '/notificacoes'; }
+        catch (_) { return '/notificacoes'; }
+    }
+    function container() {
+        let el = document.getElementById('chamados-alertas');
+        if (!el) { el = document.createElement('div'); el.id = 'chamados-alertas'; el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
+        return el;
+    }
+    function alertaFlutuante(n) {
+        const area = container();
+        const card = document.createElement('div'); card.className = 'chamados-alerta';
+        const conteudo = document.createElement('div'); conteudo.className = 'chamados-alerta-conteudo';
+        conteudo.setAttribute('role', 'link'); conteudo.tabIndex = 0;
+        const titulo = document.createElement('div'); titulo.className = 'chamados-alerta-titulo'; titulo.textContent = n.titulo || 'Nova atualização';
+        const mensagem = document.createElement('div'); mensagem.className = 'chamados-alerta-texto'; mensagem.textContent = n.mensagem || 'Você recebeu uma nova notificação.';
+        conteudo.append(titulo, mensagem);
+        const fechar = document.createElement('button'); fechar.type = 'button'; fechar.className = 'chamados-alerta-fechar'; fechar.setAttribute('aria-label', 'Fechar aviso'); fechar.textContent = '×';
+        fechar.addEventListener('click', () => card.remove());
+        const abrir = () => { location.assign(destinoSeguro(n.link)); };
+        conteudo.addEventListener('click', abrir);
+        conteudo.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } });
+        card.append(conteudo, fechar); area.prepend(card);
+        while (area.childElementCount > 3) area.lastElementChild.remove();
+        setTimeout(() => card.remove(), 9000);
+    }
+    async function alertaAndroid(n) {
+        // Somente quando a pessoa JÁ autorizou notificações no navegador.
+        // Não solicita permissão automaticamente nem altera a configuração existente.
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        if (!('serviceWorker' in navigator)) return;
+        try {
+            const reg = await navigator.serviceWorker.ready;
+            await reg.showNotification(n.titulo || 'Sistema de Chamados', {
+                body: n.mensagem || 'Nova atualização',
+                icon: '/static/icons/icon-192x192.png',
+                badge: '/static/icons/icon-96x96.png',
+                tag: 'chamados-notificacao-' + n.id,
+                data: {url: destinoSeguro(n.link)}
+            });
+        } catch (err) { console.debug('Alerta do Android indisponível:', err); }
+    }
+    async function verificar() {
+        if (ativo || document.visibilityState === 'hidden' || !navigator.onLine) return;
+        ativo = true;
+        try {
+            const resp = await fetch(endpoint, {credentials:'same-origin', cache:'no-store', headers:{Accept:'application/json'}});
+            if (!resp.ok || !(resp.headers.get('content-type') || '').includes('application/json')) return;
+            const data = await resp.json();
+            const registros = Array.isArray(data.notificacoes) ? data.notificacoes.filter(n => n && Number.isSafeInteger(Number(n.id))) : [];
+            // Primeira leitura evita inundar a tela com notificações antigas não lidas.
+            if (!baselinePronta) {
+                for (const n of registros) vistos.add(String(n.id));
+                baselinePronta = true; guardar(); return;
+            }
+            const novas = registros.filter(n => !vistos.has(String(n.id))).reverse();
+            for (const n of novas) {
+                vistos.add(String(n.id));
+                alertaFlutuante(n);
+                alertaAndroid(n);
+            }
+            if (novas.length) guardar();
+            if (vistos.size > 120) { vistos = new Set(Array.from(vistos).slice(-120)); guardar(); }
+        } catch (err) { console.debug('Consulta de novas notificações indisponível:', err); }
+        finally { ativo = false; }
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', verificar, {once:true});
+    else verificar();
+    setInterval(verificar, 12000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) verificar(); });
+    window.addEventListener('online', verificar);
+})();

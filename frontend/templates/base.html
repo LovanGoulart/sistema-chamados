@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Sistema de Chamados - Colégio Mauá">
-    <meta name="theme-color" content="#2c3e50">
+    <meta name="theme-color" content="#2D3E50">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Chamados Mauá">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Chamados Mauá">
+
+    {% if current_user.is_authenticated %}
+    <meta name="chamados-notification-user" content="{{ current_user.id }}">
+    {% endif %}
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
@@ -162,6 +166,17 @@
             margin-left: auto;
             flex-shrink: 0;
         }
+    </style>
+
+    <!-- Alertas flutuantes de novas notificações (não alteram o CSS global) -->
+    <style>
+      #chamados-alertas { position: fixed; right: 16px; top: calc(76px + env(safe-area-inset-top, 0px)); z-index: 99990; width: min(370px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+      .chamados-alerta { pointer-events: auto; background: #fff; color: #2c3e50; border: 1px solid #dde3e9; border-left: 5px solid var(--primary, #f46c6c); border-radius: 12px; box-shadow: 0 8px 26px rgba(0,0,0,.18); display: flex; align-items: flex-start; gap: 10px; padding: 12px; }
+      .chamados-alerta-conteudo { flex: 1; min-width: 0; cursor: pointer; overflow-wrap: anywhere; }
+      .chamados-alerta-titulo { font-weight: 700; font-size: .9rem; margin-bottom: 3px; }
+      .chamados-alerta-texto { font-size: .82rem; line-height: 1.35; }
+      .chamados-alerta-fechar { flex-shrink: 0; background: transparent; color: #57636f; border: 0; font-size: 22px; line-height: 1; padding: 0 4px; cursor: pointer; }
+      @media (max-width: 768px) { #chamados-alertas { top: calc(72px + env(safe-area-inset-top, 0px)); right: 10px; width: calc(100vw - 20px); } }
     </style>
 
     {% block extra_css %}{% endblock %}
@@ -2465,13 +2480,13 @@
 
 <!-- ============================================================
      SINCRONIZAÇÃO SILENCIOSA DOS CHAMADOS
-     
+
      NÃO usa location.reload().
      NÃO recarrega a página.
      NÃO altera scroll.
      NÃO fecha modais.
      NÃO interfere no chat.
-     
+
      Verifica alterações a cada 5 segundos.
      ============================================================ -->
 
@@ -2596,7 +2611,7 @@
     </script>
     {% endif %}
 
-    <script src="{{ url_for('static', filename='js/scripts.js', v='20261105b') }}"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js', v='20261113-alertas1') }}"></script>
 
     {% if current_user.is_authenticated %}
     <script src="{{ url_for('static', filename='js/pwa.js') }}"></script>
