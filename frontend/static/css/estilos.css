@@ -4540,3 +4540,10 @@ a:hover {
   .mobile-user-menu .mobile-menu-footer .mobile-menu-actions .mobile-nav-item .mobile-action-label { display: none !important; }
   .mobile-user-menu .mobile-user-nav .mobile-nav-divider { display: none !important; }
 }
+
+/* Estrutura definitiva do menu mobile: não depende da reorganização via JavaScript. */
+@media (max-width: 768px) {
+  .mobile-user-menu .mobile-user-nav .mobile-nav-item span { display: inline !important; }
+  .mobile-user-menu .mobile-menu-header .user-info-mobile { display: none !important; }
+  .mobile-user-menu .mobile-menu-footer .mobile-menu-actions button[hidden] { display: none !important; }
+}
