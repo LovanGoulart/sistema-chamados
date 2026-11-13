@@ -347,6 +347,23 @@
             }
         }
     </style>
+    <style>
+    .btn-voltar {
+        background: transparent;
+        color: var(--text-secondary, #6c757d);
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-voltar:hover {
+        color: var(--primary, #f46c6c);
+        background: rgba(244, 108, 108, 0.08);
+    }
+
+    .btn-voltar i {
+        font-size: 1.1rem;
+    }
+    </style>
 </head>
 <body>
     {% if current_user.is_authenticated %}
@@ -2275,6 +2292,14 @@
             {% endif %}
             <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
             <div class="topbar-actions">
+                <!-- Botão Voltar -->
+                <button type="button"
+                        class="btn-icon btn-voltar"
+                        title="Voltar à página anterior"
+                        aria-label="Voltar à página anterior"
+                        onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = '{{ url_for('main.dashboard') }}'; }">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
                 <!-- Botão Home (todos os usuários) -->
                 <a href="{{ url_for('main.dashboard') }}" class="btn-icon btn-home {% if request.endpoint == 'main.dashboard' %}active{% endif %}" title="Home - Meus Chamados">
                     <i class="fas fa-home"></i>
