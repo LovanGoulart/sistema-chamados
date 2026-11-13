@@ -65,3 +65,39 @@
     </div>
 </div>
 {% endblock %}
+
+
+{# Evita tela de login antiga restaurada do histórico após autenticar. #}
+{% block extra_js %}
+{{ super() }}
+<script>
+(function () {
+    'use strict';
+    const formulario = document.querySelector('form.auth-form');
+    const botao = formulario && formulario.querySelector('button[type="submit"]');
+    const textoOriginal = botao ? botao.innerHTML : '';
+
+    function restaurarBotao() {
+        if (!botao) return;
+        botao.disabled = false;
+        botao.innerHTML = textoOriginal;
+        delete botao.dataset.originalText;
+    }
+
+    // Ao voltar pelo histórico, o navegador pode exibir um snapshot antigo.
+    // Uma consulta real ao /login deixará o Flask decidir: se estiver
+    // autenticado, redireciona; caso contrário, apresenta o login normal.
+    window.addEventListener('pageshow', function (evento) {
+        restaurarBotao();
+        const navegacao = performance.getEntriesByType('navigation')[0];
+        const retornoHistorico = navegacao && navegacao.type === 'back_forward';
+        if (evento.persisted || retornoHistorico) {
+            window.location.replace('{{ url_for("main.login") }}?verificar_sessao=' + Date.now());
+        }
+    });
+
+    // Evita armazenar "Processando..." no histórico visual do navegador.
+    window.addEventListener('pagehide', restaurarBotao);
+})();
+</script>
+{% endblock %}

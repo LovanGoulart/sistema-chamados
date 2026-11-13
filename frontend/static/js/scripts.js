@@ -237,29 +237,31 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── Loading state em botões de submit ──
 document.querySelectorAll('form').forEach(function(form) {
 
-    form.addEventListener('submit', function() {
+    form.addEventListener('submit', function(e) {
 
         /*
-         * O formulário do Assistente Virtual possui
-         * seu próprio controle de envio.
-         *
-         * NÃO aplicar "Processando..." ao chat.
+         * Não ativar o carregamento quando outro validador
+         * já bloqueou o envio (ex.: senha em branco no login).
+         * checkValidity também considera o required e o tipo e-mail,
+         * inclusive quando o form usa novalidate.
          */
-        if (form.id === 'chatwaForm') {
+        if (form.id === 'chatwaForm' || e.defaultPrevented) {
+            return;
+        }
+
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            // O botão continua habilitado para permitir corrigir os campos.
             return;
         }
 
         const submitBtn = form.querySelector('button[type="submit"]');
 
-        if (submitBtn && !submitBtn.dataset.noLoading) {
-
-            submitBtn.disabled = true;
-
-            submitBtn.dataset.originalText =
-                submitBtn.innerHTML;
-
+        if (submitBtn && !submitBtn.dataset.noLoading && !submitBtn.disabled) {
+            submitBtn.dataset.originalText = submitBtn.innerHTML;
             submitBtn.innerHTML =
                 '<i class="fas fa-spinner fa-spin"></i> Processando...';
+            submitBtn.disabled = true;
         }
 
     });
@@ -589,4 +591,23 @@ function openEditSetorModal(id, nome, descricao, ativo) {
     setInterval(verificar, 12000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) verificar(); });
     window.addEventListener('online', verificar);
+})();
+
+
+// Proteção contra páginas privadas antigas restauradas pelo botão Voltar.
+// Uma página restaurada do histórico precisa ser revalidada no servidor,
+// especialmente após trocar de usuário ou sair do sistema.
+(function () {
+    'use strict';
+    window.addEventListener('pageshow', function (event) {
+        // Login já possui seu próprio tratamento de histórico.
+        if (document.querySelector('form.auth-form')) return;
+        const nav = performance.getEntriesByType('navigation')[0];
+        const peloHistorico = nav && nav.type === 'back_forward';
+        if (event.persisted || peloHistorico) {
+            // Recarrega a URL atual e deixa o servidor conferir a sessão.
+            // No reload o tipo de navegação muda para "reload", sem loop.
+            window.location.reload();
+        }
+    });
 })();

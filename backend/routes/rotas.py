@@ -26,6 +26,21 @@ from backend.utils.utilitarios import (
 main = Blueprint('main', __name__)
 api = Blueprint('api', __name__, url_prefix='/api')
 
+@main.after_request
+def evitar_cache_telas_privadas(response):
+    """Não permitir reaproveitamento de telas privadas entre sessões/usuários.
+
+    O histórico do navegador não é uma sessão: qualquer página HTML privada
+    restaurada precisa ser carregada novamente e validada pelo Flask-Login.
+    """
+    if (response.mimetype == 'text/html' or request.endpoint in ('main.login', 'main.logout')):
+        response.headers['Cache-Control'] = 'private, no-store, no-cache, max-age=0, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        response.vary.add('Cookie')
+    return response
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # FUNÇÃO AUXILIAR: Ordenação de chamados
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -209,6 +224,8 @@ def index():
 def login():
     """Página de login."""
     if current_user.is_authenticated:
+        if current_user.perfil.value == PerfilUsuario.USUARIO.value:
+            return redirect(url_for('main.meus_chamados'))
         return redirect(url_for('main.dashboard'))
 
     if request.method == 'POST':

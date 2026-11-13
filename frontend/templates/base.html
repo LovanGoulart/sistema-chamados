@@ -363,15 +363,47 @@
             .titulo-pagina-padrao > p { font-size: .75rem; }
         }
     </style>
+    <style>
+/* Logotipo maior no menu lateral */
+.sidebar-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 12px;
+}
+
+.sidebar-header .logo-maua {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.sidebar-header .logo-maua-img {
+    display: block;
+    width: 100%;
+    max-width: 175px;
+    height: auto;
+    max-height: 45px;
+    object-fit: contain;
+}
+
+/* Menu lateral recolhido */
+.sidebar.collapsed .logo-maua-img {
+    max-width: 46px;
+    max-height: 46px;
+}
+</style>
 </head>
 <body>
     {% if current_user.is_authenticated %}
     <!-- Sidebar (visível para TODOS os usuários autenticados no desktop) -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="logo">
-                <i class="fas fa-school"></i>
-                <span>Colégio Mauá</span>
+            <div class="logo logo-maua">
+                <img src="{{ url_for('static', filename='icons/logo_maua.png') }}"
+                    alt="Colégio Mauá"
+                    class="logo-maua-img">
             </div>
         </div>
 
