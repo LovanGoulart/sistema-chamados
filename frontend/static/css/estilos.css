@@ -4395,3 +4395,148 @@ a:hover {
         margin: 0 !important;
     }
 }
+
+
+/* MENU MOBILE USUÁRIO — organização fiel à sidebar do Setor.
+   Apenas apresentação: os links de usuário continuam os mesmos. */
+@media (max-width: 768px) {
+  .mobile-user-menu {
+    display: none;
+    width: min(280px, 78vw) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    background: #fff !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    box-shadow: 4px 0 22px rgba(0,0,0,.14) !important;
+  }
+  .mobile-user-menu.active { display: flex !important; }
+  .mobile-user-menu .mobile-user-menu-header {
+    height: 69px !important;
+    min-height: 69px !important;
+    flex: 0 0 69px !important;
+    padding: 7px 24px 7px 10px !important;
+    background: #fff !important;
+    border-bottom: 1px solid #e9ecef !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+  }
+  .mobile-user-menu .mobile-user-menu-header::before { content: none !important; display: none !important; }
+  .mobile-user-menu .mobile-menu-logo {
+    display: block !important;
+    width: min(190px, 100%) !important;
+    max-height: 57px !important;
+    height: auto !important;
+    object-fit: contain !important;
+    flex: 0 1 auto !important;
+  }
+  .mobile-user-menu .mobile-menu-close {
+    position: absolute !important;
+    top: 7px !important;
+    right: 7px !important;
+    color: #617081 !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    width: 25px !important;
+    height: 25px !important;
+    background: transparent !important;
+  }
+  .mobile-user-menu .mobile-user-nav {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    min-height: 0 !important;
+    padding: 11px 7px !important;
+  }
+  .mobile-user-menu .mobile-nav-item {
+    display: flex !important;
+    align-items: center !important;
+    padding: 12px 11px !important;
+    margin: 0 0 4px !important;
+    gap: 11px !important;
+    position: static !important;
+    width: 100% !important;
+    border-radius: 7px !important;
+    color: #6c757d !important;
+    font-size: .87rem !important;
+    background: transparent !important;
+    white-space: nowrap !important;
+  }
+  .mobile-user-menu .mobile-nav-item.active {
+    background: rgba(244,108,108,.11) !important;
+    color: #f46c6c !important;
+  }
+  .mobile-user-menu .mobile-nav-item.active i { color: #f46c6c !important; }
+  .mobile-user-menu .mobile-menu-footer {
+    flex: 0 0 auto;
+    padding: 10px 10px calc(11px + env(safe-area-inset-bottom, 0px));
+    background: white;
+    border-top: 1px solid #e9ecef;
+    margin-top: auto;
+  }
+  .mobile-user-menu .mobile-menu-footer .user-info-mobile {
+    display: flex !important;
+    align-items: center !important;
+    position: static !important;
+    gap: 9px !important;
+    margin: 0 0 10px !important;
+    color: #111 !important;
+    min-width: 0;
+    z-index: auto !important;
+  }
+  .mobile-user-menu .mobile-menu-footer .user-avatar {
+    flex: 0 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px !important;
+    width: 32px !important;
+    background: #f46c6c !important;
+    color: white !important;
+    font-size: 12px !important;
+    border-radius: 50% !important;
+  }
+  .mobile-user-menu .mobile-menu-footer .user-name,
+  .mobile-user-menu .mobile-menu-footer .user-role {
+    display: block;
+    color: #111 !important;
+    max-width: 185px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mobile-user-menu .mobile-menu-footer .user-name { font-size: 12px !important; font-weight: 700 !important; }
+  .mobile-user-menu .mobile-menu-footer .user-role { font-size: 11px !important; font-weight: 400 !important; }
+  .mobile-user-menu .mobile-menu-footer .mobile-menu-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mobile-user-menu .mobile-menu-footer .mobile-menu-actions .mobile-nav-item,
+  .mobile-user-menu .mobile-menu-footer .mobile-menu-actions button {
+    position: static !important;
+    display: inline-flex !important;
+    flex: 0 0 28px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 6px !important;
+    background: #f0f2f5 !important;
+    color: #667383 !important;
+    font-size: 12px !important;
+    text-decoration: none !important;
+  }
+  .mobile-user-menu .mobile-menu-footer .mobile-menu-actions button[hidden] { display: none !important; }
+  .mobile-user-menu .mobile-menu-footer .mobile-menu-actions .mobile-nav-logout { color: #667383 !important; }
+  .mobile-user-menu .mobile-menu-footer .mobile-menu-actions .mobile-nav-item i { width: auto !important; font-size: 12px !important; }
+  .mobile-user-menu .mobile-menu-footer .mobile-menu-actions .mobile-nav-item .mobile-action-label { display: none !important; }
+  .mobile-user-menu .mobile-user-nav .mobile-nav-divider { display: none !important; }
+}

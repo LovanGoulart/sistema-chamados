@@ -12,16 +12,19 @@
     /* ── Injeta os estilos do banner/toasts (não precisa editar CSS) ── */
     const css = document.createElement('style');
     css.textContent = `
-        /* ═══ BANNER DE INSTALAÇÃO (TOPO) ═══ */
+        /* ═══ CONVITE FLUTUANTE DE INSTALAÇÃO ═══ */
         .pwa-install-banner {
             position: fixed;
-            top: 12px;
+            top: calc(12px + env(safe-area-inset-top, 0px));
             left: 50%;
+            right: auto;
+            bottom: auto;
             transform: translateX(-50%);
             z-index: 5000;
             display: flex;
             align-items: center;
             gap: 12px;
+            width: max-content;
             max-width: calc(100vw - 32px);
             padding: 10px 14px;
             background: #ffffff;
@@ -32,14 +35,15 @@
             font-family: 'Inter', sans-serif;
             font-size: 0.9rem;
             color: #2c3e50;
-            animation: pwaBannerDown 0.35s ease;
+            animation: pwaBannerDown .35s ease;
         }
         @keyframes pwaBannerDown {
             from { opacity: 0; transform: translate(-50%, -20px); }
             to   { opacity: 1; transform: translate(-50%, 0); }
         }
         .pwa-install-banner.saindo {
-            animation: pwaBannerUp 0.3s ease forwards;
+            opacity: 0;
+            transition: opacity .2s ease;
         }
         @keyframes pwaBannerUp {
             from { opacity: 1; transform: translate(-50%, 0); }
@@ -179,7 +183,7 @@
             }
 
             try {
-                const registration = await navigator.serviceWorker.register('/static/sw.js', {
+                const registration = await navigator.serviceWorker.register('/sw.js', {
                     scope: '/'
                 });
 
@@ -285,16 +289,13 @@
             // Já instalado? Não mostra nada.
             if (this.isStandalone()) return;
 
-            // Não incomodar se o usuário dispensou nos últimos 7 dias
-            const lastDismiss = localStorage.getItem('pwa_install_dismissed');
-            if (lastDismiss && Date.now() - parseInt(lastDismiss) < 7 * 24 * 60 * 60 * 1000) {
-                return;
-            }
+            // O convite não fica bloqueado por uma recusa antiga.
+            // A instalação continua dependendo de oferta do navegador.
 
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 this.deferredPrompt = e;
-                this.showInstallBanner();
+                if (!this.isStandalone()) this.showInstallBanner();
             });
 
             window.addEventListener('appinstalled', () => {
@@ -315,7 +316,7 @@
         },
 
         showInstallBanner(isIos) {
-            if (document.querySelector('.pwa-install-banner')) return;
+            if (this.isStandalone() || document.querySelector('.pwa-install-banner')) return;
 
             const banner = document.createElement('div');
             banner.className = 'pwa-install-banner';
@@ -336,14 +337,10 @@
 
             document.getElementById('pwaBannerInstalar').onclick = () => this.promptInstall();
             document.getElementById('pwaBannerFechar').onclick = () => {
-                localStorage.setItem('pwa_install_dismissed', Date.now().toString());
                 this.hideInstallBanner();
             };
 
-            // Auto-fechar após 1 minuto
-            setTimeout(() => {
-                if (document.body.contains(banner)) this.hideInstallBanner();
-            }, 60000);
+            // Permanece visível até o usuário fechar ou instalar.
         },
 
         hideInstallBanner() {
@@ -373,7 +370,6 @@
             if (outcome === 'accepted') {
                 this.hideInstallBanner();
             } else {
-                localStorage.setItem('pwa_install_dismissed', Date.now().toString());
                 this.hideInstallBanner();
             }
 
@@ -386,6 +382,7 @@
 
         isStandalone() {
             return window.matchMedia('(display-mode: standalone)').matches ||
+                   window.matchMedia('(display-mode: fullscreen)').matches ||
                    window.navigator.standalone === true;
         },
 

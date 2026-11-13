@@ -611,3 +611,67 @@ function openEditSetorModal(id, nome, descricao, ativo) {
         }
     });
 })();
+
+
+/* Menu mobile do perfil Usuário: apenas reorganiza elementos já autorizados.
+   Não cria itens de navegação nem altera permissões. */
+(function () {
+  function organizarMenuUsuario() {
+    var menu = document.getElementById('mobileUserMenu');
+    if (!menu || menu.dataset.layoutPadrao === '1') return;
+    var header = menu.querySelector('.mobile-user-menu-header');
+    var nav = menu.querySelector('.mobile-user-nav');
+    var usuario = header && header.querySelector('.user-info-mobile');
+    if (!header || !nav || !usuario) return;
+    menu.dataset.layoutPadrao = '1';
+
+    // Usa o logotipo original fornecido pelo usuário, não outra versão gerada.
+    var logo = document.createElement('img');
+    logo.className = 'mobile-menu-logo';
+    logo.alt = 'Colégio Mauá - Santa Cruz do Sul';
+    logo.src = '/static/icons/logo_maua.png';
+    header.insertBefore(logo, header.firstChild);
+
+    var footer = document.createElement('div');
+    footer.className = 'mobile-menu-footer';
+    footer.appendChild(usuario);
+    var actions = document.createElement('div');
+    actions.className = 'mobile-menu-actions';
+
+    // Move os links originais de Perfil e Sair: preserva URLs e listeners.
+    var perfil = nav.querySelector('.mobile-nav-item[href*="perfil"]');
+    var sair = nav.querySelector('.mobile-nav-logout');
+    [perfil, sair].forEach(function (link) {
+      if (!link) return;
+      var descricao = link.textContent.trim();
+      link.title = descricao;
+      link.setAttribute('aria-label', descricao);
+      Array.from(link.childNodes).forEach(function (node) {
+        if (node.nodeType === 3) node.remove();
+      });
+      actions.appendChild(link);
+    });
+
+    // Espelha o botão de instalação já existente, respeitando sua disponibilidade.
+    var original = document.getElementById('btnInstalarApp');
+    if (original) {
+      var instalar = document.createElement('button');
+      instalar.type = 'button';
+      instalar.title = 'Instalar aplicativo';
+      instalar.setAttribute('aria-label', 'Instalar aplicativo');
+      instalar.innerHTML = '<i class="fas fa-download" aria-hidden="true"></i>';
+      instalar.addEventListener('click', function () { original.click(); });
+      actions.appendChild(instalar);
+      function atualizarInstalar() {
+        instalar.hidden = original.style.display === 'none' || getComputedStyle(original).display === 'none';
+      }
+      atualizarInstalar();
+      new MutationObserver(atualizarInstalar).observe(original, { attributes: true, attributeFilter: ['style', 'class'] });
+    }
+    footer.appendChild(actions);
+    menu.appendChild(footer);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', organizarMenuUsuario);
+  } else organizarMenuUsuario();
+})();
