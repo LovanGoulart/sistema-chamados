@@ -231,16 +231,18 @@
             font-size: 1rem;
             flex-shrink: 0;
         }
-        .user-info-mobile .user-name {
+        .mobile-user-menu-header .user-info-mobile .user-name {
             display: block;
             font-weight: 600;
             font-size: 0.95rem;
+            color: #000000;
         }
-        .user-info-mobile .user-role {
+        .mobile-user-menu-header .user-info-mobile .user-role {
             display: block;
             font-size: 0.75rem;
-            opacity: 0.85;
+            opacity: 1;
             text-transform: capitalize;
+            color: #000000;
         }
         .mobile-menu-close {
             background: none;
@@ -367,12 +369,12 @@
                         <span>Início</span>
                     </a>
                 </li>
-                <li class="{% if request.endpoint in ['main.chamados', 'main.novo_chamado', 'main.chamado_detalhe'] %}active{% endif %}">
+                <!--<li class="{% if request.endpoint in ['main.chamados', 'main.novo_chamado', 'main.chamado_detalhe'] %}active{% endif %}">
                     <a href="{{ url_for('main.chamados') }}">
                         <i class="fas fa-headset"></i>
                         <span>Chamados</span>
                     </a>
-                </li>
+                </li>-->
                 <li class="{% if request.endpoint == 'main.relatorios' %}active{% endif %}">
                     <a href="{{ url_for('main.relatorios') }}">
                         <i class="fas fa-chart-bar"></i>

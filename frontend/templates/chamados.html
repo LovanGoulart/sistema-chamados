@@ -4,52 +4,10 @@
 {% block page_title %}Chamados{% endblock %}
 
 {% block content %}
-<!-- Banner informativo -->
-<div class="card card-info-banner">
-    <div class="card-body">
-        <div class="info-banner-content">
-            <i class="fas fa-info-circle"></i>
-            <div>
-                {% if current_user.perfil.value == 'usuario' %}
-                    {% if current_user.setor %}
-                    <strong>Você está visualizando seus chamados e os chamados do setor {{ current_user.setor.nome }}</strong>
-                    <p>Aqui você encontra todos os chamados que você abriu e os chamados direcionados ao seu setor. Use o chat para comunicar-se com os responsáveis.</p>
-                    {% else %}
-                    <strong>Você está visualizando seus chamados</strong>
-                    <p>Aqui você encontra todos os chamados que você abriu. Use o chat para comunicar-se com o técnico responsável.</p>
-                    {% endif %}
-                {% elif current_user.perfil.value == 'setor' %}
-                <strong>Você está visualizando os chamados do seu setor</strong>
-                <p>Aqui você encontra todos os chamados direcionados ao seu setor. Use o chat para comunicar-se com os solicitantes.</p>
-                {% else %}
-                <strong>Você está visualizando todos os chamados do sistema</strong>
-                <p>Como administrador, você tem acesso a todos os chamados. Use o chat para comunicar-se com os responsáveis.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Filtros rápidos + Busca em tempo real -->
+<h2 class="chamados-titulo-filtro">{{ titulo_filtro|default('Chamados') }}</h2>
+<!-- Busca em tempo real -->
 <div class="card card-filters">
     <div class="card-body">
-        <div class="filtros-rapidos" id="filtros-rapidos">
-            <button class="filtro-chip active" data-filtro="todos">
-                <i class="fas fa-border-all"></i> Todos
-            </button>
-            <button class="filtro-chip" data-filtro="recentes">
-                <i class="fas fa-sort-amount-down"></i> Recentes
-            </button>
-            <button class="filtro-chip" data-filtro="aberto">
-                <i class="fas fa-folder-open"></i> Abertos
-            </button>
-            <button class="filtro-chip" data-filtro="em_andamento">
-                <i class="fas fa-spinner"></i> Em andamento
-            </button>
-            <button class="filtro-chip" data-filtro="pendente">
-                <i class="fas fa-pause-circle"></i> Pendentes
-            </button>
-        </div>
         <div class="search-wrapper">
             <i class="fas fa-search search-icon"></i>
             <input type="text" id="busca-tempo-real" placeholder="Digite uma palavra-chave" autocomplete="off">
@@ -62,7 +20,7 @@
 </div>
 
 <!-- Lista de chamados -->
-<div class="card" id="lista-chamados-atualizavel">
+<div class="card">
     <div class="card-body">
         {% if chamados.items %}
 
@@ -1055,6 +1013,14 @@
 }
 
 
+/* Título do grupo selecionado no dashboard */
+.chamados-titulo-filtro {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary, #2c3e50);
+    margin: 0 0 12px;
+}
+
 /* ─── CHAMADO INTEIRO CLICÁVEL ─── */
 .data-table tbody tr.chamado-row {
     cursor: pointer;
@@ -1069,9 +1035,19 @@
     cursor: pointer;
 }
 
+/* No toque/click não destacar o cartão com contorno vermelho. */
+@media (hover: none) {
+    .mobile-cards-view .chamado-card:hover {
+        border-color: var(--border-color, #e9ecef);
+    }
+}
 .mobile-cards-view .chamado-card:focus {
-    outline: 2px solid var(--primary, #0084ff);
-    outline-offset: -2px;
+    outline: none;
+}
+/* Mantém indicação acessível para quem navega pelo teclado. */
+.mobile-cards-view .chamado-card:focus-visible {
+    outline: 2px solid #2D3E50;
+    outline-offset: 2px;
 }
 </style>
 {% endblock %}
@@ -1118,12 +1094,12 @@
     const inputBusca = document.getElementById('busca-tempo-real');
     const btnLimpar = document.getElementById('limpar-busca');
     const contagem = document.getElementById('resultados-contagem');
-    const obterVazioBusca = () => document.getElementById('busca-vazia');
-
+    const vazioBusca = document.getElementById('busca-vazia');
+    const btnLimparVazio = document.getElementById('btn-limpar-busca-vazia');
     const chips = document.querySelectorAll('#filtros-rapidos .filtro-chip');
 
-    const obterLinhas = () => document.querySelectorAll('#lista-chamados-atualizavel .chamado-row');
-    const obterCards = () => document.querySelectorAll('#lista-chamados-atualizavel .chamado-card');
+    const rows = document.querySelectorAll('.chamado-row');
+    const cards = document.querySelectorAll('.chamado-card');
 
     // Data de hoje no fuso local (formato YYYY-MM-DD)
     const d = new Date();
@@ -1138,7 +1114,7 @@
         const criado = el.getAttribute('data-criado') || '';
 
         if (filtroAtivo === 'todos') return true;
-        if (filtroAtivo === 'recentes') return true;
+        if (filtroAtivo === 'hoje') return criado === hoje;
         return status === filtroAtivo;
     }
 
@@ -1152,21 +1128,7 @@
         return false;
     }
 
-    function ordenarRecentes() {
-        if (filtroAtivo !== 'recentes') return;
-        ['#tabela-chamados tbody', '#cards-chamados'].forEach(function (seletor) {
-            const alvo = document.querySelector(seletor);
-            if (!alvo) return;
-            Array.from(alvo.children).sort(function (a, b) {
-                const dataA = a.getAttribute('data-criado') || '';
-                const dataB = b.getAttribute('data-criado') || '';
-                return dataB.localeCompare(dataA) || Number(b.dataset.id || 0) - Number(a.dataset.id || 0);
-            }).forEach(function (el) { alvo.appendChild(el); });
-        });
-    }
-
     function filtrarChamados(termo) {
-        ordenarRecentes();
         const termoLower = termo.trim().toLowerCase();
         let visiveis = 0;
 
@@ -1174,13 +1136,13 @@
             btnLimpar.style.display = termoLower ? 'flex' : 'none';
         }
 
-        obterLinhas().forEach(function(row) {
+        rows.forEach(function(row) {
             const ok = matchFiltroRapido(row) && (!termoLower || matchBusca(row, termoLower));
             row.style.display = ok ? '' : 'none';
             if (ok) visiveis++;
         });
 
-        obterCards().forEach(function(card) {
+        cards.forEach(function(card) {
             const ok = matchFiltroRapido(card) && (!termoLower || matchBusca(card, termoLower));
             card.style.display = ok ? '' : 'none';
         });
@@ -1200,7 +1162,6 @@
             }
         }
 
-        const vazioBusca = obterVazioBusca();
         if (vazioBusca) {
             vazioBusca.style.display = (visiveis === 0) ? 'block' : 'none';
         }
@@ -1241,11 +1202,10 @@
         });
     }
 
-    document.addEventListener('click', function (evento) {
-        if (evento.target.closest('#btn-limpar-busca-vazia')) limparTudo();
-    });
+    if (btnLimparVazio) {
+        btnLimparVazio.addEventListener('click', limparTudo);
+    }
 
-    window.aplicarFiltrosChamados = function () { filtrarChamados(inputBusca ? inputBusca.value : ''); };
     filtrarChamados('');
 })();
 
@@ -1299,7 +1259,6 @@
         });
     }
 
-    window.configurarCliquesChamados = configurarChamadosClicaveis;
     configurarChamadosClicaveis();
 })();
 </script>

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Relatórios{% endblock %}
-{% block page_title %}Relatórios{% endblock %}
+{% block title %}Dashboards{% endblock %}
+{% block page_title %}Dashboards{% endblock %}
 
 {% block content %}
 
@@ -14,7 +14,7 @@
 /* ─── Base (Desktop) ─── */
 .stats-grid.stats-grid-4 {
     display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 16px !important;
     margin-bottom: 24px !important;
 }
@@ -318,20 +318,6 @@
         <div class="stat-info">
             <span class="stat-value">{{ estatisticas.total }}</span>
             <span class="stat-label">Chamados</span>
-        </div>
-    </div>
-    <div class="stat-card stat-info">
-        <div class="stat-icon"><i class="fas fa-folder-open"></i></div>
-        <div class="stat-info">
-            <span class="stat-value">{{ estatisticas.abertos }}</span>
-            <span class="stat-label">Em aberto</span>
-        </div>
-    </div>
-    <div class="stat-card stat-success">
-        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-        <div class="stat-info">
-            <span class="stat-value">{{ estatisticas.resolvidos }}</span>
-            <span class="stat-label">Resolvidos</span>
         </div>
     </div>
     <div class="stat-card stat-purple">

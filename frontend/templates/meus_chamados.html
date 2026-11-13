@@ -31,7 +31,7 @@
 </div>
 
 <!-- Lista de chamados -->
-<div class="card" id="lista-chamados-atualizavel">
+<div class="card">
     <div class="card-body">
         {% if chamados_ordenados %}
 
@@ -224,21 +224,20 @@
     const inputBusca = document.getElementById('busca-tempo-real');
     const btnLimpar = document.getElementById('limpar-busca');
     const contagem = document.getElementById('resultados-contagem');
-    const obterVazioBusca = () => document.getElementById('busca-vazia');
+    const vazioBusca = document.getElementById('busca-vazia');
+    const btnLimparVazio = document.getElementById('btn-limpar-busca-vazia');
 
-
-    const obterLinhas = () => document.querySelectorAll('#lista-chamados-atualizavel .chamado-row');
-    const obterCards = () => document.querySelectorAll('#lista-chamados-atualizavel .chamado-card');
+    const rows = document.querySelectorAll('.chamado-row');
+    const cards = document.querySelectorAll('.chamado-card');
 
     function filtrarChamados(termo) {
         const termoLower = termo.trim().toLowerCase();
         let visiveis = 0;
 
         if (!termoLower) {
-            obterLinhas().forEach(row => row.style.display = '');
-            obterCards().forEach(card => card.style.display = '');
+            rows.forEach(row => row.style.display = '');
+            cards.forEach(card => card.style.display = '');
             if (contagem) contagem.textContent = '';
-            const vazioBusca = obterVazioBusca();
             if (vazioBusca) vazioBusca.style.display = 'none';
             if (btnLimpar) btnLimpar.style.display = 'none';
             return;
@@ -246,7 +245,7 @@
 
         if (btnLimpar) btnLimpar.style.display = 'flex';
 
-        obterLinhas().forEach(function(row) {
+        rows.forEach(function(row) {
             const titulo = row.getAttribute('data-titulo') || '';
             const descricao = row.getAttribute('data-descricao') || '';
             const local = row.getAttribute('data-local') || '';
@@ -271,7 +270,7 @@
             }
         });
 
-        obterCards().forEach(function(card) {
+        cards.forEach(function(card) {
             const titulo = card.getAttribute('data-titulo') || '';
             const descricao = card.getAttribute('data-descricao') || '';
             const local = card.getAttribute('data-local') || '';
@@ -301,7 +300,6 @@
             }
         }
 
-        const vazioBusca = obterVazioBusca();
         if (vazioBusca) {
             vazioBusca.style.display = (visiveis === 0) ? 'block' : 'none';
         }
@@ -322,14 +320,15 @@
         });
     }
 
-    document.addEventListener('click', function (evento) {
-        if (evento.target.closest('#btn-limpar-busca-vazia') && inputBusca) {
-            inputBusca.value = '';
-            filtrarChamados('');
-        }
-    });
+    if (btnLimparVazio) {
+        btnLimparVazio.addEventListener('click', function() {
+            if (inputBusca) {
+                inputBusca.value = '';
+                filtrarChamados('');
+            }
+        });
+    }
 
-    window.aplicarFiltrosChamados = function () { filtrarChamados(inputBusca ? inputBusca.value : ''); };
     filtrarChamados('');
 })();
 
@@ -373,7 +372,6 @@
         });
     }
 
-    window.configurarCliquesChamados = configurarChamadosClicaveis;
     configurarChamadosClicaveis();
 })();
 </script>
@@ -896,11 +894,14 @@
         font-size: 0.85rem;
     }
 
-    /* Banner responsivo */
+    /* Ícone e título na mesma linha no celular. */
     .info-banner-content {
-        flex-direction: column;
-        gap: 8px;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
     }
+    .info-banner-content i { margin-top: 0; }
+    .info-banner-content strong { margin-bottom: 0; }
 
     /* Paginação */
     .pagination-item {

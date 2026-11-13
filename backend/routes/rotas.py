@@ -317,6 +317,7 @@ def dashboard():
         return redirect(url_for('main.meus_chamados'))
 
     estatisticas = ChamadoService.get_estatisticas(current_user)
+    chamados_semana = ChamadoService.contar_chamados_semana(current_user)
 
     # Buscar chamados ativos (aberto, pendente, em_andamento)
     if current_user.perfil.value == PerfilUsuario.ADMIN.value:
@@ -341,6 +342,7 @@ def dashboard():
 
     return render_template('dashboard.html',
                          estatisticas=estatisticas,
+                         chamados_semana=chamados_semana,
                          chamados_ativos=chamados_ativos)
 
 
@@ -362,7 +364,8 @@ def chamados():
         'status': request.args.get('status'),
         'prioridade': request.args.get('prioridade'),
         'setor_destino_id': request.args.get('setor_destino_id', type=int),
-        'busca': request.args.get('busca')
+        'busca': request.args.get('busca'),
+        'periodo': request.args.get('periodo') if request.args.get('periodo') in ('recentes', 'esta_semana') else None
     }
 
     # Remover filtros vazios
@@ -371,14 +374,45 @@ def chamados():
     resultado = ChamadoService.listar_chamados(current_user, filtros, pagina, 99999)
     setores = Setor.query.filter_by(ativo=True).order_by(Setor.nome).all()
 
-    # Ordenar por data prevista, status, prioridade e data
-    chamados_ordenados = get_chamados_ordenados(resultado)
+    # Para "Esta Semana": agrupar por status, com mais novos no topo de cada grupo.
+    # O escopo de acesso e o recorte semanal continuam aplicados no serviço.
+    if filtros.get('periodo') == 'esta_semana':
+        ordem_status_semana = {
+            StatusChamado.ABERTO: 0,
+            StatusChamado.EM_ANDAMENTO: 1,
+            StatusChamado.PENDENTE: 2,
+            StatusChamado.RESOLVIDO: 3,
+            StatusChamado.FECHADO: 4,
+        }
+        chamados_ordenados = sorted(
+            resultado.items,
+            key=lambda chamado: (
+                ordem_status_semana.get(chamado.status, 99),
+                -chamado.created_at.timestamp(),
+                -chamado.id,
+            )
+        )
+    elif filtros.get('periodo') == 'recentes':
+        chamados_ordenados = list(resultado.items)
+    else:
+        chamados_ordenados = get_chamados_ordenados(resultado)
+
+    titulos_status = {
+        'aberto': 'Chamados em aberto',
+        'em_andamento': 'Chamados em andamento',
+        'pendente': 'Chamados pendentes',
+        'resolvido': 'Chamados resolvidos',
+        'fechado': 'Chamados fechados'
+    }
+    titulo_filtro = ('Chamados desta semana' if filtros.get('periodo') == 'esta_semana'
+                     else titulos_status.get(filtros.get('status'), 'Chamados'))
 
     return render_template('chamados.html',
                          chamados=resultado,
                          chamados_ordenados=chamados_ordenados,
                          setores=setores,
-                         filtros=filtros)
+                         filtros=filtros,
+                         titulo_filtro=titulo_filtro)
 
 
 @main.route('/chamados/novo', methods=['GET', 'POST'])

@@ -5,79 +5,37 @@
 
 {% block content %}
 <div class="dashboard">
-    <!-- Cards de estatísticas -->
+    <!-- Cards de acesso rápido: somente chamados permitidos ao usuário. -->
     <div class="stats-grid">
-        <div class="stat-card stat-primary">
-            <div class="stat-icon"><i class="fas fa-headset"></i></div>
-            <div class="stat-info">
-                <span class="stat-value">{{ estatisticas.total }}</span>
-                <span class="stat-label">Chamados</span>
-            </div>
-        </div>
-        <div class="stat-card stat-info">
+        <a class="stat-card stat-info stat-card-link" href="{{ url_for('main.chamados', status='aberto') }}" aria-label="Ver chamados em aberto">
             <div class="stat-icon"><i class="fas fa-folder-open"></i></div>
-            <div class="stat-info">
-                <span class="stat-value">{{ estatisticas.abertos }}</span>
-                <span class="stat-label">Em aberto</span>
-            </div>
-        </div>
-        <div class="stat-card stat-warning">
+            <div class="stat-info"><span class="stat-value">{{ estatisticas.abertos }}</span><span class="stat-label">Em aberto</span></div>
+        </a>
+        <a class="stat-card stat-warning stat-card-link" href="{{ url_for('main.chamados', status='em_andamento') }}" aria-label="Ver chamados em andamento">
             <div class="stat-icon"><i class="fas fa-spinner"></i></div>
-            <div class="stat-info">
-                <span class="stat-value">{{ estatisticas.em_andamento }}</span>
-                <span class="stat-label">Em Andamento</span>
-            </div>
-        </div>
-        <div class="stat-card stat-success">
+            <div class="stat-info"><span class="stat-value">{{ estatisticas.em_andamento }}</span><span class="stat-label">Em andamento</span></div>
+        </a>
+        <a class="stat-card stat-purple stat-card-link" href="{{ url_for('main.chamados', status='pendente') }}" aria-label="Ver chamados pendentes">
+            <div class="stat-icon"><i class="fas fa-pause-circle"></i></div>
+            <div class="stat-info"><span class="stat-value">{{ estatisticas.por_status.get('pendente', 0) }}</span><span class="stat-label">Pendentes</span></div>
+        </a>
+        <a class="stat-card stat-success stat-card-link" href="{{ url_for('main.chamados', status='resolvido') }}" aria-label="Ver chamados resolvidos">
             <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-            <div class="stat-info">
-                <span class="stat-value">{{ estatisticas.resolvidos }}</span>
-                <span class="stat-label">Resolvidos</span>
-            </div>
-        </div>
-        <div class="stat-card stat-purple">
+            <div class="stat-info"><span class="stat-value">{{ estatisticas.resolvidos }}</span><span class="stat-label">Resolvidos</span></div>
+        </a>
+        <a class="stat-card stat-primary stat-card-link" href="{{ url_for('main.chamados', status='fechado') }}" aria-label="Ver chamados fechados">
+            <div class="stat-icon"><i class="fas fa-lock"></i></div>
+            <div class="stat-info"><span class="stat-value">{{ estatisticas.por_status.get('fechado', 0) }}</span><span class="stat-label">Fechados</span></div>
+        </a>
+        <a class="stat-card stat-orange stat-card-link" href="{{ url_for('main.chamados', periodo='esta_semana') }}" aria-label="Ver todos os chamados desta semana organizados por status e data" title="Chamados desta semana: abertos, em andamento, pendentes, resolvidos e fechados">
             <div class="stat-icon"><i class="fas fa-clock"></i></div>
-            <div class="stat-info">
-                <span class="stat-value">{{ formatar_tempo(estatisticas.tempo_medio_resolucao) }}</span>
-                <span class="stat-label">Tempo Médio</span>
-            </div>
-        </div>
-        <div class="stat-card stat-orange">
-            <div class="stat-icon"><i class="fas fa-calendar-week"></i></div>
-            <div class="stat-info">
-                <span class="stat-value">{{ estatisticas.chamados_semana }}</span>
-                <span class="stat-label">Esta Semana</span>
-            </div>
-        </div>
+            <div class="stat-info"><span class="stat-value">{{ chamados_semana }}</span><span class="stat-label">Esta Semana</span></div>
+        </a>
     </div>
 
     <!-- Tabela de Chamados Ativos -->
     <div class="card">
-        <div class="card-header card-header-filtros">
-            <!--<h3><i class="fas fa-list"></i> Chamados ativos</h3>-->
-            <div class="filtros-rapidos" id="filtros-rapidos">
-                <button class="filtro-chip active" data-filtro="todos">
-                    <i class="fas fa-border-all"></i> Todos
-                </button>
-                <button class="filtro-chip" data-filtro="recentes">
-                    <i class="fas fa-sort-amount-down"></i> Recentes
-                </button>
-                <!--<button class="filtro-chip" data-filtro="hoje">
-                    <i class="fas fa-calendar-day"></i> Hoje
-                </button>-->
-                <button class="filtro-chip" data-filtro="aberto">
-                    <i class="fas fa-folder-open"></i> Abertos
-                </button>
-                <button class="filtro-chip" data-filtro="em_andamento">
-                    <i class="fas fa-spinner"></i> Em andamento
-                </button>
-                <button class="filtro-chip" data-filtro="pendente">
-                    <i class="fas fa-pause-circle"></i> Pendentes
-                </button>
-                <!--<a href="{{ url_for('main.chamados') }}" class="btn btn-sm btn-outline">Ver todos</a>-->
-            </div>
-        </div>
-        <div class="card-body" id="dashboard-chamados-atualizavel">
+        <div class="card-body">
             {% if chamados_ativos %}
 
             <!-- VIEW: TABELA (desktop e tablet) -->
@@ -276,6 +234,18 @@
 
 {% block extra_css %}
 <style>
+
+/* Os cards são links acessíveis; preservam o visual original. */
+.dashboard .stat-card-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+.dashboard .stat-card-link:hover { color: inherit; }
+.dashboard .stat-card-link:focus-visible {
+    outline: 3px solid var(--primary, #f46c6c);
+    outline-offset: 3px;
+}
 /* ═══════════════════════════════════════════════════════════════
    FILTROS RÁPIDOS (CHIPS)
    ═══════════════════════════════════════════════════════════════ */
@@ -960,23 +930,14 @@
 // Filtros rápidos: Todos / Hoje / Abertos / Em andamento / Pendentes / Recentes
 (function() {
     const chips = document.querySelectorAll('#filtros-rapidos .filtro-chip');
-    const lista = document.getElementById('dashboard-chamados-atualizavel');
-    let tbody = lista.querySelector('.table-desktop-view tbody');
-    let cardsContainer = lista.querySelector('.mobile-cards-view');
-    let vazio = lista.querySelector('#filtro-vazio');
+    const tbody = document.querySelector('.table-desktop-view tbody');
+    const cardsContainer = document.querySelector('.mobile-cards-view');
+    const vazio = document.getElementById('filtro-vazio');
 
     // Guarda a ordem original vinda do backend
     // (data prevista hoje no topo -> status -> prioridade -> data de criação)
-    let linhasOriginais = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
-    let cardsOriginais = cardsContainer ? Array.from(cardsContainer.querySelectorAll('.chamado-card')) : [];
-
-    function recuperarElementosAtualizados() {
-        tbody = lista.querySelector('.table-desktop-view tbody');
-        cardsContainer = lista.querySelector('.mobile-cards-view');
-        vazio = lista.querySelector('#filtro-vazio');
-        linhasOriginais = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
-        cardsOriginais = cardsContainer ? Array.from(cardsContainer.querySelectorAll('.chamado-card')) : [];
-    }
+    const linhasOriginais = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+    const cardsOriginais = cardsContainer ? Array.from(cardsContainer.querySelectorAll('.chamado-card')) : [];
 
     // Data de hoje no fuso local (formato YYYY-MM-DD)
     const d = new Date();
@@ -1050,8 +1011,6 @@
             this.classList.add('active');
             filtroAtivo = this.getAttribute('data-filtro');
             aplicarFiltro();
-            // O filtro selecionado deve refletir os dados atuais do servidor.
-            atualizarChamadosDashboard(true);
         });
     });
 
@@ -1059,13 +1018,11 @@
 
     // ─── Clique na linha/card inteiro para abrir o chamado ───
     function configurarChamadosClicaveis() {
-        const elementos = lista.querySelectorAll(
+        const elementos = document.querySelectorAll(
             '.table-desktop-view tbody tr.chamado-row, .mobile-cards-view .chamado-card-clicavel'
         );
 
         elementos.forEach(function(elemento) {
-            if (elemento.dataset.cliqueConfigurado === 'true') return;
-            elemento.dataset.cliqueConfigurado = 'true';
             elemento.addEventListener('click', function(event) {
                 // Links e botões internos continuam funcionando normalmente.
                 if (event.target.closest('a, button, input, select, textarea, label')) {
@@ -1092,63 +1049,6 @@
     }
 
     configurarChamadosClicaveis();
-
-    // A página Início tem uma lista própria, diferente de /chamados.
-    // A atualização abaixo substitui somente a lista, preservando botões,
-    // filtro ativo, rolagem, campos e outras funcionalidades do dashboard.
-    let emAtualizacao = false;
-    let atualizarNovamente = false;
-    let ultimaResposta = null;
-
-    async function atualizarChamadosDashboard(forcar = false) {
-        if (document.hidden || !lista.isConnected) return;
-        if (emAtualizacao) {
-            if (forcar) atualizarNovamente = true;
-            return;
-        }
-        emAtualizacao = true;
-        try {
-            const url = new URL(window.location.href);
-            url.searchParams.set('_atualizacao_dashboard', Date.now().toString());
-            const resposta = await fetch(url.toString(), {
-                method: 'GET',
-                credentials: 'same-origin',
-                cache: 'no-store',
-                headers: { 'Accept': 'text/html', 'Cache-Control': 'no-cache' }
-            });
-            if (!resposta.ok || resposta.redirected || !resposta.headers.get('content-type')?.includes('text/html')) return;
-            const documento = new DOMParser().parseFromString(await resposta.text(), 'text/html');
-            const conteudoNovo = documento.getElementById('dashboard-chamados-atualizavel');
-            if (!conteudoNovo) return;
-
-            // Comparar com a última resposta do servidor, não com o DOM filtrado.
-            // Os filtros aplicam style.display e não devem provocar substituições contínuas.
-            const htmlNovo = conteudoNovo.innerHTML;
-            if (ultimaResposta === htmlNovo) return;
-            ultimaResposta = htmlNovo;
-            lista.innerHTML = htmlNovo;
-            recuperarElementosAtualizados();
-            aplicarFiltro();
-            configurarChamadosClicaveis();
-        } catch (erro) {
-            console.debug('Atualização do dashboard indisponível:', erro);
-        } finally {
-            emAtualizacao = false;
-            if (atualizarNovamente) {
-                atualizarNovamente = false;
-                atualizarChamadosDashboard(true);
-            }
-        }
-    }
-
-    window.atualizarChamadosDashboard = atualizarChamadosDashboard;
-    setInterval(function () { atualizarChamadosDashboard(); }, 5000);
-    window.addEventListener('focus', function () { atualizarChamadosDashboard(true); });
-    document.addEventListener('visibilitychange', function () {
-        if (!document.hidden) atualizarChamadosDashboard(true);
-    });
-    // Confere imediatamente, inclusive quando a página veio do histórico/cache.
-    atualizarChamadosDashboard(true);
 })();
 </script>
 {% endblock %}

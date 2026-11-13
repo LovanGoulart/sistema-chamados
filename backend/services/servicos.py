@@ -137,6 +137,16 @@ class ChamadoService:
 
         # Aplicar filtros
         if filtros:
+            # O periodo desta_semana usa o mesmo escopo de acesso definido acima.
+            # A semana começa na segunda-feira, conforme o fuso da aplicação.
+            if filtros.get('periodo') == 'esta_semana':
+                agora = agora_brasil_naive()
+                inicio = (agora - timedelta(days=agora.weekday())).replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                )
+                fim = inicio + timedelta(days=7)
+                query = query.filter(Chamado.created_at >= inicio,
+                                     Chamado.created_at < fim)
             if filtros.get('status'):
                 query = query.filter(Chamado.status == StatusChamado(filtros['status']))
             if filtros.get('prioridade'):
@@ -159,6 +169,29 @@ class ChamadoService:
         return query.paginate(page=pagina, per_page=por_pagina, error_out=False)
 
 
+
+    @staticmethod
+    def contar_chamados_semana(usuario):
+        """Conta todos os status da semana respeitando o acesso de listar_chamados."""
+        resultado = ChamadoService.listar_chamados(
+            usuario, {'periodo': 'esta_semana'}, 1, 1
+        )
+        return resultado.total
+
+    @staticmethod
+    def contar_chamados_recentes(usuario):
+        """Conta os chamados dos últimos 7 dias, usando os mesmos destinatários da listagem."""
+        query = Chamado.query
+        perfil_str = usuario.perfil_str if hasattr(usuario, 'perfil_str') else str(usuario.perfil)
+        if perfil_str == PerfilUsuario.USUARIO.value:
+            if usuario.setor_id is not None:
+                query = query.filter(or_(Chamado.usuario_id == usuario.id,
+                                         Chamado.setor_destino_id == usuario.setor_id))
+            else:
+                query = query.filter(Chamado.usuario_id == usuario.id)
+        elif perfil_str == PerfilUsuario.SETOR.value:
+            query = query.filter(Chamado.setor_destino_id == usuario.setor_id)
+        return query.filter(Chamado.created_at >= agora_brasil_naive() - timedelta(days=7)).count()
 
     @staticmethod
     def listar_meus_chamados(usuario, filtros=None, pagina=1, por_pagina=10):
