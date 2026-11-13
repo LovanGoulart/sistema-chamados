@@ -34,7 +34,7 @@
 
     <title>{% block title %}Sistema de Chamados{% endblock %} - Colégio Mauá</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css', v='20261113-2') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pwa.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -348,21 +348,20 @@
         }
     </style>
     <style>
-    .btn-voltar {
-        background: transparent;
-        color: var(--text-secondary, #6c757d);
-        border: none;
-        cursor: pointer;
-    }
-
-    .btn-voltar:hover {
-        color: var(--primary, #f46c6c);
-        background: rgba(244, 108, 108, 0.08);
-    }
-
-    .btn-voltar i {
-        font-size: 1.1rem;
-    }
+        /* Cabeçalho padronizado em todas as páginas autenticadas */
+        .topbar-heading-spacer { flex: 1; min-width: 0; }
+        .titulo-pagina-padrao { margin: 0 0 16px; }
+        .titulo-pagina-linha { display: flex; align-items: center; gap: 7px; min-width: 0; }
+        .titulo-pagina-linha > i { color: var(--primary, #f46c6c); font-size: 1rem; flex-shrink: 0; }
+        .titulo-pagina-linha h1 { color: var(--text-primary, #2c3e50); font-size: 1.08rem; font-weight: 700; line-height: 1.35; margin: 0; overflow-wrap: anywhere; }
+        .titulo-pagina-padrao > p { color: var(--text-secondary, #6c757d); font-size: .82rem; margin: 3px 0 0; line-height: 1.4; }
+        .btn-voltar { background: transparent; color: var(--text-secondary, #6c757d); }
+        .btn-voltar:hover { background: var(--bg-body, #f5f6fa); color: var(--text-primary, #2c3e50); }
+        @media (max-width: 768px) {
+            .titulo-pagina-padrao { margin-bottom: 12px; }
+            .titulo-pagina-linha h1 { font-size: 1rem; }
+            .titulo-pagina-padrao > p { font-size: .75rem; }
+        }
     </style>
 </head>
 <body>
@@ -386,12 +385,6 @@
                         <span>Início</span>
                     </a>
                 </li>
-                <!--<li class="{% if request.endpoint in ['main.chamados', 'main.novo_chamado', 'main.chamado_detalhe'] %}active{% endif %}">
-                    <a href="{{ url_for('main.chamados') }}">
-                        <i class="fas fa-headset"></i>
-                        <span>Chamados</span>
-                    </a>
-                </li>-->
                 <li class="{% if request.endpoint == 'main.relatorios' %}active{% endif %}">
                     <a href="{{ url_for('main.relatorios') }}">
                         <i class="fas fa-chart-bar"></i>
@@ -2290,14 +2283,10 @@
                 <i class="fas fa-bars"></i>
             </button>
             {% endif %}
-            <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+            <span class="topbar-heading-spacer" aria-hidden="true"></span>
             <div class="topbar-actions">
-                <!-- Botão Voltar -->
-                <button type="button"
-                        class="btn-icon btn-voltar"
-                        title="Voltar à página anterior"
-                        aria-label="Voltar à página anterior"
-                        onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = '{{ url_for('main.dashboard') }}'; }">
+                <!-- Voltar sem sair do domínio do Sistema de Chamados -->
+                <button type="button" class="btn-icon btn-voltar" title="Voltar à página anterior" aria-label="Voltar à página anterior" onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.assign('{{ url_for('main.dashboard') }}'); }">
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <!-- Botão Home (todos os usuários) -->
@@ -2334,6 +2323,35 @@
 
         <!-- Conteúdo da página -->
         <div class="content-wrapper">
+            {% if current_user.is_authenticated %}
+            {% set pagina = request.endpoint|default('', true) %}
+            <div class="titulo-pagina-padrao" role="group" aria-label="Cabeçalho da página">
+                <div class="titulo-pagina-linha">
+                    {% if pagina == 'main.novo_chamado' %}{% set icone_pagina = 'fa-plus-circle' %}
+                    {% elif pagina == 'main.dashboard' %}{% set icone_pagina = 'fa-house' %}
+                    {% elif pagina == 'main.chamados' %}{% set icone_pagina = 'fa-headset' %}
+                    {% elif pagina == 'main.meus_chamados' %}{% set icone_pagina = 'fa-user-check' %}
+                    {% elif pagina == 'main.chamado_detalhe' %}{% set icone_pagina = 'fa-ticket-alt' %}
+                    {% elif pagina == 'main.relatorios' %}{% set icone_pagina = 'fa-chart-bar' %}
+                    {% elif pagina == 'main.notificacoes' %}{% set icone_pagina = 'fa-bell' %}
+                    {% elif pagina == 'main.perfil' %}{% set icone_pagina = 'fa-user' %}
+                    {% elif pagina == 'main.admin_usuarios' %}{% set icone_pagina = 'fa-users' %}
+                    {% elif pagina == 'main.admin_setores' %}{% set icone_pagina = 'fa-building' %}
+                    {% elif pagina == 'main.admin_logs' %}{% set icone_pagina = 'fa-history' %}
+                    {% else %}{% set icone_pagina = 'fa-circle-info' %}{% endif %}
+                    <i class="fas {{ icone_pagina }}" aria-hidden="true"></i>
+                    <h1>{% if pagina == 'main.chamados' %}{{ titulo_filtro|default('Chamados') }}{% else %}{% block page_title %}Sistema de Chamados{% endblock %}{% endif %}</h1>
+                </div>
+                {% if pagina == 'main.novo_chamado' %}<p>Abra um novo chamado para o setor responsável</p>
+                {% elif pagina == 'main.dashboard' %}<p>Acompanhe os chamados e escolha uma categoria</p>
+                {% elif pagina == 'main.meus_chamados' %}<p>Acompanhe os chamados realizados por você</p>
+                {% elif pagina == 'main.relatorios' %}<p>Indicadores e gráficos dos chamados</p>
+                {% elif pagina == 'main.notificacoes' %}<p>Todas as suas notificações</p>
+                {% elif pagina == 'main.perfil' %}<p>Gerencie suas informações pessoais</p>
+                {% elif pagina == 'main.chamados' %}<p>Consulte e pesquise os chamados</p>
+                {% endif %}
+            </div>
+            {% endif %}
             {% block content %}{% endblock %}
         </div>
     </main>

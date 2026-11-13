@@ -243,8 +243,8 @@
 }
 .dashboard .stat-card-link:hover { color: inherit; }
 .dashboard .stat-card-link:focus-visible {
-    outline: 3px solid var(--primary, #f46c6c);
-    outline-offset: 3px;
+    outline: 2px solid #2D3E50;
+    outline-offset: 2px;
 }
 /* ═══════════════════════════════════════════════════════════════
    FILTROS RÁPIDOS (CHIPS)
@@ -319,7 +319,7 @@
 /* ─── Stats Grid ─── */
 .dashboard .stats-grid {
     display: grid !important;
-    grid-template-columns: repeat(6, 1fr) !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)) !important;
     gap: 16px !important;
     margin-bottom: 24px !important;
 }
@@ -385,8 +385,10 @@
     color: var(--text-secondary, #718096) !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
-    white-space: normal !important;
-    word-break: break-word !important;
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    hyphens: none !important;
     line-height: 1.3 !important;
     margin-top: 2px !important;
     display: block !important;
@@ -619,8 +621,11 @@
     cursor: pointer;
 }
 
-.data-table tbody tr.chamado-row:focus {
-    outline: 2px solid var(--primary, #0084ff);
+.data-table tbody tr.chamado-row:focus:not(:focus-visible) {
+    outline: none;
+}
+.data-table tbody tr.chamado-row:focus-visible {
+    outline: 2px solid #2D3E50;
     outline-offset: -2px;
 }
 
@@ -632,8 +637,11 @@
     cursor: pointer;
 }
 
-.chamado-card-clicavel:focus {
-    outline: 2px solid var(--primary, #0084ff);
+.chamado-card-clicavel:focus:not(:focus-visible) {
+    outline: none;
+}
+.chamado-card-clicavel:focus-visible {
+    outline: 2px solid #2D3E50;
     outline-offset: 2px;
 }
 
@@ -661,6 +669,13 @@
     .dashboard .stat-card {
         padding: 14px !important;
         gap: 10px !important;
+        /* Em duas colunas, a legenda precisa da largura inteira do card. */
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+
+    .dashboard .stat-card .stat-info {
+        width: 100% !important;
     }
 
     .dashboard .stat-card .stat-icon {
@@ -698,7 +713,7 @@
     }
 
     .chamado-card:hover {
-        border-color: var(--primary-light, #66b3ff);
+        border-color: var(--border-color, #e9ecef);
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
@@ -921,6 +936,84 @@
 .data-table td.prioridade-col {
     width: 130px;
     min-width: 130px;
+}
+
+/* Ajuste compacto: seis cards na mesma linha no desktop.
+   Mantém títulos inteiros e restaura duas colunas com ícone lateral no celular. */
+@media (min-width: 769px) {
+    .dashboard .stats-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+        gap: 9px !important;
+    }
+    .dashboard .stat-card {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: clamp(6px, .65vw, 11px) !important;
+        padding: 15px clamp(7px, .85vw, 13px) !important;
+        min-width: 0 !important;
+    }
+    .dashboard .stat-card .stat-icon {
+        width: clamp(36px, 3.5vw, 46px) !important;
+        height: clamp(36px, 3.5vw, 46px) !important;
+        min-width: clamp(36px, 3.5vw, 46px) !important;
+        min-height: clamp(36px, 3.5vw, 46px) !important;
+        font-size: clamp(1.05rem, 1.35vw, 1.35rem) !important;
+    }
+    .dashboard .stat-card .stat-info {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        width: auto !important;
+    }
+    .dashboard .stat-card .stat-label {
+        font-size: clamp(0.63rem, 0.88vw, 0.82rem) !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap !important;
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 100% !important;
+    }
+    .dashboard .stat-card .stat-value {
+        font-size: clamp(1.35rem, 1.75vw, 1.8rem) !important;
+        white-space: nowrap !important;
+    }
+}
+@media (max-width: 768px) {
+    .dashboard .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    .dashboard .stat-card {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 12px 10px !important;
+    }
+    .dashboard .stat-card .stat-info {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+    .dashboard .stat-card .stat-label {
+        font-size: 0.62rem !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap !important;
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 100% !important;
+    }
+}
+@media (max-width: 380px) {
+    .dashboard .stat-card { gap: 6px !important; padding: 10px 7px !important; }
+    .dashboard .stat-card .stat-icon {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+    }
+    .dashboard .stat-card .stat-label { font-size: 0.58rem !important; }
 }
 </style>
 {% endblock %}
