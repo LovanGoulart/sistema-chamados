@@ -4,6 +4,7 @@
 {% block page_title %}Chamados{% endblock %}
 
 {% block content %}
+<h2 class="chamados-titulo-filtro">{{ titulo_filtro|default('Chamados') }}</h2>
 <!-- Busca em tempo real -->
 <div class="card card-filters">
     <div class="card-body">
@@ -1025,8 +1026,11 @@
     cursor: pointer;
 }
 
-.data-table tbody tr.chamado-row:focus {
-    outline: 2px solid var(--primary, #0084ff);
+.data-table tbody tr.chamado-row:focus:not(:focus-visible) {
+    outline: none !important;
+}
+.data-table tbody tr.chamado-row:focus-visible {
+    outline: 2px solid #2D3E50 !important;
     outline-offset: -2px;
 }
 
@@ -1037,15 +1041,18 @@
 /* No toque/click não destacar o cartão com contorno vermelho. */
 @media (hover: none) {
     .mobile-cards-view .chamado-card:hover {
-        border-color: var(--border-color, #e9ecef);
+        border-top-color: var(--border-color, #e9ecef) !important;
+        border-right-color: var(--border-color, #e9ecef) !important;
+        border-bottom-color: var(--border-color, #e9ecef) !important;
+        box-shadow: none !important;
     }
 }
-.mobile-cards-view .chamado-card:focus {
-    outline: none;
+.mobile-cards-view .chamado-card:focus:not(:focus-visible) {
+    outline: none !important;
 }
 /* Mantém indicação acessível para quem navega pelo teclado. */
 .mobile-cards-view .chamado-card:focus-visible {
-    outline: 2px solid #2D3E50;
+    outline: 2px solid #2D3E50 !important;
     outline-offset: 2px;
 }
 </style>
