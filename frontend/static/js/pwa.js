@@ -100,6 +100,22 @@
             font-size: 1rem;
             flex-shrink: 0;
         }
+        /* iPhone/iPad: instruções claras no próprio banner, sem janela de alerta */
+        .pwa-install-banner.pwa-banner-ios {
+            width: min(350px, calc(100vw - 24px));
+            gap: 10px;
+            padding: 12px;
+            align-items: flex-start;
+        }
+        .pwa-install-banner.pwa-banner-ios .pwa-banner-texto span {
+            display: block;
+            margin-top: 4px;
+            line-height: 1.45;
+            color: #526170;
+        }
+        .pwa-install-banner.pwa-banner-ios .pwa-banner-fechar {
+            margin-top: -3px;
+        }
         .pwa-install-banner .pwa-banner-fechar:hover {
             background: #f5f6fa;
             color: #2c3e50;
@@ -319,28 +335,26 @@
             if (this.isStandalone() || document.querySelector('.pwa-install-banner')) return;
 
             const banner = document.createElement('div');
-            banner.className = 'pwa-install-banner';
+            banner.className = 'pwa-install-banner' + (isIos ? ' pwa-banner-ios' : '');
+            banner.setAttribute('role', 'status');
             banner.innerHTML = `
-                <div class="pwa-banner-icone"><i class="fas fa-download"></i></div>
+                <div class="pwa-banner-icone"><i class="fas fa-${isIos ? 'mobile-alt' : 'download'}" aria-hidden="true"></i></div>
                 <div class="pwa-banner-texto">
-                    <strong>Instalar o aplicativo</strong>
+                    <strong>${isIos ? 'Adicionar à Tela de Início' : 'Instalar o aplicativo'}</strong>
                     <span>${isIos
-                        ? 'Toque em Compartilhar e depois "Adicionar à Tela de Início"'
+                        ? 'Toque em Compartilhar (quadrado com seta para cima), escolha "Adicionar à Tela de Início" e depois "Adicionar".'
                         : 'Acesse o sistema direto da sua tela inicial'}</span>
                 </div>
-                <button class="pwa-banner-instalar" id="pwaBannerInstalar">
-                    ${isIos ? 'Como fazer' : 'Instalar'}
-                </button>
-                <button class="pwa-banner-fechar" id="pwaBannerFechar" aria-label="Fechar">&times;</button>
+                ${isIos ? '' : '<button type="button" class="pwa-banner-instalar" id="pwaBannerInstalar">Instalar</button>'}
+                <button type="button" class="pwa-banner-fechar" id="pwaBannerFechar" aria-label="Fechar aviso">&times;</button>
             `;
             document.body.appendChild(banner);
 
-            document.getElementById('pwaBannerInstalar').onclick = () => this.promptInstall();
-            document.getElementById('pwaBannerFechar').onclick = () => {
-                this.hideInstallBanner();
-            };
-
-            // Permanece visível até o usuário fechar ou instalar.
+            if (!isIos) {
+                document.getElementById('pwaBannerInstalar').onclick = () => this.promptInstall();
+            }
+            document.getElementById('pwaBannerFechar').onclick = () => this.hideInstallBanner();
+            // O banner continua visível até o usuário fechar ou instalar o app.
         },
 
         hideInstallBanner() {
@@ -352,15 +366,13 @@
         },
 
         async promptInstall() {
-            // iOS/Safari: sem prompt nativo → mostra instruções do base.html se existir
+            // iOS não oferece prompt nativo. Nunca abrir alert() ou modal no iPhone.
+            if (this.isIos()) {
+                this.showInstallBanner(true);
+                return;
+            }
             if (!this.deferredPrompt) {
-                if (typeof window.abrirModalInstalar === 'function') {
-                    window.abrirModalInstalar();
-                } else {
-                    alert('Para instalar:\n\n' +
-                          'iPhone/iPad: toque no botão Compartilhar (□↑) e escolha "Adicionar à Tela de Início".\n\n' +
-                          'Android/Chrome: menu ⋮ → "Instalar app" ou "Adicionar à tela inicial".');
-                }
+                // Em navegadores sem beforeinstallprompt, não abrir aviso intrusivo.
                 return;
             }
 
